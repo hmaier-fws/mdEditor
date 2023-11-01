@@ -13,6 +13,7 @@ module.exports = function(environment) {
     locationType: 'auto',
     vocabulariesUrl: 'https://cdn.jsdelivr.net/gh/adiwg/mdKeywords@master/resources/vocabularies.json',
     profilesListUrl: 'https://cdn.jsdelivr.net/gh/adiwg/mdProfiles@master/resources/profiles-list.json',
+    defaultTranslator: 'https://api.sciencebase.gov/mdTranslator/api/v3/translator',
     EmberENV: {
       FEATURES: {
         // Here you can enable experimental features on an ember canary build
@@ -106,6 +107,7 @@ module.exports = function(environment) {
   if (deployTarget === 'dev') {
     ENV.rootURL = '/';
     ENV.locationType = 'hash';
+    ENV.defaultTranslator = 'https://dev-mdtranslator.mdeditor.org/api/v3/translator';
   }
   return ENV;
 };

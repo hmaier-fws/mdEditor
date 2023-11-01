@@ -3,10 +3,13 @@ import { alias } from '@ember/object/computed';
 import { run } from '@ember/runloop';
 import { inject as service } from '@ember/service';
 import EmberObject, { observer } from "@ember/object";
+import ENV from 'mdeditor/config/environment';
 
 const defaultValues = {
   // mdTranslatorAPI: 'https://api.sciencebase.gov/mdTranslator/api/v3/translator',
-  mdTranslatorAPI: 'https://dev-mdtranslator.mdeditor.org/api/v3/translator',
+  // mdTranslatorAPI: 'https://dev-mdtranslator.mdeditor.org/api/v3/translator',
+  mdTranslatorAPI: ENV.defaultTranslator,
+
   fiscalStartMonth: '10'
 };
 

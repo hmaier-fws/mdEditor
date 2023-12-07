@@ -31,7 +31,7 @@ The pull request title and description should follow the same [guidelines used t
 
 ### Please check if the PR fulfills these requirements:
 
-  - [ ] The commit message follows our guidelines
+  - [ ] The commit message follows [our guidelines](https://github.com/adiwg/mdEditor/blob/develop/CONTRIBUTING.md#commit-messages)
   - [ ] The PR addresses one, or several closely related issues
   - [ ] The PR contains a single commit (squash locally before submission)
   - [ ] Tests for the changes have been added (for bug fixes / features)

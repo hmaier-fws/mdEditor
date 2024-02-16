@@ -97,7 +97,7 @@ module.exports = function(environment) {
   }
 
   if (environment === 'staging') {
-    ENV.rootURL = '/test-public/';
+    ENV.rootURL = '/test-public';
     ENV.locationType = 'auto';
   }
 

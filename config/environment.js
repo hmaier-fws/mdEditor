@@ -102,8 +102,10 @@ module.exports = function (environment) {
     ENV.locationType = "history";
   }
 
+
   if (environment === "production") {
     ENV.locationType = "history";
+    ENV.rootURL = "/test-public/prod-1/";
     ENV.keycloakConfig = {
       realm: "ScienceBase",
       clientId: "catalog",

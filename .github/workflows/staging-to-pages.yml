@@ -24,7 +24,7 @@ jobs:
 
       - name: Build
         # run: yarn build
-        run: ember build --environment=staging
+        run: yarn staging
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4

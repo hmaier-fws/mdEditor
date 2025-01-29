@@ -16,11 +16,11 @@ jobs:
         with:
           node-version: '16'
 
-      - name: Install Dependencies
-        run: yarn install
-
       - name: enable corepack
         run: corepack enable
+
+      - name: Install Dependencies
+        run: yarn install
 
       - name: Build
         run: yarn build

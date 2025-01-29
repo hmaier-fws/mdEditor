@@ -96,8 +96,8 @@ module.exports = function (environment) {
   }
 
   if (environment === "staging") {
-    ENV.rootURL = "/";
-    ENV.locationType = "history";
+    ENV.rootURL = "/mdEditor/";
+    ENV.locationType = "hash";
   }
 
   if (environment === "production") {

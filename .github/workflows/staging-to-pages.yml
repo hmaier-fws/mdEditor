@@ -18,6 +18,8 @@ jobs:
 
       - name: Install Dependencies
         run: yarn install
+
+      - name: enable corepack
         run: corepack enable
 
       - name: Build

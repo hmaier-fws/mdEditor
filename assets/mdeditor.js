@@ -26,6 +26,9 @@
   0; //eaimeta@70e063a35619d71f0,"ember-local-storage/adapters/adapter",0,"uuid"eaimeta@70e063a35619d71f
   var _default = _exports.default = _adapter.default.extend({
     generateIdForRecord(store, type, inputProperties) {
+      if (inputProperties.id) {
+        return inputProperties.id;
+      }
       if (!inputProperties.uuid) {
         let uuid = (0, _uuid.v4)();
         let shortId = uuid.split('-')[0];
@@ -5741,7 +5744,7 @@
       let Template = this.templateClass;
       if (Template) {
         let owner = Ember.getOwner(this);
-        return merge(Template.create(owner.ownerInjection(), defaults || {}), value);
+        return Ember.assign({}, Template.create(owner.ownerInjection(), defaults || {}), value);
       }
       return object;
     },
@@ -5754,28 +5757,20 @@
      */
     applyTemplateArray(propertyName, defaults) {
       let property = this.get(propertyName);
-      if (Ember.isArray(property)) {
-        let Template = this.templateClass;
-        if (Template) {
-          let owner = Ember.getOwner(this);
-          Ember.run.once(this, () => {
-            property.forEach((item, idx, items) => {
-              //items.removeAt(idx);
-
-              let newItem = Ember.assign(Template.create(owner.ownerInjection(), defaults || {}), item);
-
-              //items.insertAt(idx, newItem);
-              items.set(`${idx}`, newItem);
-            });
-            this.notifyPropertyChange(propertyName);
-          });
-        }
-      } else {
-        Ember.run.once(this, () => {
-          this.set(propertyName, Ember.A());
-        });
+      let Template = this.templateClass;
+      if (!Ember.isArray(property)) {
+        return Ember.A();
       }
-      return this.get(propertyName);
+      if (Template) {
+        let owner = Ember.getOwner(this);
+        return Ember.A(property.map(item => {
+          return Template.create(owner.ownerInjection(), {
+            ...defaults,
+            ...item
+          });
+        }));
+      }
+      return property;
     }
   });
 });
@@ -5849,6 +5844,7 @@
     patch: Ember.inject.service(),
     clean: Ember.inject.service('cleaner'),
     mdjson: Ember.inject.service('mdjson'),
+    pouch: Ember.inject.service(),
     /**
      * The hash for the clean record.
      *
@@ -5901,6 +5897,9 @@
       let json = JSON.parse(this.serialize().data.attributes.json);
       this.setCurrentHash(json);
       this.set('jsonSnapshot', json);
+
+      // Pouch handling
+      this.pouch.updatePouchRecord(this);
     },
     wasLoaded() {
       this._super(...arguments);
@@ -6032,14 +6031,14 @@
   });
   var _default = _exports.default = Base;
 });
-;define("mdeditor/models/contact", ["exports", "@ember-data/model", "ember-copy", "mdeditor/models/base", "ember-cp-validations"], function (_exports, _model, _emberCopy, _base, _emberCpValidations) {
+;define("mdeditor/models/contact", ["exports", "@ember-data/model", "ember-copy", "mdeditor/models/base", "ember-cp-validations", "uuid"], function (_exports, _model, _emberCopy, _base, _emberCpValidations, _uuid) {
   "use strict";
 
   Object.defineProperty(_exports, "__esModule", {
     value: true
   });
   _exports.default = _exports.JsonDefault = void 0;
-  0; //eaimeta@70e063a35619d71f0,"@ember-data/model",0,"@ember/object/computed",0,"@ember/utils",0,"@ember/object",0,"ember-copy",0,"mdeditor/models/base",0,"ember-cp-validations",0,"@ember/service"eaimeta@70e063a35619d71f
+  0; //eaimeta@70e063a35619d71f0,"@ember-data/model",0,"@ember/object/computed",0,"@ember/utils",0,"@ember/object",0,"ember-copy",0,"mdeditor/models/base",0,"ember-cp-validations",0,"@ember/service",0,"uuid"eaimeta@70e063a35619d71f
   const Validations = (0, _emberCpValidations.buildValidations)({
     'json.contactId': (0, _emberCpValidations.validator)('presence', {
       presence: true,
@@ -6049,7 +6048,7 @@
       regex: /^\s+$/,
       inverse: true,
       isWarning: true,
-      message: "Name should not be only white-space."
+      message: 'Name should not be only white-space.'
     }), (0, _emberCpValidations.validator)('presence', {
       disabled: Ember.computed.notEmpty('model.json.name'),
       presence: true
@@ -6058,7 +6057,7 @@
       regex: /^\s+$/,
       inverse: true,
       isWarning: true,
-      message: "Position Name should not be only white-space."
+      message: 'Position Name should not be only white-space.'
     }), (0, _emberCpValidations.validator)('presence', {
       disabled: Ember.computed.notEmpty('model.json.postiionName'),
       presence: true
@@ -6072,18 +6071,18 @@
     init() {
       this._super(...arguments);
       this.setProperties({
-        'contactId': null,
-        'isOrganization': false,
-        'name': null,
-        'positionName': null,
-        'memberOfOrganization': [],
-        'logoGraphic': [],
-        'phone': [],
-        'address': [],
-        'electronicMailAddress': [],
-        'externalIdentifier': [],
-        'onlineResource': [],
-        'hoursOfService': []
+        contactId: null,
+        isOrganization: false,
+        name: null,
+        positionName: null,
+        memberOfOrganization: [],
+        logoGraphic: [],
+        phone: [],
+        address: [],
+        electronicMailAddress: [],
+        externalIdentifier: [],
+        onlineResource: [],
+        hoursOfService: []
       });
     }
   });
@@ -6249,7 +6248,7 @@
         }
       }
       if (orgName && !isOrganization) {
-        return orgName += ": " + combinedName;
+        return orgName += ': ' + combinedName;
       }
       return combinedName;
     }),
@@ -6299,15 +6298,19 @@
         positionName,
         isOrganization
       } = current;
+      let newUuid = (0, _uuid.v4)();
+      let shortId = newUuid.split('-')[0];
       json.setProperties({
         isOrganization: isOrganization,
         name: name ? `Copy of ${name}` : null,
         positionName: name ? positionName : `Copy of ${positionName}`,
-        contactId: null
+        contactId: newUuid
       });
-      return this.store.createRecord('contact', {
-        json: json
+      let newContact = this.store.createRecord('contact', {
+        json: json,
+        id: shortId
       });
+      return newContact;
     }
   });
 });
@@ -6381,14 +6384,14 @@
     initializer: null
   }), _class);
 });
-;define("mdeditor/models/custom-profile", ["exports", "@ember-data/model", "mdeditor/models/schema", "ember-cp-validations"], function (_exports, _model, _schema, _emberCpValidations) {
+;define("mdeditor/models/custom-profile", ["exports", "@ember-data/model", "ember-cp-validations"], function (_exports, _model, _emberCpValidations) {
   "use strict";
 
   Object.defineProperty(_exports, "__esModule", {
     value: true
   });
   _exports.default = void 0;
-  0; //eaimeta@70e063a35619d71f0,"@ember-data/model",0,"@ember/object",0,"@ember/object/computed",0,"@ember/runloop",0,"@ember/service",0,"mdeditor/models/schema",0,"ember-cp-validations"eaimeta@70e063a35619d71f
+  0; //eaimeta@70e063a35619d71f0,"@ember-data/model",0,"@ember/object",0,"@ember/object/computed",0,"@ember/runloop",0,"@ember/service",0,"ember-cp-validations"eaimeta@70e063a35619d71f
   // [{
   //   "id": "full",
   //   "namespace": "org.adiwg.profile",
@@ -6454,22 +6457,19 @@
     definitions: Ember.inject.service('profile'),
     uri: (0, _model.attr)('string'),
     alias: (0, _model.attr)('string'),
-    altDescription: (0, _model.attr)('string'),
-    remoteVersion: (0, _model.attr)('string'),
-    config: (0, _model.attr)('json'),
+    title: (0, _model.attr)('string'),
+    description: (0, _model.attr)('string'),
     profileId: (0, _model.attr)('string'),
-    title: Ember.computed.or('alias', 'config.title'),
-    identifier: Ember.computed.alias('config.identifier'),
-    namespace: Ember.computed.alias('config.namespace'),
-    description: Ember.computed.or('altDescription', 'config.description'),
-    localVersion: Ember.computed.alias('config.version'),
-    components: Ember.computed.alias('config.components'),
-    nav: Ember.computed.alias('config.nav'),
-    hasUpdate: Ember.computed('localVersion', 'remoteVersion', _schema.checkVersion),
+    thesauri: (0, _model.attr)({
+      defaultValue: () => []
+    }),
+    profileTitle: Ember.computed.or('alias', 'title'),
+    identifier: Ember.computed.alias('id').readOnly(),
+    components: Ember.computed.alias('profile.components').readOnly(),
+    schemas: (0, _model.hasMany)('schemas'),
     definition: Ember.computed('profileId', function () {
       return this.definitions.profiles.findBy('identifier', this.profileId);
     }),
-    thesauri: Ember.computed.alias('config.thesauri'),
     /* eslint-disable ember/no-observers */
     updateSettings: Ember.observer('hasDirtyAttributes', 'title', 'uri', 'alias', 'description', 'hasUpdate', 'schemas.[]', 'profileId', function () {
       if (this.isNew || this.isEmpty || this.isDeleted) {
@@ -6485,14 +6485,14 @@
     /* eslint-enable ember/no-observers */
   });
 });
-;define("mdeditor/models/dictionary", ["exports", "@ember-data/model", "ember-copy", "mdeditor/models/base", "ember-cp-validations", "mdeditor/config/environment"], function (_exports, _model, _emberCopy, _base, _emberCpValidations, _environment) {
+;define("mdeditor/models/dictionary", ["exports", "@ember-data/model", "ember-copy", "mdeditor/models/base", "ember-cp-validations", "mdeditor/config/environment", "uuid"], function (_exports, _model, _emberCopy, _base, _emberCpValidations, _environment, _uuid) {
   "use strict";
 
   Object.defineProperty(_exports, "__esModule", {
     value: true
   });
   _exports.default = void 0;
-  0; //eaimeta@70e063a35619d71f0,"@ember-data/model",0,"ember-copy",0,"@ember/object/computed",0,"mdeditor/models/base",0,"ember-cp-validations",0,"@ember/object",0,"mdeditor/config/environment"eaimeta@70e063a35619d71f
+  0; //eaimeta@70e063a35619d71f0,"@ember-data/model",0,"ember-copy",0,"@ember/object/computed",0,"mdeditor/models/base",0,"ember-cp-validations",0,"@ember/object",0,"mdeditor/config/environment",0,"uuid"eaimeta@70e063a35619d71f
   const {
     APP: {
       defaultProfileId
@@ -6605,12 +6605,15 @@
       let current = this.cleanJson;
       let json = Ember.Object.create(current);
       let name = current.dataDictionary.citation.title;
+      let newUuid = (0, _uuid.v4)();
+      let shortId = newUuid.split('-')[0];
       json.set('dataDictionary.citation.title', `Copy of ${name}`);
-      //TODO:copy needs a new ID
-      json.set('dataDictionary.dictionaryId', null);
-      return this.store.createRecord('dictionary', {
-        json: json
+      json.set('dataDictionary.dictionaryId', newUuid);
+      let newDictionary = this.store.createRecord('dictionary', {
+        json: json,
+        id: shortId
       });
+      return newDictionary;
     }
   });
 });
@@ -6841,14 +6844,14 @@
     /* eslint-enable ember/no-observers */
   });
 });
-;define("mdeditor/models/record", ["exports", "@ember-data/model", "ember-copy", "mdeditor/models/base", "ember-cp-validations", "mdeditor/config/environment"], function (_exports, _model, _emberCopy, _base, _emberCpValidations, _environment) {
+;define("mdeditor/models/record", ["exports", "@ember-data/model", "ember-copy", "mdeditor/models/base", "ember-cp-validations", "mdeditor/config/environment", "uuid"], function (_exports, _model, _emberCopy, _base, _emberCpValidations, _environment, _uuid) {
   "use strict";
 
   Object.defineProperty(_exports, "__esModule", {
     value: true
   });
   _exports.default = void 0;
-  0; //eaimeta@70e063a35619d71f0,"@ember-data/model",0,"@ember/object/computed",0,"@ember/application",0,"@ember/object",0,"ember-copy",0,"mdeditor/models/base",0,"ember-cp-validations",0,"mdeditor/config/environment"eaimeta@70e063a35619d71f
+  0; //eaimeta@70e063a35619d71f0,"@ember-data/model",0,"@ember/object/computed",0,"@ember/application",0,"@ember/object",0,"ember-copy",0,"mdeditor/models/base",0,"ember-cp-validations",0,"mdeditor/config/environment",0,"uuid"eaimeta@70e063a35619d71f
   const {
     APP: {
       defaultProfileId
@@ -7040,15 +7043,19 @@
       let current = this.cleanJson;
       let json = Ember.Object.create(current);
       let name = current.metadata.resourceInfo.citation.title;
+      let newUuid = (0, _uuid.v4)();
+      let shortId = newUuid.split('-')[0];
       json.set('metadata.resourceInfo.citation.title', `Copy of ${name}`);
       json.set('metadata.resourceInfo.resourceType', Ember.getWithDefault(json, 'metadata.resourceInfo.resourceType', [{}]));
       json.set('metadata.metadataInfo.metadataIdentifier', {
-        identifier: null,
+        identifier: newUuid,
         namespace: 'urn:uuid'
       });
-      return this.store.createRecord('record', {
-        json: json
+      let newRecord = this.store.createRecord('record', {
+        json: json,
+        id: shortId
       });
+      return newRecord;
     }
   });
   Object.defineProperty(Record.prototype, '_formatted', {
@@ -7058,14 +7065,14 @@
   });
   var _default = _exports.default = Record;
 });
-;define("mdeditor/models/schema", ["exports", "@ember-data/model", "ember-cp-validations", "semver", "ajv", "ajv-errors", "ajv/lib/refs/json-schema-draft-04"], function (_exports, _model, _emberCpValidations, _semver, _ajv, ajvErrors, draft4) {
+;define("mdeditor/models/schema", ["exports", "@ember-data/model", "ember-cp-validations", "semver", "ajv", "ajv-errors", "ajv/lib/refs/json-schema-draft-04"], function (_exports, _model, _emberCpValidations, _semver, _ajv, _ajvErrors, draft4) {
   "use strict";
 
   Object.defineProperty(_exports, "__esModule", {
     value: true
   });
   _exports.regex = _exports.default = _exports.checkVersion = void 0;
-  0; //eaimeta@70e063a35619d71f0,"@ember-data/model",0,"@ember/runloop",0,"@ember/object",0,"@ember/object/computed",0,"@ember/string",0,"ember-cp-validations",0,"semver",0,"ajv",0,"ajv-errors",0,"ajv/lib/refs/json-schema-draft-04",0,"@ember/service"eaimeta@70e063a35619d71f
+  0; //eaimeta@70e063a35619d71f0,"@ember-data/model",0,"@ember/runloop",0,"@ember/object",0,"@ember/object/computed",0,"@ember/string",0,"ember-cp-validations",0,"semver",0,"ajv",0,"ajv-errors",0,"ajv/lib/refs/json-schema-draft-04",0,"@ember/service",0,"ajv"eaimeta@70e063a35619d71f
   const ajvOptions = {
     verbose: true,
     allErrors: true,
@@ -7082,19 +7089,19 @@
   };
   _exports.checkVersion = checkVersion;
   const Validations = (0, _emberCpValidations.buildValidations)({
-    'title': (0, _emberCpValidations.validator)('presence', {
+    title: (0, _emberCpValidations.validator)('presence', {
       presence: true,
       ignoreBlank: true
     }),
-    'description': (0, _emberCpValidations.validator)('presence', {
+    description: (0, _emberCpValidations.validator)('presence', {
       presence: true,
       ignoreBlank: true
     }),
-    'schemaType': [(0, _emberCpValidations.validator)('presence', true), (0, _emberCpValidations.validator)('inclusion', {
+    schemaType: [(0, _emberCpValidations.validator)('presence', true), (0, _emberCpValidations.validator)('inclusion', {
       description: 'This value',
       in: ['record', 'contact', 'dictionary']
     })],
-    'uri': [(0, _emberCpValidations.validator)('presence', {
+    uri: [(0, _emberCpValidations.validator)('presence', {
       presence: true,
       ignoreBlank: true
     }), (0, _emberCpValidations.validator)('format', {
@@ -7102,7 +7109,7 @@
       isWarning: false,
       message: 'This field should be a valid, resolvable URL.'
     })],
-    'customSchemas': [(0, _emberCpValidations.validator)('array-valid'), (0, _emberCpValidations.validator)('array-required', {
+    customSchemas: [(0, _emberCpValidations.validator)('array-valid'), (0, _emberCpValidations.validator)('array-required', {
       track: ['type'],
       isWarning: true
     })]
@@ -7119,7 +7126,8 @@
      */
     init() {
       this._super(...arguments);
-      this.schemaValidator = ajvErrors(new _ajv.default(ajvOptions));
+      this.schemaValidator = new _ajv.default(ajvOptions);
+      (0, _ajvErrors.default)(this.schemaValidator);
       this.schemaValidator.addMetaSchema(draft4);
       this.updateSettings;
     },
@@ -8204,7 +8212,7 @@
     // Extract the record ID from the current URL
     recordId: Ember.computed('router.currentURL', function () {
       const url = this.router.currentURL;
-      const match = url.match(/\/record\/([^\/]+)\//);
+      const match = url.match(/\/record\/([^/]+)(?:\/|$)/);
       return match ? match[1] : null;
     }),
     // Function to preprocess and transform errors
@@ -8298,10 +8306,17 @@
       minItems(error) {
         let propertyName = this.getPropertyName(error.dataPath);
         let limit = error.params.limit;
+        const message = `Should not have fewer than ${limit} items in ${propertyName}.`;
+        const messages = [message];
+        if (error.dataPath === '/contact') {
+          messages.push('If you already have contacts in your contacts list, you need to add a contact to this record to eliminate this error.');
+          messages.push('In this case, one of the below errors is also probably related to this error.');
+          messages.push('If you do not have any contacts, you need to create a contact and then add it to this record.');
+        }
         return {
           type: 'minItems',
           header: `Minimum Items Required for ${propertyName}`,
-          messages: [`Should not have fewer than ${limit} items in ${propertyName}.`],
+          messages,
           path: error.dataPath,
           url: this.mapDataPathToEndpoint(error.dataPath)
         };
@@ -10016,10 +10031,9 @@
     }
     async update() {
       const {
-        record,
-        relatedRecord
+        record
       } = this.args;
-      await this.pouch.updatePouchRecord(record, relatedRecord);
+      await this.pouch.updatePouchRecord(record);
       this.updated = true;
     }
   }, _descriptor = _applyDecoratedDescriptor(_class.prototype, "pouch", [_dec], {
@@ -12202,8 +12216,8 @@
   _exports.default = void 0;
   0; //eaimeta@70e063a35619d71feaimeta@70e063a35619d71f
   var _default = _exports.default = Ember.HTMLBars.template({
-    "id": "pz/MJhTG",
-    "block": "{\"symbols\":[\"&default\"],\"statements\":[[4,\"if\",[[24,[\"label\"]]],null,{\"statements\":[[0,\"  \"],[7,\"label\",true],[8],[0,\"\\n    \"],[1,[22,\"label\"],false],[0,\"\\n\"],[0,\"  \"],[9],[0,\"\\n\"],[4,\"if\",[[24,[\"showInfoTip\"]]],null,{\"statements\":[[0,\"    \"],[1,[28,\"control/md-infotip\",null,[[\"text\"],[[24,[\"placeholder\"]]]]],false],[0,\"\\n\"]],\"parameters\":[]},null]],\"parameters\":[]},null],[7,\"div\",true],[10,\"class\",\"md-input-input\"],[8],[0,\"\\n  \"],[1,[28,\"input\",null,[[\"value\",\"placeholder\",\"required\",\"type\",\"step\",\"maxlength\",\"class\",\"disabled\",\"change\"],[[24,[\"value\"]],[24,[\"placeholder\"]],[24,[\"required\"]],[24,[\"type\"]],[24,[\"step\"]],[24,[\"maxlength\"]],[24,[\"inputClass\"]],[24,[\"disabled\"]],[24,[\"change\"]]]]],false],[0,\"\\n\\n  \"],[7,\"span\",true],[10,\"class\",\"md-input-error\"],[8],[0,\"\\n\"],[4,\"if\",[[24,[\"showErrorMessage\"]]],null,{\"statements\":[[0,\"      \"],[7,\"span\",true],[10,\"class\",\"md-error\"],[8],[0,\"\\n        \"],[1,[28,\"fa-icon\",[\"exclamation-circle\"],null],false],[0,\"\\n\"],[4,\"ember-tooltip\",null,[[\"side\",\"tooltipClass\"],[\"right\",\"ember-tooltip md-tooltip danger\"]],{\"statements\":[[0,\"            \"],[1,[28,\"get\",[[28,\"get\",[[28,\"get\",[[28,\"get\",[[24,[\"model\"]],\"validations\"],null],\"attrs\"],null],[24,[\"valuePath\"]]],null],\"message\"],null],false],[0,\"\\n\"]],\"parameters\":[]},null],[0,\"      \"],[9],[0,\"\\n\"]],\"parameters\":[]},null],[0,\"\\n\"],[4,\"if\",[[24,[\"showWarningMessage\"]]],null,{\"statements\":[[0,\"      \"],[7,\"span\",true],[10,\"class\",\"md-warning\"],[8],[0,\"\\n        \"],[1,[28,\"fa-icon\",[\"exclamation-triangle\"],null],false],[0,\"\\n\"],[4,\"ember-tooltip\",null,[[\"side\",\"tooltipClass\"],[\"right\",\"ember-tooltip md-tooltip warning\"]],{\"statements\":[[0,\"        \"],[1,[28,\"get\",[[28,\"get\",[[28,\"get\",[[28,\"get\",[[24,[\"model\"]],\"validations\"],null],\"attrs\"],null],[24,[\"valuePath\"]]],null],\"warningMessage\"],null],false],[0,\"\\n\"]],\"parameters\":[]},null],[0,\"      \"],[9],[0,\"\\n\"]],\"parameters\":[]},null],[0,\"  \"],[9],[0,\"\\n\"],[9],[0,\"\\n\"],[14,1]],\"hasEval\":false}",
+    "id": "X+oQhN81",
+    "block": "{\"symbols\":[\"&default\"],\"statements\":[[4,\"if\",[[23,0,[\"label\"]]],null,{\"statements\":[[0,\"  \"],[7,\"label\",true],[8],[0,\"\\n    \"],[1,[23,0,[\"label\"]],false],[0,\"\\n\"],[0,\"  \"],[9],[0,\"\\n\"],[4,\"if\",[[23,0,[\"showInfoTip\"]]],null,{\"statements\":[[0,\"    \"],[5,\"control/md-infotip\",[],[[\"@text\"],[[23,0,[\"placeholder\"]]]]],[0,\"\\n\"]],\"parameters\":[]},null]],\"parameters\":[]},null],[7,\"div\",true],[10,\"class\",\"md-input-input\"],[8],[0,\"\\n  \"],[5,\"input\",[[12,\"class\",[23,0,[\"inputClass\"]]]],[[\"@value\",\"@placeholder\",\"@required\",\"@type\",\"@step\",\"@maxlength\",\"@disabled\",\"@readonly\",\"@change\"],[[23,0,[\"value\"]],[23,0,[\"placeholder\"]],[23,0,[\"required\"]],[23,0,[\"type\"]],[23,0,[\"step\"]],[23,0,[\"maxlength\"]],[23,0,[\"disabled\"]],[23,0,[\"readonly\"]],[23,0,[\"change\"]]]]],[0,\"\\n\\n  \"],[7,\"span\",true],[10,\"class\",\"md-input-error\"],[8],[0,\"\\n\"],[4,\"if\",[[23,0,[\"showErrorMessage\"]]],null,{\"statements\":[[0,\"      \"],[7,\"span\",true],[10,\"class\",\"md-error\"],[8],[0,\"\\n        \"],[1,[28,\"fa-icon\",[\"exclamation-circle\"],null],false],[0,\"\\n        \"],[5,\"ember-tooltip\",[],[[\"@side\",\"@tooltipClass\"],[\"right\",\"ember-tooltip md-tooltip danger\"]],{\"statements\":[[0,\"\\n            \"],[1,[28,\"get\",[[28,\"get\",[[28,\"get\",[[28,\"get\",[[23,0,[\"model\"]],\"validations\"],null],\"attrs\"],null],[23,0,[\"valuePath\"]]],null],\"message\"],null],false],[0,\"\\n        \"]],\"parameters\":[]}],[0,\"\\n      \"],[9],[0,\"\\n\"]],\"parameters\":[]},null],[0,\"\\n\"],[4,\"if\",[[23,0,[\"showWarningMessage\"]]],null,{\"statements\":[[0,\"      \"],[7,\"span\",true],[10,\"class\",\"md-warning\"],[8],[0,\"\\n        \"],[1,[28,\"fa-icon\",[\"exclamation-triangle\"],null],false],[0,\"\\n        \"],[5,\"ember-tooltip\",[],[[\"@side\",\"@tooltipClass\"],[\"right\",\"ember-tooltip md-tooltip warning\"]],{\"statements\":[[0,\"\\n        \"],[1,[28,\"get\",[[28,\"get\",[[28,\"get\",[[28,\"get\",[[23,0,[\"model\"]],\"validations\"],null],\"attrs\"],null],[23,0,[\"valuePath\"]]],null],\"warningMessage\"],null],false],[0,\"\\n        \"]],\"parameters\":[]}],[0,\"\\n      \"],[9],[0,\"\\n\"]],\"parameters\":[]},null],[0,\"  \"],[9],[0,\"\\n\"],[9],[0,\"\\n\"],[14,1],[14,1]],\"hasEval\":false}",
     "meta": {
       "moduleName": "mdeditor/pods/components/input/md-input/template.hbs"
     }
@@ -13299,8 +13313,8 @@
   _exports.default = void 0;
   0; //eaimeta@70e063a35619d71feaimeta@70e063a35619d71f
   var _default = _exports.default = Ember.HTMLBars.template({
-    "id": "zvGMDaX9",
-    "block": "{\"symbols\":[\"&default\"],\"statements\":[[4,\"if\",[[24,[\"label\"]]],null,{\"statements\":[[4,\"if\",[[24,[\"isCollapsible\"]]],null,{\"statements\":[[0,\"    \"],[7,\"label\",false],[12,\"role\",\"button\"],[3,\"action\",[[23,0,[]],[28,\"toggle\",[\"isExpanded\",[23,0,[]]],null]]],[8],[0,\"\\n      \"],[1,[28,\"fa-icon\",[[28,\"if\",[[24,[\"isExpanded\"]],\"caret-up\",\"caret-down\"],null]],null],false],[0,\"\\n      \"],[1,[22,\"label\"],false],[0,\"\\n    \"],[9],[0,\"\\n\"]],\"parameters\":[]},{\"statements\":[[0,\"    \"],[7,\"label\",true],[8],[1,[22,\"label\"],false],[9],[0,\"\\n\"]],\"parameters\":[]}],[4,\"if\",[[24,[\"showInfotip\"]]],null,{\"statements\":[[0,\"    \"],[1,[28,\"control/md-infotip\",null,[[\"text\"],[[24,[\"placeholder\"]]]]],false],[0,\"\\n\"]],\"parameters\":[]},null]],\"parameters\":[]},null],[0,\"\\n\"],[4,\"liquid-if\",[[24,[\"isExpanded\"]]],[[\"enableGrowth\"],[true]],{\"statements\":[[0,\"  \"],[7,\"div\",true],[10,\"class\",\"md-input-input\"],[8],[0,\"\\n    \"],[1,[28,\"textarea\",null,[[\"value\",\"placeholder\",\"required\",\"maxlength\",\"autoresize\",\"rows\",\"max-rows\",\"max-width\",\"max-height\",\"class\"],[[24,[\"value\"]],[24,[\"placeholder\"]],[24,[\"required\"]],[24,[\"maxlength\"]],[24,[\"autoresize\"]],[24,[\"rows\"]],[24,[\"maxrows\"]],[24,[\"maxwidth\"]],[24,[\"maxheight\"]],[24,[\"inputClass\"]]]]],false],[0,\"\\n    \"],[7,\"span\",true],[10,\"class\",\"md-input-error\"],[8],[0,\"\\n\"],[4,\"if\",[[24,[\"showErrorMessage\"]]],null,{\"statements\":[[0,\"        \"],[7,\"span\",true],[10,\"class\",\"md-error\"],[8],[0,\"\\n          \"],[1,[28,\"fa-icon\",[\"exclamation-circle\"],null],false],[0,\"\\n\"],[4,\"ember-tooltip\",null,[[\"side\",\"tooltipClass\"],[\"right\",\"ember-tooltip md-tooltip danger\"]],{\"statements\":[[0,\"            \"],[1,[28,\"get\",[[28,\"get\",[[28,\"get\",[[28,\"get\",[[24,[\"model\"]],\"validations\"],null],\"attrs\"],null],[24,[\"valuePath\"]]],null],\"message\"],null],false],[0,\"\\n\"]],\"parameters\":[]},null],[0,\"        \"],[9],[0,\"\\n\"]],\"parameters\":[]},null],[0,\"\\n\"],[4,\"if\",[[24,[\"showWarningMessage\"]]],null,{\"statements\":[[0,\"        \"],[7,\"span\",true],[10,\"class\",\"md-warning\"],[8],[0,\"\\n          \"],[1,[28,\"fa-icon\",[\"exclamation-triangle\"],null],false],[0,\"\\n\"],[4,\"ember-tooltip\",null,[[\"side\",\"tooltipClass\"],[\"right\",\"ember-tooltip md-tooltip warning\"]],{\"statements\":[[0,\"            \"],[1,[28,\"get\",[[28,\"get\",[[28,\"get\",[[28,\"get\",[[24,[\"model\"]],\"validations\"],null],\"attrs\"],null],[24,[\"valuePath\"]]],null],\"warningMessage\"],null],false],[0,\"\\n\"]],\"parameters\":[]},null],[0,\"        \"],[9],[0,\"\\n\"]],\"parameters\":[]},null],[0,\"    \"],[9],[0,\"\\n  \"],[9],[0,\"\\n  \"],[14,1],[0,\"\\n\"]],\"parameters\":[]},null]],\"hasEval\":false}",
+    "id": "/2azAMnF",
+    "block": "{\"symbols\":[\"&default\"],\"statements\":[[4,\"if\",[[24,[\"label\"]]],null,{\"statements\":[[4,\"if\",[[24,[\"isCollapsible\"]]],null,{\"statements\":[[0,\"    \"],[7,\"label\",false],[12,\"role\",\"button\"],[3,\"action\",[[23,0,[]],[28,\"toggle\",[\"isExpanded\",[23,0,[]]],null]]],[8],[0,\"\\n      \"],[1,[28,\"fa-icon\",[[28,\"if\",[[24,[\"isExpanded\"]],\"caret-up\",\"caret-down\"],null]],null],false],[0,\"\\n      \"],[1,[22,\"label\"],false],[0,\"\\n    \"],[9],[0,\"\\n\"]],\"parameters\":[]},{\"statements\":[[0,\"    \"],[7,\"label\",true],[8],[1,[22,\"label\"],false],[9],[0,\"\\n\"]],\"parameters\":[]}],[4,\"if\",[[24,[\"showInfotip\"]]],null,{\"statements\":[[0,\"    \"],[1,[28,\"control/md-infotip\",null,[[\"text\"],[[24,[\"placeholder\"]]]]],false],[0,\"\\n\"]],\"parameters\":[]},null]],\"parameters\":[]},null],[0,\"\\n\"],[4,\"liquid-if\",[[24,[\"isExpanded\"]]],[[\"enableGrowth\"],[true]],{\"statements\":[[0,\"  \"],[7,\"div\",true],[10,\"class\",\"md-input-input\"],[8],[0,\"\\n    \"],[5,\"textarea\",[[12,\"class\",[23,0,[\"inputClass\"]]]],[[\"@value\",\"@placeholder\",\"@required\",\"@maxlength\",\"@autoresize\",\"@rows\",\"@max-rows\",\"@max-width\",\"@max-height\",\"@readonly\",\"@disabled\"],[[23,0,[\"value\"]],[23,0,[\"placeholder\"]],[23,0,[\"required\"]],[23,0,[\"maxlength\"]],[23,0,[\"autoresize\"]],[23,0,[\"rows\"]],[23,0,[\"maxrows\"]],[23,0,[\"maxwidth\"]],[23,0,[\"maxheight\"]],[23,0,[\"readonly\"]],[23,0,[\"readonly\"]]]]],[0,\"    \"],[7,\"span\",true],[10,\"class\",\"md-input-error\"],[8],[0,\"\\n\"],[4,\"if\",[[24,[\"showErrorMessage\"]]],null,{\"statements\":[[0,\"        \"],[7,\"span\",true],[10,\"class\",\"md-error\"],[8],[0,\"\\n          \"],[1,[28,\"fa-icon\",[\"exclamation-circle\"],null],false],[0,\"\\n\"],[4,\"ember-tooltip\",null,[[\"side\",\"tooltipClass\"],[\"right\",\"ember-tooltip md-tooltip danger\"]],{\"statements\":[[0,\"            \"],[1,[28,\"get\",[[28,\"get\",[[28,\"get\",[[28,\"get\",[[24,[\"model\"]],\"validations\"],null],\"attrs\"],null],[24,[\"valuePath\"]]],null],\"message\"],null],false],[0,\"\\n\"]],\"parameters\":[]},null],[0,\"        \"],[9],[0,\"\\n\"]],\"parameters\":[]},null],[0,\"\\n\"],[4,\"if\",[[24,[\"showWarningMessage\"]]],null,{\"statements\":[[0,\"        \"],[7,\"span\",true],[10,\"class\",\"md-warning\"],[8],[0,\"\\n          \"],[1,[28,\"fa-icon\",[\"exclamation-triangle\"],null],false],[0,\"\\n\"],[4,\"ember-tooltip\",null,[[\"side\",\"tooltipClass\"],[\"right\",\"ember-tooltip md-tooltip warning\"]],{\"statements\":[[0,\"            \"],[1,[28,\"get\",[[28,\"get\",[[28,\"get\",[[28,\"get\",[[24,[\"model\"]],\"validations\"],null],\"attrs\"],null],[24,[\"valuePath\"]]],null],\"warningMessage\"],null],false],[0,\"\\n\"]],\"parameters\":[]},null],[0,\"        \"],[9],[0,\"\\n\"]],\"parameters\":[]},null],[0,\"    \"],[9],[0,\"\\n  \"],[9],[0,\"\\n  \"],[14,1],[0,\"\\n\"]],\"parameters\":[]},null]],\"hasEval\":false}",
     "meta": {
       "moduleName": "mdeditor/pods/components/input/md-textarea/template.hbs"
     }
@@ -19721,7 +19735,7 @@
      * @requires alias
      * @default "alias('model.coverageName')"
      */
-    name: Ember.computed.alias('model.coverageName'),
+    name: Ember.computed.alias('item.coverageName'),
     /**
      * 'description' is the alias for 'coverageDescription' used in the validations for the
      * 'raster/preview' object.
@@ -19731,7 +19745,7 @@
      * @requires alias
      * @default "alias('model.coverageDescription')"
      */
-    description: Ember.computed.alias('model.coverageDescription')
+    description: Ember.computed.alias('item.coverageDescription')
   });
 });
 ;define("mdeditor/pods/components/object/md-raster/preview/template", ["exports"], function (_exports) {
@@ -19743,8 +19757,8 @@
   _exports.default = void 0;
   0; //eaimeta@70e063a35619d71feaimeta@70e063a35619d71f
   var _default = _exports.default = Ember.HTMLBars.template({
-    "id": "867Pf/OE",
-    "block": "{\"symbols\":[],\"statements\":[[7,\"form\",true],[10,\"class\",\"form-horizontal\"],[8],[0,\"\\n  \"],[7,\"div\",true],[10,\"class\",\"form-group\"],[8],[0,\"\\n    \"],[7,\"label\",true],[10,\"class\",\"col-lg-3\"],[8],[0,\"Raster Name\"],[9],[0,\"\\n    \"],[1,[28,\"input/md-input\",null,[[\"class\",\"placeholder\",\"profilePath\",\"showValidations\",\"value\"],[\"col-lg-9\",\"The name(title) of the raster.\",[28,\"concat\",[[24,[\"profilePath\"]],\".coverageName\"],null],true,[24,[\"model\",\"coverageName\"]]]]],false],[0,\"\\n  \"],[9],[0,\"\\n  \"],[7,\"div\",true],[10,\"class\",\"form-group\"],[8],[0,\"\\n    \"],[7,\"label\",true],[10,\"class\",\"col-lg-3\"],[8],[0,\"Raster Description\"],[9],[0,\"\\n    \"],[1,[28,\"input/md-textarea\",null,[[\"class\",\"placeholder\",\"profilePath\",\"showValidations\",\"value\"],[\"col-lg-9\",\"A description of the raster.\",[28,\"concat\",[[24,[\"profilePath\"]],\".coverageDescription\"],null],true,[24,[\"model\",\"coverageDescription\"]]]]],false],[0,\"\\n  \"],[9],[0,\"\\n\"],[9]],\"hasEval\":false}",
+    "id": "myW6Ql/U",
+    "block": "{\"symbols\":[],\"statements\":[[7,\"form\",true],[10,\"class\",\"form-horizontal\"],[8],[0,\"\\n  \"],[7,\"div\",true],[10,\"class\",\"form-group\"],[8],[0,\"\\n    \"],[7,\"label\",true],[10,\"class\",\"col-lg-3\"],[8],[0,\"Raster Name\"],[9],[0,\"\\n    \"],[1,[28,\"input/md-input\",null,[[\"class\",\"placeholder\",\"profilePath\",\"showValidations\",\"value\",\"readonly\"],[\"col-lg-9\",\"The name(title) of the raster.\",[28,\"concat\",[[24,[\"profilePath\"]],\".coverageName\"],null],true,[24,[\"item\",\"coverageName\"]],true]]],false],[0,\"\\n  \"],[9],[0,\"\\n  \"],[7,\"div\",true],[10,\"class\",\"form-group\"],[8],[0,\"\\n    \"],[7,\"label\",true],[10,\"class\",\"col-lg-3\"],[8],[0,\"Raster Description\"],[9],[0,\"\\n    \"],[1,[28,\"input/md-textarea\",null,[[\"class\",\"placeholder\",\"profilePath\",\"showValidations\",\"value\",\"readonly\"],[\"col-lg-9\",\"A description of the raster.\",[28,\"concat\",[[24,[\"profilePath\"]],\".coverageDescription\"],null],true,[24,[\"item\",\"coverageDescription\"]],true]]],false],[0,\"\\n  \"],[9],[0,\"\\n\"],[9]],\"hasEval\":false}",
     "meta": {
       "moduleName": "mdeditor/pods/components/object/md-raster/preview/template.hbs"
     }
@@ -20164,8 +20178,8 @@
   _exports.default = void 0;
   0; //eaimeta@70e063a35619d71feaimeta@70e063a35619d71f
   var _default = _exports.default = Ember.HTMLBars.template({
-    "id": "ycX57kTq",
-    "block": "{\"symbols\":[\"editing\",\"editing\",\"&default\"],\"statements\":[[1,[28,\"input/md-codelist-multi\",null,[[\"value\",\"create\",\"tooltip\",\"icon\",\"mdCodeName\",\"closeOnSelect\",\"placeholder\",\"label\",\"profilePath\"],[[24,[\"model\",\"spatialRepresentationType\"]],true,true,false,\"spatialRepresentation\",false,\"Select method used to represent geographic information\",\"Spatial Representation Type\",[28,\"concat\",[[24,[\"profilePath\"]],\".spatialRepresentationType\"],null]]]],false],[0,\"\\n\\n\"],[4,\"object/md-object-table\",null,[[\"items\",\"header\",\"buttonText\",\"ellipsis\",\"profilePath\",\"attributes\"],[[24,[\"model\",\"spatialReferenceSystem\"]],\"Spatial Reference System\",\"Add Reference System\",true,[28,\"concat\",[[24,[\"profilePath\"]],\".spatialReferenceSystem\"],null],\"referenceSystemType,referenceSystemIdentifier.identifier\"]],{\"statements\":[[0,\"  \"],[1,[28,\"object/md-srs\",null,[[\"model\",\"profilePath\"],[[23,2,[]],[28,\"concat\",[[24,[\"profilePath\"]],\".spatialReferenceSystem\"],null]]]],false],[0,\"\\n\"]],\"parameters\":[2]},null],[0,\"\\n\"],[4,\"object/md-object-table\",null,[[\"items\",\"header\",\"buttonText\",\"ellipsis\",\"profilePath\",\"attributes\"],[[24,[\"model\",\"spatialResolution\"]],\"Spatial Resolution\",\"Add Spatial Resolution\",true,[28,\"concat\",[[24,[\"profilePath\"]],\".spatialResolution\"],null],\"scaleFactor,levelOfDetail,measure.type\"]],{\"statements\":[[0,\"  \"],[1,[28,\"object/md-spatial-resolution\",null,[[\"model\",\"profilePath\"],[[23,1,[]],[28,\"concat\",[[24,[\"profilePath\"]],\".spatialResolution\"],null]]]],false],[0,\"\\n\"]],\"parameters\":[1]},null],[0,\"\\n\\n\"],[1,[28,\"object/md-objectroute-table\",null,[[\"attributes\",\"items\",\"header\",\"shadow\",\"buttonText\",\"ellipsis\",\"previewTemplate\",\"editItem\",\"verticalButtons\",\"profilePath\",\"hideIndex\",\"condensed\",\"editOnAdd\",\"data-spy\",\"addSubbar\"],[\" \",[24,[\"model\",\"coverageDescription\"]],\"Raster Description\",true,\"Add Raster Description\",false,\"object/md-raster/preview\",[28,\"action\",[[23,0,[]],\"editRaster\"],null],true,[28,\"concat\",[[24,[\"profilePath\"]],\".coverageDescription\"],null],false,false,false,\"Raster Descriptions\",\"md-subbar-extra\"]]],false],[0,\"\\n\"],[14,3]],\"hasEval\":false}",
+    "id": "C8kyZIQy",
+    "block": "{\"symbols\":[\"editing\",\"editing\",\"&default\"],\"statements\":[[1,[28,\"input/md-codelist-multi\",null,[[\"value\",\"create\",\"tooltip\",\"icon\",\"mdCodeName\",\"closeOnSelect\",\"placeholder\",\"label\",\"profilePath\"],[[24,[\"model\",\"spatialRepresentationType\"]],true,true,false,\"spatialRepresentation\",false,\"Select method used to represent geographic information\",\"Spatial Representation Type\",[28,\"concat\",[[24,[\"profilePath\"]],\".spatialRepresentationType\"],null]]]],false],[0,\"\\n\\n\"],[4,\"object/md-object-table\",null,[[\"items\",\"header\",\"buttonText\",\"ellipsis\",\"profilePath\",\"attributes\"],[[24,[\"model\",\"spatialReferenceSystem\"]],\"Spatial Reference System\",\"Add Reference System\",true,[28,\"concat\",[[24,[\"profilePath\"]],\".spatialReferenceSystem\"],null],\"referenceSystemType,referenceSystemIdentifier.identifier\"]],{\"statements\":[[0,\"  \"],[1,[28,\"object/md-srs\",null,[[\"model\",\"profilePath\"],[[23,2,[]],[28,\"concat\",[[24,[\"profilePath\"]],\".spatialReferenceSystem\"],null]]]],false],[0,\"\\n\"]],\"parameters\":[2]},null],[0,\"\\n\"],[4,\"object/md-object-table\",null,[[\"items\",\"header\",\"buttonText\",\"ellipsis\",\"profilePath\",\"attributes\"],[[24,[\"model\",\"spatialResolution\"]],\"Spatial Resolution\",\"Add Spatial Resolution\",true,[28,\"concat\",[[24,[\"profilePath\"]],\".spatialResolution\"],null],\"scaleFactor,levelOfDetail,measure.type\"]],{\"statements\":[[0,\"  \"],[1,[28,\"object/md-spatial-resolution\",null,[[\"model\",\"profilePath\"],[[23,1,[]],[28,\"concat\",[[24,[\"profilePath\"]],\".spatialResolution\"],null]]]],false],[0,\"\\n\"]],\"parameters\":[1]},null],[0,\"\\n\"],[1,[28,\"object/md-objectroute-table\",null,[[\"attributes\",\"items\",\"header\",\"shadow\",\"buttonText\",\"ellipsis\",\"previewTemplate\",\"editItem\",\"verticalButtons\",\"profilePath\",\"hideIndex\",\"condensed\",\"editOnAdd\",\"routeParams\",\"scrollToId\",\"data-spy\",\"addSubbar\"],[\" \",[24,[\"model\",\"coverageDescription\"]],\"Raster Description\",true,\"Add Raster Description\",false,\"object/md-raster/preview\",[28,\"action\",[[23,0,[]],\"editRaster\"],null],true,[28,\"concat\",[[24,[\"profilePath\"]],\".coverageDescription\"],null],false,false,true,[24,[\"index\"]],[28,\"concat\",[\"md-raster-\",[24,[\"rasterId\"]]],null],\"Raster Descriptions\",\"md-subbar-extra\"]]],false],[0,\"\\n\"],[14,3]],\"hasEval\":false}",
     "meta": {
       "moduleName": "mdeditor/pods/components/object/md-spatial-info/template.hbs"
     }
@@ -21412,17 +21426,14 @@
   var _default = _exports.default = Ember.Route.extend(_scrollTo.default, {
     flashMessages: Ember.inject.service(),
     pouch: Ember.inject.service(),
-    async model(params) {
-      // Finding pouch-contact records needs to happen first
-      // to load them into the store as related contact records
-      await this.store.findAll('pouch-contact');
+    model(params) {
       return this.store.peekRecord('contact', params.contact_id);
     },
     actions: {
       saveContact: async function () {
         const model = this.currentRouteModel();
         await model.save();
-        await this.pouch.updatePouchRecord(model.pouchContact, model);
+        await this.pouch.updatePouchRecord(model);
         this.flashMessages.success(`Saved Contact: ${model.get('title')}`);
       },
       destroyContact: function () {
@@ -23079,7 +23090,6 @@
       saveDictionary: async function () {
         const model = this.currentRouteModel();
         await model.save();
-        await this.pouch.updatePouchRecord(model.pouchDictionary, model);
         this.flashMessages.success(`Saved Dictionary: ${model.get('title')}`);
       },
       cancelDictionary: function () {
@@ -23168,10 +23178,7 @@
   0; //eaimeta@70e063a35619d71f0,"@ember/service",0,"@ember/routing/route",0,"ember-copy"eaimeta@70e063a35619d71f
   var _default = _exports.default = Ember.Route.extend({
     flashMessages: Ember.inject.service(),
-    async model(params) {
-      // Finding pouch-dictionary records needs to happen first
-      // to load them into the store as related dictionary records
-      await this.store.findAll('pouch-dictionary');
+    model(params) {
       return this.store.peekRecord('dictionary', params.dictionary_id);
     },
     afterModel(model) {
@@ -23359,6 +23366,9 @@
             // Update the item's 'json' string
             item.attributes.json = JSON.stringify(jsonData);
           }
+
+          // Remove all PouchDB relationships
+          delete item.relationships;
           return item;
         });
 
@@ -23502,11 +23512,18 @@
         case 'records':
           return Ember.getWithDefault(json, 'metadata.resourceInfo.citation.title', 'NO TITLE');
         case 'dictionaries':
-          return Ember.getWithDefault(json, 'dataDictionary.citation.title', 'NO TITLE');
+          // Check both possible paths for the dictionary title
+          return Ember.getWithDefault(json, 'dataDictionary.citation.title',
+          // If not found, try the direct path
+          Ember.getWithDefault(json, 'citation.title', 'NO TITLE'));
         case 'contacts':
           return json.name || 'NO NAME';
         case 'schemas':
           return record.attributes.title || 'NO TITLE';
+        case 'custom-profiles':
+          return record.attributes.title || 'NO TITLE';
+        case 'profiles':
+          return record.attributes.alias || 'NO TITLE';
         default:
           return 'N/A';
       }
@@ -23531,6 +23548,13 @@
               case 'dictionaries':
                 if (json.dataDictionary.dictionaryId) {
                   Ember.set(this, 'id', json.dataDictionary.dictionaryId.substring(0, 8));
+                } else {
+                  let uuid = (0, _uuid.v4)();
+                  let shortId = uuid.split('-')[0];
+                  json.dataDictionary.dictionaryId = uuid;
+                  Ember.set(this, 'dictionaryId', uuid);
+                  Ember.set(this, 'id', shortId);
+                  this.attributes.json = JSON.stringify(json);
                 }
                 break;
               case 'records':
@@ -23543,8 +23567,7 @@
         },
         attributes: Ember.computed(function () {
           return {
-            json: null //,
-            //date-updated: '2017-05-18T21:21:34.446Z'
+            json: null
           };
         }),
         type: null
@@ -23561,7 +23584,7 @@
       }
       if (Ember.get(json, 'metadata.metadataInfo.metadataIdentifier') === undefined) {
         json.metadata.metadataInfo.metadataIdentifier = {
-          identifier: uuidV4(),
+          identifier: (0, _uuid.v4)(),
           namespace: 'urn:uuid'
         };
       }
@@ -23619,7 +23642,6 @@
         if (!map[item.type]) {
           map[item.type] = [];
         }
-        console.log(item);
         item.meta = {};
         item.meta.title = this.getTitle(item);
         item.meta.icon = this.icons[item.type];
@@ -23637,14 +23659,28 @@
         throw new Error(`${file.name} is not a valid mdEditor file.`);
       }
 
-      // Ensure dictionaryId is inside dataDictionary
+      // Ensure dictionaries have the correct structure
       json.data.forEach(record => {
         if (record.type === 'dictionaries' && record.attributes.json) {
           let jsonData = JSON.parse(record.attributes.json);
-          if (jsonData.dataDictionary && record.attributes.dictionaryId && !jsonData.dataDictionary.dictionaryId) {
-            Ember.set(jsonData.dataDictionary, 'dictionaryId', record.attributes.dictionaryId);
-            delete record.attributes.dictionaryId;
+
+          // Case 1: dictionaryId is at root but should be in dataDictionary
+          if (jsonData.dataDictionary && jsonData.dictionaryId && !jsonData.dataDictionary.dictionaryId) {
+            Ember.set(jsonData.dataDictionary, 'dictionaryId', jsonData.dictionaryId);
+            delete jsonData.dictionaryId;
             record.attributes.json = JSON.stringify(jsonData);
+          }
+
+          // Case 2: The entire dictionary structure is at root level (no dataDictionary wrapper)
+          // Check if it has dictionary properties but no dataDictionary property
+          else if (!jsonData.dataDictionary && (jsonData.citation || jsonData.dictionaryId || jsonData.entity || jsonData.domain)) {
+            // Create a dataDictionary wrapper and move all properties inside it
+            const newData = {
+              dataDictionary: {
+                ...jsonData
+              }
+            };
+            record.attributes.json = JSON.stringify(newData);
           }
         }
       });
@@ -23653,10 +23689,6 @@
     //TODO: fix propertyName id for dataDictionary
     columns: Ember.computed(function () {
       let route = this;
-
-      // Log the route and any relevant data
-      console.log('Route:', route);
-      console.log('Current Route Model:', route.currentRouteModel());
       return [{
         propertyName: 'meta.title',
         title: 'Title'
@@ -23805,6 +23837,13 @@
         let data = {
           data: this.currentRouteModel().get('data').filterBy('meta.export').rejectBy('type', 'settings')
         };
+
+        // Remove all PouchDB relationships
+        data.data.forEach(record => {
+          if (record.relationships) {
+            delete record.relationships;
+          }
+        });
         store.importData(data, {
           truncate: !this.currentRouteModel().get('merge'),
           json: false
@@ -27231,7 +27270,6 @@
       saveRecord: async function () {
         const model = this.currentRouteModel();
         await model.save();
-        await this.pouch.updatePouchRecord(model.pouchRecord, model);
         this.flashMessages.success(`Saved Record: ${model.get('title')}`);
       },
       cancelRecord: function () {
@@ -27942,10 +27980,7 @@
       };
       this.set('breadCrumb', crumb);
     },
-    async model(params) {
-      // Finding pouch-record records needs to happen first
-      // to load them into the store as related record records
-      await this.store.findAll('pouch-record');
+    model(params) {
       return this.store.peekRecord('record', params.record_id);
     },
     actions: {
@@ -30014,8 +30049,12 @@
     },
     async createNewCustomProfile(profileConfig) {
       const newProfile = this.store.createRecord('custom-profile');
-      newProfile.set('config', profileConfig);
+      newProfile.set('uri', profileConfig.uri || null);
+      newProfile.set('alias', profileConfig.title || '');
+      newProfile.set('title', profileConfig.title);
+      newProfile.set('description', profileConfig.description || '');
       newProfile.set('profileId', profileConfig.identifier);
+      newProfile.set('thesauri', profileConfig.thesauri || []);
       await newProfile.save();
     },
     async loadCustomProfilesFromUrl(url) {
@@ -31685,9 +31724,27 @@
         this.flashMessages.danger(`Error importing ${errorCount} ${meta.list}`);
       }
     }
-    async updatePouchRecord(pouchRecord, relatedRecord) {
-      pouchRecord.json = relatedRecord.cleanJson;
-      return await pouchRecord.save();
+    async updatePouchRecord(relatedRecord) {
+      let pouchRecord;
+      switch (relatedRecord.constructor.modelName) {
+        case POUCH_TYPES.RECORD:
+          await this.store.findAll('pouch-record');
+          pouchRecord = relatedRecord.pouchRecord;
+          break;
+        case POUCH_TYPES.CONTACT:
+          await this.store.findAll('pouch-contact');
+          pouchRecord = relatedRecord.pouchContact;
+          break;
+        case POUCH_TYPES.DICTIONARY:
+          await this.store.findAll('pouch-dictionary');
+          pouchRecord = relatedRecord.pouchDictionary;
+          break;
+      }
+      // Only update the pouch record if one exists
+      if (!!pouchRecord) {
+        pouchRecord.json = relatedRecord.cleanJson;
+        return await pouchRecord.save();
+      }
     }
     async deletePouchRecord(pouchRecord) {
       // First delete pouch record
@@ -33496,7 +33553,7 @@ catch(err) {
 
 ;
           if (!runningTests) {
-            require("mdeditor/app")["default"].create({"repository":"https://github.com/adiwg/mdEditor","defaultProfileId":"org.adiwg.profile.full","name":"mdeditor","version":"1.3.0-rc.1+c10f9172"});
+            require("mdeditor/app")["default"].create({"repository":"https://github.com/adiwg/mdEditor","defaultProfileId":"org.adiwg.profile.full","name":"mdeditor","version":"1.3.0-rc.3+a88186bc"});
           }
         
 //# sourceMappingURL=mdeditor.map

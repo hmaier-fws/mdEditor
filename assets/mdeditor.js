@@ -5756,6 +5756,7 @@
      * @return {Array}
      */
     applyTemplateArray(propertyName, defaults) {
+      console.log(propertyName);
       let property = this.get(propertyName);
       let Template = this.templateClass;
       if (!Ember.isArray(property)) {
@@ -5771,6 +5772,32 @@
         }));
       }
       return property;
+    },
+    // TODO: 'This is a hack to get the template to work with the object-template mixin.  It is not a good solution.'
+    applyObjectTemplateArray(propertyName, defaults) {
+      let property = this.get(propertyName);
+      if (Ember.isArray(property)) {
+        let Template = this.templateClass;
+        if (Template) {
+          let owner = Ember.getOwner(this);
+          Ember.run.once(this, () => {
+            property.forEach((item, idx, items) => {
+              //items.removeAt(idx);
+
+              let newItem = Ember.assign(Template.create(owner.ownerInjection(), defaults || {}), item);
+
+              //items.insertAt(idx, newItem);
+              items.set(`${idx}`, newItem);
+            });
+            this.notifyPropertyChange(propertyName);
+          });
+        }
+      } else {
+        Ember.run.once(this, () => {
+          this.set(propertyName, Ember.A());
+        });
+      }
+      return this.get(propertyName);
     }
   });
 });
@@ -14880,7 +14907,7 @@
     didReceiveAttrs() {
       this._super(...arguments);
       if (this.value) {
-        this.applyTemplateArray('value');
+        this.applyObjectTemplateArray('value');
       }
     },
     attributeBindings: ['data-spy'],
@@ -19831,12 +19858,14 @@
   });
   _exports.default = void 0;
   0; //eaimeta@70e063a35619d71f0,"@ember/component",0,"@ember/object",0,"ember-cp-validations"eaimeta@70e063a35619d71f
-  const Validations = (0, _emberCpValidations.buildValidations)({
-    'type': [(0, _emberCpValidations.validator)('presence', {
-      presence: true,
-      ignoreBlank: true
-    })]
-  });
+  // const Validations = buildValidations({
+  //   'type': [
+  //     validator('presence', {
+  //       presence: true,
+  //       ignoreBlank: true
+  //     })
+  //   ]
+  // });
   var _default = _exports.default = Ember.Component.extend({
     /**
      * mdEditor class for input and edit of mdJSON 'phone' object.
@@ -19855,7 +19884,7 @@
      * @property templateClass
      * @type Ember.Object
      */
-    templateClass: Ember.Object.extend(Validations, {
+    templateClass: Ember.Object.extend({
       init() {
         this._super(...arguments);
       }
@@ -33553,7 +33582,7 @@ catch(err) {
 
 ;
           if (!runningTests) {
-            require("mdeditor/app")["default"].create({"repository":"https://github.com/adiwg/mdEditor","defaultProfileId":"org.adiwg.profile.full","name":"mdeditor","version":"1.3.0-rc.3+a88186bc"});
+            require("mdeditor/app")["default"].create({"repository":"https://github.com/adiwg/mdEditor","defaultProfileId":"org.adiwg.profile.full","name":"mdeditor","version":"1.3.0-rc.4+8e913c9b"});
           }
         
 //# sourceMappingURL=mdeditor.map

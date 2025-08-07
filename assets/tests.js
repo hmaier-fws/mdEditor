@@ -1866,7 +1866,7 @@ define("mdeditor/tests/integration/components/sb-publisher-test", ["@ember/test-
       });
       this.set("settings", Ember.Object.create({
         data: {
-          publishOptions: {}
+          publishOptions: []
         }
       }));
       this.set("records", (0, _createRecord.default)(3));

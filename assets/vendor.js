@@ -165673,11 +165673,13 @@ define("ember-resolver/features", [], function () {
     layout: _sbPublisher.default,
     init() {
       this._super(...arguments);
-      let settings = this.get("settings.data.publishOptions");
-      let config = this.get("config");
-      this.set("treeRoot", Ember.Object.create({
-        label: "ScienceBase Default",
-        icon: "globe",
+      let publishOptions = this.get('settings.data.publishOptions') || [];
+      // Support both legacy 'catalog' field and new 'publisher' field
+      let settings = publishOptions.find(option => option.catalog === 'ScienceBase' || option.publisher === 'ScienceBase') || {};
+      let config = this.get('config');
+      this.set('treeRoot', Ember.Object.create({
+        label: 'ScienceBase Default',
+        icon: 'globe',
         checkable: false,
         isExpanded: true,
         draggable: false,
@@ -165686,11 +165688,11 @@ define("ember-resolver/features", [], function () {
         hideToggle: true,
         hideCheck: true,
         isRoot: true,
-        nodeClass: "sb-tree-root",
-        sbId: Ember.getWithDefault(settings, "sb-defaultParent", Ember.get(config, "defaultParent")),
+        nodeClass: 'sb-tree-root',
+        sbId: Ember.getWithDefault(settings, 'sb-defaultParent', Ember.get(config, 'defaultParent')),
         config: config,
         willDestroy() {
-          let children = this.get("children");
+          let children = this.get('children');
           if (children) {
             children.forEach(itm => {
               itm.destroy();
@@ -165699,33 +165701,33 @@ define("ember-resolver/features", [], function () {
         }
       }));
     },
-    classNames: ["sb-publisher"],
+    classNames: ['sb-publisher'],
     store: Ember.inject.service(),
     settings: Ember.inject.service(),
-    publishService: Ember.inject.service("publish"),
-    config: Ember.computed("publishService", function () {
-      return this.get("publishService.catalogs").findBy("name", "ScienceBase");
+    publishService: Ember.inject.service('publish'),
+    config: Ember.computed('publishService', function () {
+      return this.get('publishService.catalogs').findBy('name', 'ScienceBase');
     }),
-    tokenService: Ember.inject.service("token"),
+    tokenService: Ember.inject.service('token'),
     selected: Ember.A(),
-    publishable: Ember.computed("selected", "selected.[]", "isPublishing", function () {
-      if (this.get("isPublishing")) {
+    publishable: Ember.computed('selected', 'selected.[]', 'isPublishing', function () {
+      if (this.get('isPublishing')) {
         return [];
       }
-      return this.get("selected").filter(itm => {
-        let path = Ember.get(itm, "path");
-        let length = Ember.get(path, "length");
-        return itm.get("sbParentId") || length < 3 || path.objectAt(length - 2).get("isSelected");
+      return this.get('selected').filter(itm => {
+        let path = Ember.get(itm, 'path');
+        let length = Ember.get(path, 'length');
+        return itm.get('sbParentId') || length < 3 || path.objectAt(length - 2).get('isSelected');
       });
     }),
-    canPublish: Ember.computed.bool("publishable.length"),
-    records: Ember.computed("store", function () {
-      return this.get("store").peekAll("record").rejectBy("hasSchemaErrors");
+    canPublish: Ember.computed.bool('publishable.length'),
+    records: Ember.computed('store', function () {
+      return this.get('store').peekAll('record').rejectBy('hasSchemaErrors');
     }),
-    hasToken: Ember.computed.bool("tokenService.token"),
-    model: Ember.computed("records.@each.recordId", "records.@each.parentIds", function () {
-      let all = this.get("records");
-      let records = all.rejectBy("hasParent");
+    hasToken: Ember.computed.bool('tokenService.token'),
+    model: Ember.computed('records.@each.recordId', 'records.@each.parentIds', function () {
+      let all = this.get('records');
+      let records = all.rejectBy('hasParent');
       if (Ember.isEmpty(records)) {
         return null;
       }
@@ -165734,73 +165736,75 @@ define("ember-resolver/features", [], function () {
         let children = node.addChildren(all);
         if (children) {
           children.forEach(itm => {
-            Ember.set(itm, "parentNode", node);
+            Ember.set(itm, 'parentNode', node);
             itm.addChildren(all);
           });
         }
         return node;
       });
-      let treeRoot = this.get("treeRoot");
-      treeRoot.set("children", tree);
+      let treeRoot = this.get('treeRoot');
+      treeRoot.set('children', tree);
       return [treeRoot];
     }),
     willDestroyElement() {
       this._super(...arguments);
-      let selected = this.get("selected");
-      selected.forEach(itm => Ember.set(itm, "isSelected", false));
+      let selected = this.get('selected');
+      selected.forEach(itm => Ember.set(itm, 'isSelected', false));
       selected.clear();
-      this.get("treeRoot").destroy();
+      this.get('treeRoot').destroy();
     },
     createNode(rec) {
-      let config = this.get("config");
-      let settings = this.get("settings.data.publishOptions");
+      let config = this.get('config');
+      let publishOptions = this.get('settings.data.publishOptions') || [];
+      // Support both legacy 'catalog' field and new 'publisher' field
+      let settings = publishOptions.find(option => option.catalog === 'ScienceBase' || option.publisher === 'ScienceBase') || {};
       Ember.setProperties(config, {
-        defaultParent: Ember.getWithDefault(settings, "sb-defaultParent", Ember.get(config, "defaultParent")),
-        defaultCommunity: Ember.get(settings, "sb-defaultCommunity"),
-        defaultOrganization: Ember.get(settings, "sb-defaultOrganization")
+        defaultParent: Ember.getWithDefault(settings, 'sb-defaultParent', Ember.get(config, 'defaultParent')),
+        defaultCommunity: Ember.get(settings, 'sb-defaultCommunity'),
+        defaultOrganization: Ember.get(settings, 'sb-defaultOrganization')
       });
       return _sbTreeNode.default.create({
         _record: rec,
-        config: this.get("config"),
+        config: this.get('config'),
         settings: settings
       });
     },
     actions: {
       hash(val) {
-        this.set("password", btoa(val));
+        this.set('password', btoa(val));
       },
       publish() {
-        let selected = this.get("publishable").filter(itm => Ember.get(itm, "path.length") < 3 || !Ember.get(itm, "parentNode.isSelected"));
-        this.set("isPublishing", true);
+        let selected = this.get('publishable').filter(itm => Ember.get(itm, 'path.length') < 3 || !Ember.get(itm, 'parentNode.isSelected'));
+        this.set('isPublishing', true);
         const promises = selected.map(record => {
-          Ember.set(record, "isLoading", true);
+          Ember.set(record, 'isLoading', true);
           return record.publish(this.tokenService.token);
         });
         Ember.RSVP.allSettled(promises).then(() => {
-          Ember.set(this, "isPublishing", false);
+          Ember.set(this, 'isPublishing', false);
         }, () => {
-          Ember.get(this, "flashMessages").danger("Publishing error!");
+          Ember.get(this, 'flashMessages').danger('Publishing error!');
         });
       },
       addToken() {
         const token = this.tokenService.addToken(this.rawToken);
         if (!token) {
-          Ember.set(this, "rawToken", null);
+          Ember.set(this, 'rawToken', null);
         }
       },
       selectRecord(nodeModel, path) {
-        let selected = this.get("selected");
-        let target = selected.findBy("id", Ember.get(nodeModel, "id"));
-        if (Ember.get(nodeModel, "isSelected") && target === undefined && !nodeModel.get("notSelectable")) {
-          Ember.set(nodeModel, "path", path);
+        let selected = this.get('selected');
+        let target = selected.findBy('id', Ember.get(nodeModel, 'id'));
+        if (Ember.get(nodeModel, 'isSelected') && target === undefined && !nodeModel.get('notSelectable')) {
+          Ember.set(nodeModel, 'path', path);
           selected.pushObject(nodeModel);
         } else {
           selected.removeObject(target);
-          Ember.set(nodeModel, "path", []);
-          let nodeChildren = nodeModel.get("children") || [];
+          Ember.set(nodeModel, 'path', []);
+          let nodeChildren = nodeModel.get('children') || [];
           nodeChildren.forEach(function (itm) {
-            if (itm.get("notSelectable") && itm.get("isSelected")) {
-              Ember.set(itm, "isSelected", false);
+            if (itm.get('notSelectable') && itm.get('isSelected')) {
+              Ember.set(itm, 'isSelected', false);
               this.actions.selectRecord.call(this, itm);
             }
           }, this);
@@ -165981,8 +165985,8 @@ define("ember-resolver/features", [], function () {
   });
   _exports.default = void 0;
   var _default = _exports.default = Ember.HTMLBars.template({
-    "id": "8oUN3w4U",
-    "block": "{\"symbols\":[],\"statements\":[[7,\"div\",true],[10,\"class\",\"form\"],[8],[0,\"\\n  \"],[1,[28,\"input/md-input\",null,[[\"label\",\"value\",\"placeholder\",\"change\"],[\"Default Parent Identifier\",[24,[\"model\",\"sb-defaultParent\"]],\"Enter the identifier for the default Parent item.\",[24,[\"save\"]]]]],false],[0,\"\\n  \"],[1,[28,\"input/md-input\",null,[[\"label\",\"value\",\"placeholder\",\"change\"],[\"Publishing Endpoint\",[24,[\"model\",\"sb-publishEndpoint\"]],\"Enter the endpoint for a publishing service.\",[24,[\"save\"]]]]],false],[0,\"\\n\"],[9],[0,\"\\n\"]],\"hasEval\":false}",
+    "id": "P8FmR+IN",
+    "block": "{\"symbols\":[\"@save\",\"@model\"],\"statements\":[[7,\"div\",true],[10,\"class\",\"form\"],[8],[0,\"\\n  \"],[1,[28,\"input/md-input\",null,[[\"label\",\"value\",\"placeholder\",\"change\"],[\"Default Parent Identifier\",[24,[\"model\",\"sb-defaultParent\"]],\"Enter the identifier for the default Parent item.\",[24,[\"save\"]]]]],false],[0,\"\\n  \"],[1,[28,\"input/md-input\",null,[[\"label\",\"value\",\"placeholder\",\"change\"],[\"Publisher Endpoint\",[23,2,[\"publisherEndpoint\"]],\"Enter the main endpoint URL for the ScienceBase publisher.\",[23,1,[]]]]],false],[0,\"\\n\"],[9],[0,\"\\n\"]],\"hasEval\":false}",
     "meta": {
       "moduleName": "mdeditor-sciencebase/templates/components/sb-settings.hbs"
     }
@@ -166026,14 +166030,14 @@ define("ember-resolver/features", [], function () {
   });
   _exports.default = void 0;
   var _default = _exports.default = {
-    name: "ScienceBase",
-    route: "sciencebase",
-    description: "ScienceBase is a collaborative scientific data and information management platform",
-    icon: "globe",
-    rootURI: "https://api.sciencebase.gov/sbmd-service/",
-    rootItemURL: "https://www.sciencebase.gov/catalog/item/",
-    defaultParent: "59ef8a34e4b0220bbd98d449",
-    settingsComponent: "sb-settings"
+    name: 'ScienceBase',
+    route: 'sciencebase',
+    description: 'ScienceBase is a collaborative scientific data and information management platform',
+    icon: 'globe',
+    // rootURI: "https://api.sciencebase.gov/sbmd-service/",
+    rootItemURL: 'https://www.sciencebase.gov/catalog/item/',
+    defaultParent: '59ef8a34e4b0220bbd98d449',
+    settingsComponent: 'sb-settings'
   };
 });
 ;define("mdeditor-sciencebase/utils/sb-tree-node", ["exports", "moment", "jquery"], function (_exports, _moment, _jquery) {
@@ -166045,84 +166049,84 @@ define("ember-resolver/features", [], function () {
   _exports.default = void 0;
   var _default = _exports.default = Ember.Object.extend({
     _record: null,
-    label: Ember.computed.alias("_record.title"),
-    id: Ember.computed.alias("_record.recordId"),
-    uuid: Ember.computed.alias("id").readOnly(),
-    identifier: Ember.computed.alias("id").readOnly(),
-    icon: Ember.computed.alias("_record.icon"),
-    xhrError: Ember.computed.alias("_record._xhrError"),
-    isSelected: Ember.computed.alias("_record._isSelectedPub"),
-    type: Ember.computed.alias("_record.defaultType"),
-    hideCheck: Ember.computed.bool("_record.hasParent"),
+    label: Ember.computed.alias('_record.title'),
+    id: Ember.computed.alias('_record.recordId'),
+    uuid: Ember.computed.alias('id').readOnly(),
+    identifier: Ember.computed.alias('id').readOnly(),
+    icon: Ember.computed.alias('_record.icon'),
+    xhrError: Ember.computed.alias('_record._xhrError'),
+    isSelected: Ember.computed.alias('_record._isSelectedPub'),
+    type: Ember.computed.alias('_record.defaultType'),
+    hideCheck: Ember.computed.bool('_record.hasParent'),
     isLoading: false,
     isExpanded: true,
-    notSelectable: Ember.computed("sbId", "isSelected", "parentNode", "parentNode.isSelected", function () {
-      let parent = this.get("parentNode");
+    notSelectable: Ember.computed('sbId', 'isSelected', 'parentNode', 'parentNode.isSelected', function () {
+      let parent = this.get('parentNode');
       if (!Ember.isPresent(parent)) {
         return false;
       }
-      if (parent.get("isSelected")) {
+      if (parent.get('isSelected')) {
         return false;
       }
-      if (this.get("sbParentId")) {
+      if (this.get('sbParentId')) {
         return false;
       }
       return true;
     }),
-    sortOrder: Ember.computed("config.defaultParent", "sbParentId", function () {
-      let parent = this.get("sbParentId");
-      return !parent || this.get("config.defaultParent") === parent ? 0 : 1;
+    sortOrder: Ember.computed('config.defaultParent', 'sbParentId', function () {
+      let parent = this.get('sbParentId');
+      return !parent || this.get('config.defaultParent') === parent ? 0 : 1;
     }),
-    nodeClass: Ember.computed("sortOrder", function () {
-      return this.get("sortOrder") ? "tree-node-unrooted" : "tree-node-rooted";
+    nodeClass: Ember.computed('sortOrder', function () {
+      return this.get('sortOrder') ? 'tree-node-unrooted' : 'tree-node-rooted';
     }),
     draggable: true,
-    definition: Ember.computed("_record.json.metadata.resourceInfo.abstract", function () {
-      return Ember.get(this, "_record.json.metadata.resourceInfo.abstract").split(" ").splice(0, 50).join(" ");
+    definition: Ember.computed('_record.json.metadata.resourceInfo.abstract', function () {
+      return Ember.get(this, '_record.json.metadata.resourceInfo.abstract').split(' ').splice(0, 50).join(' ');
     }),
-    sbId: Ember.computed("_record.json.metadata.resourceInfo.citation.identifier.@each.identifier", function () {
-      let record = this.get("_record");
+    sbId: Ember.computed('_record.json.metadata.resourceInfo.citation.identifier.@each.identifier', function () {
+      let record = this.get('_record');
       return this.findSbId(record);
     }),
-    sbParentId: Ember.computed("_record.parentIds.@each.identifier", "_record.defaultParent", function () {
-      let parentIds = this.get("_record.parentIds");
+    sbParentId: Ember.computed('_record.parentIds.@each.identifier', '_record.defaultParent', function () {
+      let parentIds = this.get('_record.parentIds');
       if (!parentIds) {
         return false;
       }
-      let primary = parentIds.findBy("namespace", "gov.sciencebase.catalog");
+      let primary = parentIds.findBy('namespace', 'gov.sciencebase.catalog');
       if (primary) {
-        return Ember.get(primary, "identifier");
+        return Ember.get(primary, 'identifier');
       }
-      return this.findSbId(this.get("_record.defaultParent"));
+      return this.findSbId(this.get('_record.defaultParent'));
     }),
-    sbParentIdObj: Ember.computed("sbParentId", function () {
-      let record = Ember.get(this, "_record");
-      let path = "json.metadata.metadataInfo.parentMetadata.identifier";
+    sbParentIdObj: Ember.computed('sbParentId', function () {
+      let record = Ember.get(this, '_record');
+      let path = 'json.metadata.metadataInfo.parentMetadata.identifier';
       let ids = Ember.get(record, path);
       if (ids) {
-        return ids.findBy("namespace", "gov.sciencebase.catalog");
+        return ids.findBy('namespace', 'gov.sciencebase.catalog');
       }
       return null;
     }),
-    sbDate: Ember.computed("sbId", function () {
-      let record = this.findSbIdObject(this.get("_record"));
-      let dates = record ? Ember.get(record, "authority.date") : null;
-      if (dates && Ember.get(dates, "length")) {
-        let published = dates.filterBy("dateType", "published");
+    sbDate: Ember.computed('sbId', function () {
+      let record = this.findSbIdObject(this.get('_record'));
+      let dates = record ? Ember.get(record, 'authority.date') : null;
+      if (dates && Ember.get(dates, 'length')) {
+        let published = dates.filterBy('dateType', 'published');
         if (!published) {
           return null;
         }
-        if (Ember.get(published, "length") === 1) {
-          return Ember.get(published, "firstObject.date");
+        if (Ember.get(published, 'length') === 1) {
+          return Ember.get(published, 'firstObject.date');
         }
-        return published.mapBy("date").reduce(function (a, b) {
+        return published.mapBy('date').reduce(function (a, b) {
           return _moment.default.max((0, _moment.default)(a), (0, _moment.default)(b));
         });
       }
       return null;
     }),
     willDestroy() {
-      this.get("children").forEach(itm => {
+      this.get('children').forEach(itm => {
         itm.destroy();
       });
     },
@@ -166130,11 +166134,11 @@ define("ember-resolver/features", [], function () {
       if (!record) {
         return null;
       }
-      if (record.get("recordIdNamespace") === "gov.sciencebase.catalog") {
-        return record.get("json.metadata.metadataInfo.metadataIdentifier");
+      if (record.get('recordIdNamespace') === 'gov.sciencebase.catalog') {
+        return record.get('json.metadata.metadataInfo.metadataIdentifier');
       }
-      let ids = record.get("json.metadata.resourceInfo.citation.identifier");
-      let id = ids ? ids.findBy("namespace", "gov.sciencebase.catalog") : null;
+      let ids = record.get('json.metadata.resourceInfo.citation.identifier');
+      let id = ids ? ids.findBy('namespace', 'gov.sciencebase.catalog') : null;
       return id;
     },
     findSbId(record) {
@@ -166142,160 +166146,160 @@ define("ember-resolver/features", [], function () {
         return null;
       }
       let id = this.findSbIdObject(record);
-      return id ? Ember.get(id, "identifier") : null;
+      return id ? Ember.get(id, 'identifier') : null;
     },
     addSbId(id) {
-      let record = Ember.get(this, "_record");
-      let path = "json.metadata.resourceInfo.citation.identifier";
+      let record = Ember.get(this, '_record');
+      let path = 'json.metadata.resourceInfo.citation.identifier';
       let arr = Ember.A();
       Ember.set(record, path, Ember.getWithDefault(record, path, arr));
       Ember.get(record, path).pushObject({
         authority: {
           date: [{
             date: (0, _moment.default)().toISOString(),
-            dateType: "published",
-            description: "Published using mdEditor"
+            dateType: 'published',
+            description: 'Published using mdEditor'
           }],
-          title: "ScienceBase"
+          title: 'ScienceBase'
         },
         identifier: id,
-        namespace: "gov.sciencebase.catalog",
-        description: "Identifier imported from ScienceBase during publication"
+        namespace: 'gov.sciencebase.catalog',
+        description: 'Identifier imported from ScienceBase during publication'
       });
     },
     addSbParentId(id) {
-      let record = Ember.get(this, "_record");
-      let path = "json.metadata.metadataInfo.parentMetadata";
-      let idPath = path + ".identifier";
+      let record = Ember.get(this, '_record');
+      let path = 'json.metadata.metadataInfo.parentMetadata';
+      let idPath = path + '.identifier';
       let arr = Ember.A();
       Ember.set(record, path, Ember.getWithDefault(record, path, {
-        title: "Parent Metadata"
+        title: 'Parent Metadata'
       }));
       Ember.set(record, idPath, Ember.getWithDefault(record, idPath, arr));
       Ember.get(record, idPath).pushObject({
         authority: {
           date: [{
             date: (0, _moment.default)().toISOString(),
-            dateType: "published",
-            description: "Published using mdEditor"
+            dateType: 'published',
+            description: 'Published using mdEditor'
           }],
-          title: "ScienceBase"
+          title: 'ScienceBase'
         },
         identifier: id,
-        namespace: "gov.sciencebase.catalog",
-        description: "Identifier imported from ScienceBase during publication"
+        namespace: 'gov.sciencebase.catalog',
+        description: 'Identifier imported from ScienceBase during publication'
       });
     },
     updateSbParentId() {
-      let record = Ember.get(this, "_record");
-      let path = "json.metadata.metadataInfo.parentMetadata.identifier";
-      let id = Ember.get(record, path).findBy("namespace", "gov.sciencebase.catalog");
+      let record = Ember.get(this, '_record');
+      let path = 'json.metadata.metadataInfo.parentMetadata.identifier';
+      let id = Ember.get(record, path).findBy('namespace', 'gov.sciencebase.catalog');
       if (id) {
-        Ember.set(id, "authority", {
+        Ember.set(id, 'authority', {
           date: [{
             date: (0, _moment.default)().toISOString(),
-            dateType: "published",
-            description: "Published using mdEditor"
+            dateType: 'published',
+            description: 'Published using mdEditor'
           }],
-          title: "ScienceBase"
+          title: 'ScienceBase'
         });
       }
     },
     addChildren(records) {
       let children = records.filter(itm => {
-        let parentIds = itm.get("parentIds");
+        let parentIds = itm.get('parentIds');
         if (!parentIds) {
           return false;
         }
-        return parentIds.findBy("identifier", Ember.get(this, "id"));
+        return parentIds.findBy('identifier', Ember.get(this, 'id'));
       }).map(rec => {
         return this.constructor.create({
           _record: rec,
-          config: this.get("config")
+          config: this.get('config')
         });
       });
-      Ember.set(this, "children", children);
+      Ember.set(this, 'children', children);
       return children;
     },
     publish(refreshToken) {
       let record = this;
-      let sbId = record.get("sbId");
-      let publishOptions = record.get("settings");
-      let rootURI = Ember.getWithDefault(publishOptions, "sb-publishEndpoint", this.get("config.rootURI"));
-      let defaultParent = this.get("config.defaultParent");
-      let url = record.get("type") === "project" ? rootURI + "project" : rootURI + "product";
-      let urlPut = sbId ? "/" + sbId : "";
+      let sbId = record.get('sbId');
+      let publishOptions = record.get('settings');
+      let rootURI = Ember.getWithDefault(publishOptions, 'publisherEndpoint', Ember.getWithDefault(publishOptions, 'sb-publishEndpoint', this.get('config.rootURI')));
+      let defaultParent = this.get('config.defaultParent');
+      let url = record.get('type') === 'project' ? rootURI + 'project' : rootURI + 'product';
+      let urlPut = sbId ? '/' + sbId : '';
       let data = {
         data: {
-          parentid: record.get("sbParentId") || record.get("parentNode.sbId") || defaultParent,
-          community_id: record.get("sbParentId") || record.get("parentNode.sbId") || defaultParent,
-          mdjson: record.get("_record.formatted"),
-          type: "records",
+          parentid: record.get('sbParentId') || record.get('parentNode.sbId') || defaultParent,
+          community_id: record.get('sbParentId') || record.get('parentNode.sbId') || defaultParent,
+          mdjson: record.get('_record.formatted'),
+          type: 'records',
           refresh_token: refreshToken
         }
       };
       record.setProperties({
         isLoading: true,
-        "_record._xhrError": false,
+        '_record._xhrError': false,
         result: null
       });
-      record.notifyPropertyChange("isLoading");
+      record.notifyPropertyChange('isLoading');
       let promise = _jquery.default.ajax(url + urlPut, {
-        type: sbId ? "PUT" : "POST",
+        type: sbId ? 'PUT' : 'POST',
         data: JSON.stringify(data),
-        contentType: "application/json; charset=utf-8",
-        dataType: "json",
+        contentType: 'application/json; charset=utf-8',
+        dataType: 'json',
         context: this
       }).then(function (response) {
-        Ember.set(record, "isLoading", false);
+        Ember.set(record, 'isLoading', false);
         if (response.id) {
           if (!sbId) {
             record.addSbId(response.id);
           } else if (sbId !== response.id) {
-            let error = "Publishing error! ScienceBase identifier mismatch!";
-            Ember.set(record, "_record._xhrError", [error]);
+            let error = 'Publishing error! ScienceBase identifier mismatch!';
+            Ember.set(record, '_record._xhrError', [error]);
             throw new Error(error);
           }
-          if (!record.get("sbParentId")) {
+          if (!record.get('sbParentId')) {
             record.addSbParentId(response.parentId);
           } else {
             record.updateSbParentId();
           }
-          let idObj = record.findSbIdObject(record.get("_record"));
+          let idObj = record.findSbIdObject(record.get('_record'));
           if (idObj) {
             //make sure we have an authority and a date
-            Ember.set(idObj, "authority", Ember.getWithDefault(idObj, "authority", {
+            Ember.set(idObj, 'authority', Ember.getWithDefault(idObj, 'authority', {
               date: [],
-              title: "ScienceBase"
+              title: 'ScienceBase'
             }));
-            Ember.set(idObj, "authority.title", Ember.getWithDefault(idObj, "authority.title", "ScienceBase"));
-            Ember.set(idObj, "authority.date", Ember.getWithDefault(idObj, "authority.date", []));
-            Ember.get(idObj, "authority.date").pushObject({
+            Ember.set(idObj, 'authority.title', Ember.getWithDefault(idObj, 'authority.title', 'ScienceBase'));
+            Ember.set(idObj, 'authority.date', Ember.getWithDefault(idObj, 'authority.date', []));
+            Ember.get(idObj, 'authority.date').pushObject({
               date: (0, _moment.default)().toISOString(),
-              dateType: "published",
-              description: "Published using mdEditor"
+              dateType: 'published',
+              description: 'Published using mdEditor'
             });
-            record.notifyPropertyChange("sbDate");
+            record.notifyPropertyChange('sbDate');
           }
-          Ember.set(this, "result", response);
-          record.notifyPropertyChange("_record.defaultParent");
-          record.get("_record").save();
-          return Ember.RSVP.allSettled(record.children.filterBy("isSelected").map(child => {
-            Ember.set(child, "isLoading", true);
+          Ember.set(this, 'result', response);
+          record.notifyPropertyChange('_record.defaultParent');
+          record.get('_record').save();
+          return Ember.RSVP.allSettled(record.children.filterBy('isSelected').map(child => {
+            Ember.set(child, 'isLoading', true);
             return child.publish(refreshToken);
           }));
         } else {
-          Ember.set(this, "errors", response.error);
+          Ember.set(this, 'errors', response.error);
           // get(this, 'flashMessages')
           //   .danger('Publishing error!');
-          throw new Error("Publishing error!");
+          throw new Error('Publishing error!');
         }
       }, response => {
         let error = `Error Publishing: ${response.status}: ${response.statusText}`;
-        let xhrError = Ember.get(response, "responseJSON.error.messages") || [];
+        let xhrError = Ember.get(response, 'responseJSON.error.messages') || [];
         xhrError.unshift(error);
-        Ember.set(record, "isLoading", false);
-        Ember.set(this, "_record._xhrError", xhrError);
+        Ember.set(record, 'isLoading', false);
+        Ember.set(this, '_record._xhrError', xhrError);
         throw new Error(xhrError);
       });
       return promise;

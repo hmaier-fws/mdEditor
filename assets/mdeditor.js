@@ -5706,6 +5706,7 @@
       this._super(...arguments);
       if (this.get('settings.data.autoSave')) {
         model.set('jsonRevert', model.serialize().data.attributes.json);
+        model.set('dateUpdatedRevert', model.get('dateUpdated'));
       }
       this.pollTask.perform();
       return model;
@@ -5944,6 +5945,35 @@
       // Pouch handling
       this.pouch.updatePouchRecord(this);
     },
+    updateTimestamp() {
+      // Update dateUpdated to current timestamp when record is manually saved
+      this.set('dateUpdated', new Date());
+    },
+    // TODO: Clean this up when we move to upgraded Ember
+    revertChanges() {
+      // Temporarily disable auto-save behavior
+      let originalAutoSave = this.get('settings.data.autoSave');
+      this.set('settings.data.autoSave', false);
+
+      // Store the original dateUpdated before any changes
+      let originalDateUpdated = this.get('dateUpdatedRevert');
+
+      // Revert JSON content
+      let json = this.get('jsonRevert');
+      if (json) {
+        this.set('json', Ember.Object.create(JSON.parse(json)));
+      }
+
+      // Revert dateUpdated field
+      if (originalDateUpdated) {
+        this.set('dateUpdated', originalDateUpdated);
+      }
+
+      // Re-enable auto-save after revert is complete
+      Ember.run.scheduleOnce('actions', this, function () {
+        this.set('settings.data.autoSave', originalAutoSave);
+      });
+    },
     wasLoaded() {
       this._super(...arguments);
       let json = JSON.parse(this.serialize().data.attributes.json);
@@ -5975,7 +6005,7 @@
      */
     hashObject(target, parsed) {
       let toHash = parsed ? target : JSON.parse(JSON.stringify(target));
-      return typeof toHash === "object" ? (0, _objectHash.default)(toHash) : undefined;
+      return typeof toHash === 'object' ? (0, _objectHash.default)(toHash) : undefined;
     },
     /**
      * Compare the current hash with the cached one.
@@ -6887,14 +6917,14 @@
     /* eslint-enable ember/no-observers */
   });
 });
-;define("mdeditor/models/record", ["exports", "@ember-data/model", "ember-copy", "mdeditor/models/base", "ember-cp-validations", "mdeditor/config/environment", "uuid"], function (_exports, _model, _emberCopy, _base, _emberCpValidations, _environment, _uuid) {
+;define("mdeditor/models/record", ["exports", "@ember-data/model", "ember-copy", "mdeditor/models/base", "ember-cp-validations", "mdeditor/config/environment", "uuid", "mdjson-schemas/resources/js/schemas"], function (_exports, _model, _emberCopy, _base, _emberCpValidations, _environment, _uuid, _schemas) {
   "use strict";
 
   Object.defineProperty(_exports, "__esModule", {
     value: true
   });
   _exports.default = void 0;
-  0; //eaimeta@70e063a35619d71f0,"@ember-data/model",0,"@ember/object/computed",0,"@ember/application",0,"@ember/object",0,"ember-copy",0,"mdeditor/models/base",0,"ember-cp-validations",0,"mdeditor/config/environment",0,"uuid"eaimeta@70e063a35619d71f
+  0; //eaimeta@70e063a35619d71f0,"@ember-data/model",0,"@ember/object/computed",0,"@ember/application",0,"@ember/object",0,"ember-copy",0,"mdeditor/models/base",0,"ember-cp-validations",0,"mdeditor/config/environment",0,"uuid",0,"mdjson-schemas/resources/js/schemas"eaimeta@70e063a35619d71f
   const {
     APP: {
       defaultProfileId
@@ -6954,10 +6984,12 @@
     }),
     json: (0, _model.attr)('json', {
       defaultValue() {
+        // Get schema version directly from imported schemas to avoid service dependency issues
+        const schemaVersion = _schemas.default.schema.version;
         const obj = Ember.Object.create({
           schema: {
             name: 'mdJson',
-            version: '2.6.0'
+            version: schemaVersion
           },
           metadata: {
             metadataInfo: {
@@ -7004,8 +7036,20 @@
     title: Ember.computed.alias('json.metadata.resourceInfo.citation.title'),
     icon: Ember.computed('json.metadata.resourceInfo.resourceType.firstObject.type', function () {
       const type = this.get('json.metadata.resourceInfo.resourceType.0.type') || '';
-      const list = Ember.getOwner(this).lookup('service:icon');
-      return type ? list.get(type) || list.get('default') : list.get('defaultFile');
+      try {
+        const owner = Ember.getOwner(this);
+        if (owner) {
+          const list = owner.lookup('service:icon');
+          if (list) {
+            return type ? list.get(type) || list.get('default') : list.get('defaultFile');
+          }
+        }
+      } catch (error) {
+        console.warn('Failed to get icon service:', error);
+      }
+
+      // Fallback icon if service is not available
+      return 'fa fa-file-o';
     }),
     recordId: Ember.computed.alias('json.metadata.metadataInfo.metadataIdentifier.identifier'),
     recordIdNamespace: Ember.computed.alias('json.metadata.metadataInfo.metadataIdentifier.namespace'),
@@ -8075,8 +8119,8 @@
   _exports.default = void 0;
   0; //eaimeta@70e063a35619d71feaimeta@70e063a35619d71f
   var _default = _exports.default = Ember.HTMLBars.template({
-    "id": "AO6Dg846",
-    "block": "{\"symbols\":[\"&default\"],\"statements\":[[7,\"div\",true],[10,\"class\",\"btn-group-vertical center-block\"],[10,\"role\",\"group\"],[10,\"aria-label\",\"CRUD Button Controls\"],[8],[0,\"\\n\"],[4,\"if\",[[24,[\"doSave\"]]],null,{\"statements\":[[0,\"      \"],[7,\"button\",false],[12,\"class\",\"btn btn-lg btn-success\"],[12,\"disabled\",[28,\"if\",[[24,[\"model\",\"hasDirtyHash\"]],false,true],null]],[12,\"type\",\"submit\"],[3,\"action\",[[23,0,[]],\"save\"]],[8],[0,\"\\n        \"],[7,\"i\",true],[10,\"class\",\"fa fa-floppy-o\"],[8],[9],[0,\" Save\\n      \"],[9],[0,\"\\n      \"],[7,\"button\",false],[12,\"class\",\"btn btn-lg btn-warning\"],[12,\"disabled\",[28,\"if\",[[24,[\"model\",\"canRevert\"]],false,true],null]],[12,\"type\",\"button\"],[3,\"action\",[[23,0,[]],\"cancel\"]],[8],[0,\"\\n        \"],[7,\"i\",true],[10,\"class\",\"fa fa-undo\"],[8],[9],[0,\" Cancel\\n      \"],[9],[0,\"\\n\"]],\"parameters\":[]},null],[4,\"if\",[[24,[\"showCopy\"]]],null,{\"statements\":[[0,\"    \"],[7,\"button\",false],[12,\"class\",\"btn btn-lg btn-info\"],[12,\"type\",\"button\"],[3,\"action\",[[23,0,[]],\"copy\"]],[8],[0,\"\\n      \"],[7,\"i\",true],[10,\"class\",\"fa fa-clone\"],[8],[9],[0,\" Copy\\n    \"],[9],[0,\"\\n\"]],\"parameters\":[]},null],[4,\"if\",[[24,[\"showDelete\"]]],null,{\"statements\":[[4,\"control/md-button-confirm\",null,[[\"class\",\"onConfirm\",\"tooltip\",\"tipClass\"],[\"btn btn-lg btn-danger\",[28,\"action\",[[23,0,[]],\"delete\"],null],\"Permanently delete this record?\",\"danger\"]],{\"statements\":[[0,\"      \"],[7,\"span\",true],[10,\"class\",\"fa fa-times\"],[8],[9],[0,\" Delete\\n\"]],\"parameters\":[]},null]],\"parameters\":[]},null],[0,\"  \"],[14,1],[0,\"\\n  \"],[1,[28,\"ember-tooltip\",null,[[\"tooltipClass\",\"text\",\"side\"],[\"ember-tooltip md-tooltip primary\",\"Manage the record\",\"top\"]]],false],[0,\"\\n\"],[9],[0,\"\\n\"]],\"hasEval\":false}",
+    "id": "mwejzniU",
+    "block": "{\"symbols\":[\"&default\"],\"statements\":[[7,\"div\",true],[10,\"class\",\"btn-group-vertical center-block\"],[10,\"role\",\"group\"],[10,\"aria-label\",\"CRUD Button Controls\"],[8],[0,\"\\n\"],[4,\"if\",[[24,[\"doSave\"]]],null,{\"statements\":[[0,\"      \"],[7,\"button\",false],[12,\"class\",\"btn btn-lg btn-success\"],[12,\"disabled\",[28,\"if\",[[28,\"or\",[[24,[\"model\",\"hasDirtyHash\"]],[24,[\"settings\",\"data\",\"autoSave\"]]],null],false,true],null]],[12,\"type\",\"submit\"],[3,\"action\",[[23,0,[]],\"save\"]],[8],[0,\"\\n        \"],[7,\"i\",true],[10,\"class\",\"fa fa-floppy-o\"],[8],[9],[0,\" Save\\n      \"],[9],[0,\"\\n      \"],[7,\"button\",false],[12,\"class\",\"btn btn-lg btn-warning\"],[12,\"disabled\",[28,\"if\",[[24,[\"model\",\"canRevert\"]],false,true],null]],[12,\"type\",\"button\"],[3,\"action\",[[23,0,[]],\"cancel\"]],[8],[0,\"\\n        \"],[7,\"i\",true],[10,\"class\",\"fa fa-undo\"],[8],[9],[0,\" Cancel\\n      \"],[9],[0,\"\\n\"]],\"parameters\":[]},null],[4,\"if\",[[24,[\"showCopy\"]]],null,{\"statements\":[[0,\"    \"],[7,\"button\",false],[12,\"class\",\"btn btn-lg btn-info\"],[12,\"type\",\"button\"],[3,\"action\",[[23,0,[]],\"copy\"]],[8],[0,\"\\n      \"],[7,\"i\",true],[10,\"class\",\"fa fa-clone\"],[8],[9],[0,\" Copy\\n    \"],[9],[0,\"\\n\"]],\"parameters\":[]},null],[4,\"if\",[[24,[\"showDelete\"]]],null,{\"statements\":[[4,\"control/md-button-confirm\",null,[[\"class\",\"onConfirm\",\"tooltip\",\"tipClass\"],[\"btn btn-lg btn-danger\",[28,\"action\",[[23,0,[]],\"delete\"],null],\"Permanently delete this record?\",\"danger\"]],{\"statements\":[[0,\"      \"],[7,\"span\",true],[10,\"class\",\"fa fa-times\"],[8],[9],[0,\" Delete\\n\"]],\"parameters\":[]},null]],\"parameters\":[]},null],[0,\"  \"],[14,1],[0,\"\\n  \"],[1,[28,\"ember-tooltip\",null,[[\"tooltipClass\",\"text\",\"side\"],[\"ember-tooltip md-tooltip primary\",\"Manage the record\",\"top\"]]],false],[0,\"\\n\"],[9],[0,\"\\n\"]],\"hasEval\":false}",
     "meta": {
       "moduleName": "mdeditor/pods/components/control/md-crud-buttons/template.hbs"
     }
@@ -11057,6 +11101,7 @@
       saveRecord(evt) {
         let model = this.model;
         evt.stopPropagation();
+        model.updateTimestamp();
         model.save().then(() => {
           this.flashMessages.success(`Saved Record: ${model.get('title')}`);
         });
@@ -12763,6 +12808,7 @@
      */
     updateProfile(profile) {
       this.profile.set('active', profile);
+      this.record.updateTimestamp();
       this.record.save();
     },
     /**
@@ -19057,6 +19103,7 @@
         // item.set('_selected', true);
         Ember.run.later(this, function () {
           this.selected.pushObject(item);
+          this.record.updateTimestamp();
           this.record.save();
         }, 250);
       },
@@ -19064,6 +19111,7 @@
         // item.set('_selected', false);
         Ember.run.later(this, function () {
           this.selected.removeObject(item);
+          this.record.updateTimestamp();
           this.record.save();
         }, 250);
       }
@@ -21577,7 +21625,7 @@
     value: true
   });
   _exports.default = void 0;
-  0; //eaimeta@70e063a35619d71f0,"@ember/routing/route",0,"ember-copy",0,"@ember/service",0,"mdeditor/mixins/scroll-to"eaimeta@70e063a35619d71f
+  0; //eaimeta@70e063a35619d71f0,"@ember/routing/route",0,"ember-copy",0,"@ember/service",0,"@ember/object",0,"mdeditor/mixins/scroll-to"eaimeta@70e063a35619d71f
   var _default = _exports.default = Ember.Route.extend(_scrollTo.default, {
     flashMessages: Ember.inject.service(),
     pouch: Ember.inject.service(),
@@ -21587,6 +21635,7 @@
     actions: {
       saveContact: async function () {
         const model = this.currentRouteModel();
+        model.updateTimestamp();
         await model.save();
         await this.pouch.updatePouchRecord(model);
         this.flashMessages.success(`Saved Contact: ${model.get('title')}`);
@@ -21604,7 +21653,7 @@
         if (this.get('settings.data.autoSave')) {
           let json = model.get('jsonRevert');
           if (json) {
-            model.set('json', JSON.parse(json));
+            model.revertChanges();
             this.flashMessages.warning(message);
           }
           return;
@@ -23220,7 +23269,7 @@
     value: true
   });
   _exports.default = void 0;
-  0; //eaimeta@70e063a35619d71f0,"@ember/service",0,"@ember/routing/route",0,"mdeditor/mixins/hash-poll",0,"mdeditor/mixins/cancel"eaimeta@70e063a35619d71f
+  0; //eaimeta@70e063a35619d71f0,"@ember/service",0,"@ember/routing/route",0,"@ember/object",0,"@ember/runloop",0,"mdeditor/mixins/hash-poll",0,"mdeditor/mixins/cancel"eaimeta@70e063a35619d71f
   var _default = _exports.default = Ember.Route.extend(_hashPoll.default, _cancel.default, {
     /**
      * The profile service
@@ -23244,6 +23293,7 @@
        */
       saveDictionary: async function () {
         const model = this.currentRouteModel();
+        model.updateTimestamp();
         await model.save();
         this.flashMessages.success(`Saved Dictionary: ${model.get('title')}`);
       },
@@ -23253,7 +23303,7 @@
         if (this.get('settings.data.autoSave')) {
           let json = model.get('jsonRevert');
           if (json) {
-            model.set('json', JSON.parse(json));
+            model.revertChanges();
             this.doCancel();
             this.flashMessages.warning(message);
           }
@@ -23582,7 +23632,7 @@
       exportSelectedData(asMdjson) {
         fixLiabilityTypo(this.store).then(() => {
           if (asMdjson) {
-            let records = this.store.peekAll('record').filterBy('_selected').map(item => this.mdjson.formatRecord(item));
+            let records = this.store.peekAll('record').filterBy('_selected').map(item => this.mdjson.formatRecord(item, false, true));
             window.saveAs(new Blob([JSON.stringify(records)], {
               type: 'application/json;charset=utf-8'
             }), `mdjson-${_moment.default.utc().format('YYYYMMDD-HHmmss')}.json`);
@@ -23725,6 +23775,11 @@
         contact,
         dataDictionary
       } = json;
+
+      // Remove mdDictionary array from mdJSON as it should not be there according to mdJSON schema
+      if (json.mdDictionary) {
+        delete json.mdDictionary;
+      }
       let data = Ember.A();
       let template = Ember.Object.extend({
         init() {
@@ -23780,9 +23835,28 @@
           namespace: 'urn:uuid'
         };
       }
+
+      // Extract dictionaryId values from dataDictionary array and populate mdDictionary array
+      if (dataDictionary && dataDictionary.length > 0) {
+        let mdDictionaryIds = dataDictionary.filter(dict => dict.dictionaryId).map(dict => dict.dictionaryId);
+        if (mdDictionaryIds.length > 0) {
+          json = {
+            ...json,
+            mdDictionary: mdDictionaryIds
+          };
+        }
+      }
+
+      // Create a clean copy of json without contact and dataDictionary arrays
+      // These are handled separately as individual entities
+      let cleanJson = {
+        ...json
+      };
+      delete cleanJson.contact;
+      delete cleanJson.dataDictionary;
       data.pushObject(template.create({
         attributes: {
-          json: JSON.stringify(json)
+          json: JSON.stringify(cleanJson)
           //profile: 'full'
         },
         type: 'records'
@@ -27498,7 +27572,7 @@
     value: true
   });
   _exports.default = void 0;
-  0; //eaimeta@70e063a35619d71f0,"@ember/service",0,"@ember/routing/route",0,"mdeditor/mixins/hash-poll",0,"mdeditor/mixins/cancel"eaimeta@70e063a35619d71f
+  0; //eaimeta@70e063a35619d71f0,"@ember/service",0,"@ember/routing/route",0,"@ember/object",0,"@ember/runloop",0,"mdeditor/mixins/hash-poll",0,"mdeditor/mixins/cancel"eaimeta@70e063a35619d71f
   var _default = _exports.default = Ember.Route.extend(_hashPoll.default, _cancel.default, {
     init() {
       this._super(...arguments);
@@ -27524,6 +27598,7 @@
     actions: {
       saveRecord: async function () {
         const model = this.currentRouteModel();
+        model.updateTimestamp();
         await model.save();
         this.flashMessages.success(`Saved Record: ${model.get('title')}`);
       },
@@ -27533,7 +27608,7 @@
         if (this.get('settings.data.autoSave')) {
           let json = model.get('jsonRevert');
           if (json) {
-            model.set('json', JSON.parse(json));
+            model.revertChanges();
             this.doCancel();
             this.flashMessages.warning(message);
           }
@@ -30494,146 +30569,6 @@
     }
   });
 });
-;define("mdeditor/services/data-mapper", ["exports", "uuid/v4", "mdeditor/utils/fix-liability-typo"], function (_exports, _v, _fixLiabilityTypo) {
-  "use strict";
-
-  Object.defineProperty(_exports, "__esModule", {
-    value: true
-  });
-  _exports.default = void 0;
-  0; //eaimeta@70e063a35619d71f0,"@ember/service",0,"@ember/array",0,"uuid/v4",0,"@ember/polyfills",0,"mdeditor/utils/fix-liability-typo",0,"@ember/object"eaimeta@70e063a35619d71f
-  class DataMapperService extends Ember.Service {
-    getTitle(record) {
-      let raw = record.attributes.json;
-      let json = raw ? JSON.parse(raw) : null;
-      switch (record.type) {
-        case 'records':
-          return Ember.getWithDefault(json, 'metadata.resourceInfo.citation.title', 'NO TITLE');
-        case 'dictionaries':
-          return Ember.getWithDefault(json, 'dataDictionary.citation.title', 'NO TITLE');
-        case 'contacts':
-          return json.name || 'NO NAME';
-        case 'schemas':
-          return record.attributes.title || 'NO TITLE';
-        default:
-          return 'N/A';
-      }
-    }
-    formatMdJSON(json) {
-      const {
-        contact,
-        dataDictionary,
-        metadata
-      } = json;
-      const data = Ember.A();
-      if (contact) {
-        contact.forEach(item => {
-          data.pushObject(new Template({
-            attributes: {
-              json: JSON.stringify(Ember.assign({}, item))
-            },
-            type: 'contacts'
-          }));
-        });
-      }
-      if (!metadata.metadataInfo.metadataIdentifier) {
-        metadata.metadataInfo.metadataIdentifier = {
-          identifier: (0, _v.default)(),
-          namespace: 'urn:uuid'
-        };
-      }
-      data.pushObject(new Template({
-        attributes: {
-          json: JSON.stringify(json)
-        },
-        type: 'records'
-      }));
-      if (dataDictionary) {
-        dataDictionary.forEach(item => {
-          data.pushObject(new Template({
-            attributes: {
-              json: JSON.stringify({
-                dataDictionary: item
-              })
-            },
-            type: 'dictionaries'
-          }));
-        });
-      }
-      return data;
-    }
-    mapRecords(records) {
-      return records.reduce((accumulatedRecords, item) => {
-        // Initialize the type array if it doesn't exist
-        if (!accumulatedRecords[item.type]) {
-          accumulatedRecords[item.type] = [];
-        }
-
-        // Use optional chaining and nullish coalescing for safer access and assignment
-        const meta = {
-          title: this.getTitle(item),
-          icon: this.icons[item.type] ?? 'defaultIcon',
-          export: true
-        };
-
-        // Create a new item with meta and add it to the type-specific array
-        accumulatedRecords[item.type].push(EmObject.create({
-          ...item,
-          meta
-        }));
-        return accumulatedRecords;
-      }, {});
-    }
-    mapEditorJSON({
-      file,
-      json
-    }) {
-      const validator = this.jsonvalidator.validator;
-      if (!validator.validate('jsonapi', json)) {
-        throw new Error(`${file.name} is not a valid mdEditor file.`);
-      }
-      return this.mapRecords(json.data);
-    }
-    mapMdJSON(data) {
-      let mappedData = Ember.A();
-
-      // Simplify the conditional logic with a ternary operator and spread operator
-      const items = Ember.isArray(data.json) ? data.json : [data.json];
-      items.forEach(item => {
-        mappedData = [...mappedData, ...this.formatMdJSON(item)];
-      });
-      set(data, 'json.data', mappedData);
-      return this.mapRecords(mappedData);
-    }
-    mapJSON({
-      json: {
-        data
-      },
-      route
-    }) {
-      // Determine the mapping function based on data type
-      let files = Ember.isArray(data) ? this.mapEditorJSON({
-        json: {
-          data
-        },
-        route
-      }) : this.mapMdJSON({
-        json: {
-          data
-        },
-        route
-      });
-
-      // Fix a common typo in liability field
-      (0, _fixLiabilityTypo.fixLiabilityTypo)(files);
-
-      // Update the current route model with new files and data
-      route.currentRouteModel().set('files', files).set('data', data);
-    }
-  }
-  _exports.default = DataMapperService;
-  window.__CLASSIC_OWN_CLASSES__.set(DataMapperService, true);
-});
 ;define("mdeditor/services/drag-coordinator", ["exports", "ember-drag-drop/services/drag-coordinator"], function (_exports, _dragCoordinator) {
   "use strict";
 
@@ -31593,6 +31528,9 @@
     cleaner: Ember.inject.service(),
     contacts: Ember.inject.service(),
     store: Ember.inject.service(),
+    getSchemaVersion() {
+      return _schemas.default.schema.version;
+    },
     injectCitations(json) {
       let assoc = json.metadata.associatedResource;
       if (assoc) {
@@ -31641,7 +31579,7 @@
       }
       Ember.set(json, 'dataDictionary', arr);
     },
-    formatRecord(rec, asText) {
+    formatRecord(rec, asText, includeDictionaries = true) {
       let _contacts = [];
       let conts = this.contacts;
       const _replacer = function (key, value) {
@@ -31686,7 +31624,14 @@
       let cleaner = this.cleaner;
       let clean = cleaner.clean(Ember.get(rec, 'json'));
       this.injectCitations(clean);
-      this.injectDictionaries(rec, clean);
+      if (includeDictionaries) {
+        this.injectDictionaries(rec, clean);
+      }
+
+      // Always remove mdDictionary array from output as it's internal reference only
+      if (clean.mdDictionary) {
+        delete clean.mdDictionary;
+      }
       let json = JSON.parse(JSON.stringify(cleaner.clean(clean), _replacer));
       let contacts = this.store.peekAll('contact').mapBy('json');
       json.contact = contacts.filter(item => {
@@ -33953,7 +33898,7 @@ catch(err) {
 
 ;
           if (!runningTests) {
-            require("mdeditor/app")["default"].create({"repository":"https://github.com/adiwg/mdEditor","defaultProfileId":"org.adiwg.profile.full","name":"mdeditor","version":"1.3.0-rc.5+e1118655"});
+            require("mdeditor/app")["default"].create({"repository":"https://github.com/adiwg/mdEditor","defaultProfileId":"org.adiwg.profile.full","name":"mdeditor","version":"1.3.0+2506a493"});
           }
         
 //# sourceMappingURL=mdeditor.map

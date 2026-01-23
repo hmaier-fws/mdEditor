@@ -1,0 +1,123 @@
+Built using Node v18.20.4
+
+
+
+
+Build Error (Babel) in mdeditor/models/base.js
+
+C:\Users\HMaier\local_docs\projects\hmaier-fws_git_repo\mdEditor\mdeditor\models\base.js: Unexpected token (196:3)
+
+  194 |     // Update dateUpdated to current timestamp when record is manually saved
+  195 |     this.set('dateUpdated', new Date());
+> 196 |   },
+      |    ^
+  197 |
+  198 |   // TODO: Clean this up when we move to upgraded Ember
+  199 |   revertChanges() {SyntaxError: C:\Users\HMaier\local_docs\projects\hmaier-fws_git_repo\mdEditor\mdeditor\models\base.js: Unexpected token (196:3)
+
+  194 |     // Update dateUpdated to current timestamp when record is manually saved
+  195 |     this.set('dateUpdated', new Date());
+> 196 |   },
+      |    ^
+  197 |
+  198 |   // TODO: Clean this up when we move to upgraded Ember
+  199 |   revertChanges() {
+    at constructor (C:\Users\HMaier\local_docs\projects\hmaier-fws_git_repo\mdEditor\node_modules\@babel\parser\lib\index.js:360:19)
+    at Parser.raise (C:\Users\HMaier\local_docs\projects\hmaier-fws_git_repo\mdEditor\node_modules\@babel\parser\lib\index.js:3327:19)
+    at Parser.unexpected (C:\Users\HMaier\local_docs\projects\hmaier-fws_git_repo\mdEditor\node_modules\@babel\parser\lib\index.js:3347:16)
+    at Parser.parsePropertyName (C:\Users\HMaier\local_docs\projects\hmaier-fws_git_repo\mdEditor\node_modules\@babel\parser\lib\index.js:11708:18)
+    at Parser.parseClassElementName (C:\Users\HMaier\local_docs\projects\hmaier-fws_git_repo\mdEditor\node_modules\@babel\parser\lib\index.js:13320:10)
+    at Parser.parseClassMemberWithIsStatic (C:\Users\HMaier\local_docs\projects\hmaier-fws_git_repo\mdEditor\node_modules\@babel\parser\lib\index.js:13225:22)
+    at Parser.parseClassMember (C:\Users\HMaier\local_docs\projects\hmaier-fws_git_repo\mdEditor\node_modules\@babel\parser\lib\index.js:13198:10)
+    at C:\Users\HMaier\local_docs\projects\hmaier-fws_git_repo\mdEditor\node_modules\@babel\parser\lib\index.js:13152:14
+    at Parser.withSmartMixTopicForbiddingContext (C:\Users\HMaier\local_docs\projects\hmaier-fws_git_repo\mdEditor\node_modules\@babel\parser\lib\index.js:12078:14)
+    at Parser.parseClassBody (C:\Users\HMaier\local_docs\projects\hmaier-fws_git_repo\mdEditor\node_modules\@babel\parser\lib\index.js:13134:10)
+    at Parser.parseClass (C:\Users\HMaier\local_docs\projects\hmaier-fws_git_repo\mdEditor\node_modules\@babel\parser\lib\index.js:13109:22)
+    at Parser.parseStatementContent (C:\Users\HMaier\local_docs\projects\hmaier-fws_git_repo\mdEditor\node_modules\@babel\parser\lib\index.js:12434:21)
+    at Parser.parseStatementLike (C:\Users\HMaier\local_docs\projects\hmaier-fws_git_repo\mdEditor\node_modules\@babel\parser\lib\index.js:12407:17)
+    at Parser.parseModuleItem (C:\Users\HMaier\local_docs\projects\hmaier-fws_git_repo\mdEditor\node_modules\@babel\parser\lib\index.js:12384:17)
+    at Parser.parseBlockOrModuleBlockBody (C:\Users\HMaier\local_docs\projects\hmaier-fws_git_repo\mdEditor\node_modules\@babel\parser\lib\index.js:12955:36)
+    at Parser.parseBlockBody (C:\Users\HMaier\local_docs\projects\hmaier-fws_git_repo\mdEditor\node_modules\@babel\parser\lib\index.js:12948:10)
+    at Parser.parseProgram (C:\Users\HMaier\local_docs\projects\hmaier-fws_git_repo\mdEditor\node_modules\@babel\parser\lib\index.js:12281:10)
+    at Parser.parseTopLevel (C:\Users\HMaier\local_docs\projects\hmaier-fws_git_repo\mdEditor\node_modules\@babel\parser\lib\index.js:12271:25)
+    at Parser.parse (C:\Users\HMaier\local_docs\projects\hmaier-fws_git_repo\mdEditor\node_modules\@babel\parser\lib\index.js:14123:10)
+    at parse (C:\Users\HMaier\local_docs\projects\hmaier-fws_git_repo\mdEditor\node_modules\@babel\parser\lib\index.js:14157:38)
+    at parser (C:\Users\HMaier\local_docs\projects\hmaier-fws_git_repo\mdEditor\node_modules\@babel\core\lib\parser\index.js:41:34)
+    at parser.next (<anonymous>)
+    at normalizeFile (C:\Users\HMaier\local_docs\projects\hmaier-fws_git_repo\mdEditor\node_modules\@babel\core\lib\transformation\normalize-file.js:64:37)
+    at normalizeFile.next (<anonymous>)
+    at run (C:\Users\HMaier\local_docs\projects\hmaier-fws_git_repo\mdEditor\node_modules\@babel\core\lib\transformation\index.js:22:50)
+    at run.next (<anonymous>)
+    at transform (C:\Users\HMaier\local_docs\projects\hmaier-fws_git_repo\mdEditor\node_modules\@babel\core\lib\transform.js:22:33)
+    at transform.next (<anonymous>)
+    at step (C:\Users\HMaier\local_docs\projects\hmaier-fws_git_repo\mdEditor\node_modules\gensync\index.js:261:32)
+    at C:\Users\HMaier\local_docs\projects\hmaier-fws_git_repo\mdEditor\node_modules\gensync\index.js:273:13
+    at async.call.result.err.err (C:\Users\HMaier\local_docs\projects\hmaier-fws_git_repo\mdEditor\node_modules\gensync\index.js:223:11)
+    at C:\Users\HMaier\local_docs\projects\hmaier-fws_git_repo\mdEditor\node_modules\gensync\index.js:189:28
+    at C:\Users\HMaier\local_docs\projects\hmaier-fws_git_repo\mdEditor\node_modules\@babel\core\lib\gensync-utils\async.js:67:7
+    at C:\Users\HMaier\local_docs\projects\hmaier-fws_git_repo\mdEditor\node_modules\gensync\index.js:113:33
+    at step (C:\Users\HMaier\local_docs\projects\hmaier-fws_git_repo\mdEditor\node_modules\gensync\index.js:287:14)
+    at C:\Users\HMaier\local_docs\projects\hmaier-fws_git_repo\mdEditor\node_modules\gensync\index.js:273:13
+    at async.call.result.err.err (C:\Users\HMaier\local_docs\projects\hmaier-fws_git_repo\mdEditor\node_modules\gensync\index.js:223:11)
+
+
+Stack Trace and Error Report: C:\Users\HMaier\AppData\Local\Temp/error.dump.0453d194d2f5493231049426780912dc.log
+Build Error (Babel) in mdeditor/models/base.js
+
+C:\Users\HMaier\local_docs\projects\hmaier-fws_git_repo\mdEditor\mdeditor\models\base.js: Unexpected token (196:3)
+
+  194 |     // Update dateUpdated to current timestamp when record is manually saved
+  195 |     this.set('dateUpdated', new Date());
+> 196 |   },
+      |    ^
+  197 |
+  198 |   // TODO: Clean this up when we move to upgraded Ember
+  199 |   revertChanges() {SyntaxError: C:\Users\HMaier\local_docs\projects\hmaier-fws_git_repo\mdEditor\mdeditor\models\base.js: Unexpected token (196:3)
+
+  194 |     // Update dateUpdated to current timestamp when record is manually saved
+  195 |     this.set('dateUpdated', new Date());
+> 196 |   },
+      |    ^
+  197 |
+  198 |   // TODO: Clean this up when we move to upgraded Ember
+  199 |   revertChanges() {
+    at constructor (C:\Users\HMaier\local_docs\projects\hmaier-fws_git_repo\mdEditor\node_modules\@babel\parser\lib\index.js:360:19)
+    at Parser.raise (C:\Users\HMaier\local_docs\projects\hmaier-fws_git_repo\mdEditor\node_modules\@babel\parser\lib\index.js:3327:19)
+    at Parser.unexpected (C:\Users\HMaier\local_docs\projects\hmaier-fws_git_repo\mdEditor\node_modules\@babel\parser\lib\index.js:3347:16)
+    at Parser.parsePropertyName (C:\Users\HMaier\local_docs\projects\hmaier-fws_git_repo\mdEditor\node_modules\@babel\parser\lib\index.js:11708:18)
+    at Parser.parseClassElementName (C:\Users\HMaier\local_docs\projects\hmaier-fws_git_repo\mdEditor\node_modules\@babel\parser\lib\index.js:13320:10)
+    at Parser.parseClassMemberWithIsStatic (C:\Users\HMaier\local_docs\projects\hmaier-fws_git_repo\mdEditor\node_modules\@babel\parser\lib\index.js:13225:22)
+    at Parser.parseClassMember (C:\Users\HMaier\local_docs\projects\hmaier-fws_git_repo\mdEditor\node_modules\@babel\parser\lib\index.js:13198:10)
+    at C:\Users\HMaier\local_docs\projects\hmaier-fws_git_repo\mdEditor\node_modules\@babel\parser\lib\index.js:13152:14
+    at Parser.withSmartMixTopicForbiddingContext (C:\Users\HMaier\local_docs\projects\hmaier-fws_git_repo\mdEditor\node_modules\@babel\parser\lib\index.js:12078:14)
+    at Parser.parseClassBody (C:\Users\HMaier\local_docs\projects\hmaier-fws_git_repo\mdEditor\node_modules\@babel\parser\lib\index.js:13134:10)
+    at Parser.parseClass (C:\Users\HMaier\local_docs\projects\hmaier-fws_git_repo\mdEditor\node_modules\@babel\parser\lib\index.js:13109:22)
+    at Parser.parseStatementContent (C:\Users\HMaier\local_docs\projects\hmaier-fws_git_repo\mdEditor\node_modules\@babel\parser\lib\index.js:12434:21)
+    at Parser.parseStatementLike (C:\Users\HMaier\local_docs\projects\hmaier-fws_git_repo\mdEditor\node_modules\@babel\parser\lib\index.js:12407:17)
+    at Parser.parseModuleItem (C:\Users\HMaier\local_docs\projects\hmaier-fws_git_repo\mdEditor\node_modules\@babel\parser\lib\index.js:12384:17)
+    at Parser.parseBlockOrModuleBlockBody (C:\Users\HMaier\local_docs\projects\hmaier-fws_git_repo\mdEditor\node_modules\@babel\parser\lib\index.js:12955:36)
+    at Parser.parseBlockBody (C:\Users\HMaier\local_docs\projects\hmaier-fws_git_repo\mdEditor\node_modules\@babel\parser\lib\index.js:12948:10)
+    at Parser.parseProgram (C:\Users\HMaier\local_docs\projects\hmaier-fws_git_repo\mdEditor\node_modules\@babel\parser\lib\index.js:12281:10)
+    at Parser.parseTopLevel (C:\Users\HMaier\local_docs\projects\hmaier-fws_git_repo\mdEditor\node_modules\@babel\parser\lib\index.js:12271:25)
+    at Parser.parse (C:\Users\HMaier\local_docs\projects\hmaier-fws_git_repo\mdEditor\node_modules\@babel\parser\lib\index.js:14123:10)
+    at parse (C:\Users\HMaier\local_docs\projects\hmaier-fws_git_repo\mdEditor\node_modules\@babel\parser\lib\index.js:14157:38)
+    at parser (C:\Users\HMaier\local_docs\projects\hmaier-fws_git_repo\mdEditor\node_modules\@babel\core\lib\parser\index.js:41:34)
+    at parser.next (<anonymous>)
+    at normalizeFile (C:\Users\HMaier\local_docs\projects\hmaier-fws_git_repo\mdEditor\node_modules\@babel\core\lib\transformation\normalize-file.js:64:37)
+    at normalizeFile.next (<anonymous>)
+    at run (C:\Users\HMaier\local_docs\projects\hmaier-fws_git_repo\mdEditor\node_modules\@babel\core\lib\transformation\index.js:22:50)
+    at run.next (<anonymous>)
+    at transform (C:\Users\HMaier\local_docs\projects\hmaier-fws_git_repo\mdEditor\node_modules\@babel\core\lib\transform.js:22:33)
+    at transform.next (<anonymous>)
+    at step (C:\Users\HMaier\local_docs\projects\hmaier-fws_git_repo\mdEditor\node_modules\gensync\index.js:261:32)
+    at C:\Users\HMaier\local_docs\projects\hmaier-fws_git_repo\mdEditor\node_modules\gensync\index.js:273:13
+    at async.call.result.err.err (C:\Users\HMaier\local_docs\projects\hmaier-fws_git_repo\mdEditor\node_modules\gensync\index.js:223:11)
+    at C:\Users\HMaier\local_docs\projects\hmaier-fws_git_repo\mdEditor\node_modules\gensync\index.js:189:28
+    at C:\Users\HMaier\local_docs\projects\hmaier-fws_git_repo\mdEditor\node_modules\@babel\core\lib\gensync-utils\async.js:67:7
+    at C:\Users\HMaier\local_docs\projects\hmaier-fws_git_repo\mdEditor\node_modules\gensync\index.js:113:33
+    at step (C:\Users\HMaier\local_docs\projects\hmaier-fws_git_repo\mdEditor\node_modules\gensync\index.js:287:14)
+    at C:\Users\HMaier\local_docs\projects\hmaier-fws_git_repo\mdEditor\node_modules\gensync\index.js:273:13
+    at async.call.result.err.err (C:\Users\HMaier\local_docs\projects\hmaier-fws_git_repo\mdEditor\node_modules\gensync\index.js:223:11)
+
+
+Stack Trace and Error Report: C:\Users\HMaier\AppData\Local\Temp/error.dump.ed01ba650fa920538a130eae77da12b3.log

@@ -45,9 +45,6 @@ define("mdeditor/tests/acceptance/pods/contact/copy-test", ["qunit", "@ember/tes
       assert.equal((0, _testHelpers.currentURL)(), '/contact/' + contact.id);
       await (0, _testHelpers.click)('.md-crud-buttons .btn-info');
       assert.equal((0, _testHelpers.findAll)('.md-input-input input')[1].value, 'Copy of Contact0', 'created copy');
-
-      //change route to prevent error during teardown
-      await (0, _testHelpers.visit)('/');
     });
   });
 });
@@ -121,8 +118,21 @@ define("mdeditor/tests/acceptance/pods/contacts/contacts-test", ["qunit", "@embe
       assert.expect(1);
       var store = this.owner.lookup('service:store');
 
-      //make sure there's at least one record visible
-      store.createRecord('contact');
+      //make sure there's at least one record visible as a loaded record
+      store.push({
+        data: {
+          id: 'test-contact-1',
+          type: 'contact',
+          attributes: {
+            json: {
+              contactId: 'test-contact-1',
+              name: 'Test Contact',
+              isOrganization: false
+            },
+            dateUpdated: new Date().toISOString()
+          }
+        }
+      });
       await (0, _testHelpers.visit)('/contacts');
       await (0, _testHelpers.click)('button.md-button-confirm.btn-danger');
       assert.equal((0, _testHelpers.find)('button.md-button-confirm.btn-danger').innerText.trim(), 'Confirm');
@@ -148,9 +158,6 @@ define("mdeditor/tests/acceptance/pods/dictionary/copy-test", ["qunit", "@ember/
       assert.equal((0, _testHelpers.currentURL)(), '/dictionary/' + dictionary.id);
       await (0, _testHelpers.click)('.md-crud-buttons .btn-info');
       assert.equal((0, _testHelpers.findAll)('.md-input-input input')[0].value, 'Copy of My Dictionary0', 'created copy');
-
-      //change route to prevent error during teardown
-      await (0, _testHelpers.visit)('/');
     });
   });
 });
@@ -170,7 +177,7 @@ define("mdeditor/tests/acceptance/pods/dictionary/new-test", ["qunit", "@ember/t
       assert.expect(4);
       await (0, _testHelpers.visit)('/dictionary/new');
       assert.equal((0, _testHelpers.find)('.md-input-input input').value, '');
-      assert.equal((0, _testHelpers.find)('.md-select').innerText, '');
+      assert.equal((0, _testHelpers.find)('.md-codelist-multi').innerText.trim(), '');
       assert.equal((0, _testHelpers.find)('button.md-form-save').disabled, true);
       assert.equal((0, _testHelpers.findAll)('.md-error.ember-tooltip-target').length, 2);
       //change route to prevent error during teardown
@@ -180,9 +187,9 @@ define("mdeditor/tests/acceptance/pods/dictionary/new-test", ["qunit", "@ember/t
       assert.expect(4);
       await (0, _testHelpers.visit)('/dictionary/new');
       await (0, _testHelpers.fillIn)('.md-input-input input', 'Dictionary Name');
-      await (0, _testSupport.selectChoose)('div.md-select', 'aggregate');
+      await (0, _testSupport.selectChoose)('.md-codelist-multi', 'aggregate');
       assert.equal((0, _testHelpers.find)('.md-input-input input').value, 'Dictionary Name');
-      assert.equal((0, _testHelpers.find)('div.md-select .select-value').innerText, 'aggregate');
+      assert.ok((0, _testHelpers.find)('.md-codelist-multi').innerText.includes('aggregate'));
       assert.equal((0, _testHelpers.find)('button.md-form-save').disabled, false);
       assert.equal((0, _testHelpers.findAll)('.md-error.ember-tooltip-target').length, 0);
       //change route to prevent error during teardown
@@ -191,7 +198,7 @@ define("mdeditor/tests/acceptance/pods/dictionary/new-test", ["qunit", "@ember/t
     (0, _qunit.test)('test new dictionary missing dictionary name', async function (assert) {
       assert.expect(2);
       await (0, _testHelpers.visit)('/dictionary/new');
-      await (0, _testSupport.selectChoose)('div.md-select', 'aggregate');
+      await (0, _testSupport.selectChoose)('.md-codelist-multi', 'aggregate');
       assert.equal((0, _testHelpers.find)('button.md-form-save').disabled, true);
       assert.equal((0, _testHelpers.findAll)('.md-error.ember-tooltip-target').length, 1);
       //change route to prevent error during teardown
@@ -294,7 +301,7 @@ define("mdeditor/tests/acceptance/pods/record/new-test", ["qunit", "@ember/test-
     });
   });
 });
-define("mdeditor/tests/helpers/create-citation", ["exports"], function (_exports) {
+define("mdeditor/tests/helpers/create-citation", ["exports", "@ember/object"], function (_exports, _object) {
   "use strict";
 
   Object.defineProperty(_exports, "__esModule", {
@@ -305,7 +312,7 @@ define("mdeditor/tests/helpers/create-citation", ["exports"], function (_exports
   function createCitation(total) {
     const citations = [];
     for (let i = 0; i < total; i++) {
-      const citation = Ember.Object.create({
+      const citation = _object.default.create({
         "title": "title" + i,
         "alternateTitle": ["alternateTitle0", "alternateTitle1"],
         "date": [{
@@ -370,7 +377,7 @@ define("mdeditor/tests/helpers/create-citation", ["exports"], function (_exports
     return citations;
   }
 });
-define("mdeditor/tests/helpers/create-contact", ["exports"], function (_exports) {
+define("mdeditor/tests/helpers/create-contact", ["exports", "@ember/object"], function (_exports, _object) {
   "use strict";
 
   Object.defineProperty(_exports, "__esModule", {
@@ -381,7 +388,7 @@ define("mdeditor/tests/helpers/create-contact", ["exports"], function (_exports)
   function createContact(total) {
     const contacts = [];
     for (let i = 0; i < total; i++) {
-      const contact = Ember.Object.create({
+      const contact = _object.default.create({
         json: {
           "contactId": i,
           "isOrganization": false,
@@ -401,7 +408,7 @@ define("mdeditor/tests/helpers/create-contact", ["exports"], function (_exports)
     return contacts;
   }
 });
-define("mdeditor/tests/helpers/create-dictionary", ["exports"], function (_exports) {
+define("mdeditor/tests/helpers/create-dictionary", ["exports", "@ember/object"], function (_exports, _object) {
   "use strict";
 
   Object.defineProperty(_exports, "__esModule", {
@@ -412,7 +419,7 @@ define("mdeditor/tests/helpers/create-dictionary", ["exports"], function (_expor
   let createDictionary = function (total) {
     const dictionaries = [];
     for (let i = 0; i < total; i++) {
-      const dictionary = Ember.Object.create({
+      const dictionary = _object.default.create({
         json: {
           "dataDictionary": {
             "citation": {
@@ -440,7 +447,7 @@ define("mdeditor/tests/helpers/create-dictionary", ["exports"], function (_expor
   let createDomain = function (total) {
     const domains = [];
     for (let i = 0; i < total; i++) {
-      const domain = Ember.Object.create({
+      const domain = _object.default.create({
         "domainId": "domainId" + i,
         "commonName": "commonName" + i,
         "codeName": "codeName" + i,
@@ -459,7 +466,7 @@ define("mdeditor/tests/helpers/create-dictionary", ["exports"], function (_expor
   let createAttribute = function (total) {
     const attributes = [];
     for (let i = 0; i < total; i++) {
-      const attribute = Ember.Object.create({
+      const attribute = _object.default.create({
         "commonName": "attributeCommonName" + i,
         "codeName": "attributeCodeName0-" + i,
         "alias": ["attributeAlias0-" + i],
@@ -479,7 +486,7 @@ define("mdeditor/tests/helpers/create-dictionary", ["exports"], function (_expor
   let createEntity = function (total) {
     const entities = [];
     for (let i = 0; i < total; i++) {
-      const entity = Ember.Object.create({
+      const entity = _object.default.create({
         "entityId": "entityId" + i,
         "commonName": "commonName" + i,
         "codeName": "codeName" + i,
@@ -507,7 +514,7 @@ define("mdeditor/tests/helpers/create-dictionary", ["exports"], function (_expor
   };
   _exports.createEntity = createEntity;
 });
-define("mdeditor/tests/helpers/create-extent", ["exports"], function (_exports) {
+define("mdeditor/tests/helpers/create-extent", ["exports", "@ember/object"], function (_exports, _object) {
   "use strict";
 
   Object.defineProperty(_exports, "__esModule", {
@@ -518,7 +525,7 @@ define("mdeditor/tests/helpers/create-extent", ["exports"], function (_exports) 
   function createExtent(total) {
     const contacts = [];
     for (let i = 0; i < total; i++) {
-      const contact = Ember.Object.create({
+      const contact = _object.default.create({
         "description": "description" + i,
         "geographicExtent": [{
           "description": "description" + i,
@@ -579,7 +586,7 @@ define("mdeditor/tests/helpers/create-extent", ["exports"], function (_exports) 
     return contacts;
   }
 });
-define("mdeditor/tests/helpers/create-identifier", ["exports"], function (_exports) {
+define("mdeditor/tests/helpers/create-identifier", ["exports", "@ember/object"], function (_exports, _object) {
   "use strict";
 
   Object.defineProperty(_exports, "__esModule", {
@@ -590,7 +597,7 @@ define("mdeditor/tests/helpers/create-identifier", ["exports"], function (_expor
   function createIdentifier(total) {
     const identifiers = [];
     for (let i = 0; i < total; i++) {
-      const identifier = Ember.Object.create({
+      const identifier = _object.default.create({
         "identifier": "identifier" + i,
         "namespace": "namespace" + i,
         "version": "version" + i,
@@ -604,7 +611,7 @@ define("mdeditor/tests/helpers/create-identifier", ["exports"], function (_expor
     return identifiers;
   }
 });
-define("mdeditor/tests/helpers/create-map-layer", ["exports"], function (_exports) {
+define("mdeditor/tests/helpers/create-map-layer", ["exports", "@ember/object"], function (_exports, _object) {
   "use strict";
 
   Object.defineProperty(_exports, "__esModule", {
@@ -618,7 +625,7 @@ define("mdeditor/tests/helpers/create-map-layer", ["exports"], function (_export
       features: []
     };
     for (let i = 1; i < total + 1; i++) {
-      const layer = Ember.Object.create({
+      const layer = _object.default.create({
         type: 'Feature',
         id: i,
         geometry: {
@@ -634,7 +641,7 @@ define("mdeditor/tests/helpers/create-map-layer", ["exports"], function (_export
     return layers;
   }
 });
-define("mdeditor/tests/helpers/create-profile", ["exports"], function (_exports) {
+define("mdeditor/tests/helpers/create-profile", ["exports", "@ember/object"], function (_exports, _object) {
   "use strict";
 
   Object.defineProperty(_exports, "__esModule", {
@@ -645,7 +652,7 @@ define("mdeditor/tests/helpers/create-profile", ["exports"], function (_exports)
   function createProfile(total) {
     const profiles = [];
     for (let i = 0; i < total; i++) {
-      const profile = Ember.Object.create({
+      const profile = _object.default.create({
         "uri": "https://jlblcc.github.io/test-profile/profiles/minimal.json",
         "alias": 'My alias' + i,
         "altDescription": 'alternate decscription' + i,
@@ -743,7 +750,7 @@ define("mdeditor/tests/helpers/create-profile", ["exports"], function (_exports)
     return profiles;
   }
 });
-define("mdeditor/tests/helpers/create-record", ["exports"], function (_exports) {
+define("mdeditor/tests/helpers/create-record", ["exports", "@ember/object"], function (_exports, _object) {
   "use strict";
 
   Object.defineProperty(_exports, "__esModule", {
@@ -754,7 +761,7 @@ define("mdeditor/tests/helpers/create-record", ["exports"], function (_exports) 
   let createRecord = total => {
     const records = [];
     for (let i = 0; i < total; i++) {
-      const record = Ember.Object.create({
+      const record = _object.default.create({
         json: {
           schema: {
             name: 'mdJson',
@@ -801,7 +808,7 @@ define("mdeditor/tests/helpers/create-record", ["exports"], function (_exports) 
   let createCoverageDescription = total => {
     const coverageDescriptions = [];
     for (let i = 0; i < total; i++) {
-      const coverageDescription = Ember.Object.create({
+      const coverageDescription = _object.default.create({
         "coverageName": "coverageName" + i,
         "coverageDescription": "coverageDescription" + i,
         "attributeGroup": [{
@@ -837,7 +844,7 @@ define("mdeditor/tests/helpers/create-record", ["exports"], function (_exports) 
   let createAttribute = total => {
     const attributes = [];
     for (var i = 0; i < total; i++) {
-      const attribute = Ember.Object.create({
+      const attribute = _object.default.create({
         "attributeDescription": "attributeDescription" + i,
         "attributeIdentifier": [{
           "identifier": "identifier" + i,
@@ -1156,7 +1163,7 @@ define("mdeditor/tests/helpers/create-taxonomy", ["exports"], function (_exports
     return taxonomies;
   }
 });
-define("mdeditor/tests/helpers/data-transfer", ["exports"], function (_exports) {
+define("mdeditor/tests/helpers/data-transfer", ["exports", "@ember/object"], function (_exports, _object) {
   "use strict";
 
   Object.defineProperty(_exports, "__esModule", {
@@ -1164,7 +1171,7 @@ define("mdeditor/tests/helpers/data-transfer", ["exports"], function (_exports) 
   });
   _exports.default = void 0;
   0; //eaimeta@70e063a35619d71f0,"@ember/object"eaimeta@70e063a35619d71f
-  var c = Ember.Object.extend({
+  var c = _object.default.extend({
     getData: function () {
       return this.get('payload');
     },
@@ -1208,7 +1215,7 @@ define("mdeditor/tests/helpers/data-transfer", ["exports"], function (_exports) 
   });
   var _default = _exports.default = c;
 });
-define("mdeditor/tests/helpers/destroy-app", ["exports"], function (_exports) {
+define("mdeditor/tests/helpers/destroy-app", ["exports", "@ember/runloop"], function (_exports, _runloop) {
   "use strict";
 
   Object.defineProperty(_exports, "__esModule", {
@@ -1219,12 +1226,12 @@ define("mdeditor/tests/helpers/destroy-app", ["exports"], function (_exports) {
   function destroyApp(application) {
     var store = application.__container__.lookup('service:store');
     if (store) {
-      Ember.run(function () {
+      (0, _runloop.run)(function () {
         store.unloadAll();
         application.destroy();
       });
     } else {
-      Ember.run(application, 'destroy');
+      (0, _runloop.run)(application, 'destroy');
     }
   }
 });
@@ -1266,7 +1273,8 @@ define("mdeditor/tests/helpers/drag-drop", ["exports", "@ember/test-helpers", "m
     await (0, _testHelpers.triggerEvent)(dropSelector, 'drop', event);
     return await (0, _testHelpers.triggerEvent)(dragSelector, 'dragend', dropEndOptions);
   }
-  async function drag(dragSelector, options = {}) {
+  async function drag(dragSelector) {
+    let options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
     let dragEvent = new _mockEvent.default(options.dragStartOptions);
     await (0, _testHelpers.triggerEvent)(dragSelector, 'mouseover');
     await (0, _testHelpers.triggerEvent)(dragSelector, 'dragstart', dragEvent);
@@ -1278,41 +1286,7 @@ define("mdeditor/tests/helpers/drag-drop", ["exports", "@ember/test-helpers", "m
     }
   }
 });
-define("mdeditor/tests/helpers/ember-cli-file-picker", ["exports"], function (_exports) {
-  "use strict";
-
-  Object.defineProperty(_exports, "__esModule", {
-    value: true
-  });
-  _exports.uploadFileHelper = _exports.uploadFile = void 0;
-  0; //eaimeta@70e063a35619d71f0,"ember"eaimeta@70e063a35619d71f
-  function createFile(content = ['test'], options = {}) {
-    const {
-      name,
-      type,
-      lastModifiedDate
-    } = options;
-    const file = new Blob(content, {
-      type: type ? type : 'text/plain'
-    });
-    file.name = name ? name : 'test.txt';
-    return file;
-  }
-  const uploadFileHelper = function (content, options) {
-    const file = createFile(content, options);
-    const event = jQuery.Event('change');
-    event.target = {
-      files: [file]
-    };
-    jQuery('.file-picker__input').trigger(event);
-  };
-  _exports.uploadFileHelper = uploadFileHelper;
-  const uploadFile = _exports.uploadFile = Ember.Test.registerAsyncHelper('uploadFile', function (app, content, options) {
-    uploadFileHelper(content, options);
-    return wait();
-  });
-});
-define("mdeditor/tests/helpers/ember-drag-drop", ["exports", "mdeditor/tests/helpers/data-transfer"], function (_exports, _dataTransfer) {
+define("mdeditor/tests/helpers/ember-drag-drop", ["exports", "@ember/runloop", "mdeditor/tests/helpers/data-transfer"], function (_exports, _runloop, _dataTransfer) {
   "use strict";
 
   Object.defineProperty(_exports, "__esModule", {
@@ -1320,28 +1294,30 @@ define("mdeditor/tests/helpers/ember-drag-drop", ["exports", "mdeditor/tests/hel
   });
   _exports.drag = drag;
   0; //eaimeta@70e063a35619d71f0,"@ember/runloop",0,"mdeditor/tests/helpers/data-transfer"eaimeta@70e063a35619d71f
+  /* global triggerEvent , andThen */
   function drop($dragHandle, dropCssPath, dragEvent) {
     let dropTarget = document.querySelector(dropCssPath);
     if (dropTarget.length === 0) {
       throw `There are no drop targets by the given selector: '${dropCssPath}'`;
     }
-    Ember.run(() => {
+    (0, _runloop.run)(() => {
       triggerEvent(dropTarget, 'dragover', _dataTransfer.default.makeMockEvent());
     });
-    Ember.run(() => {
+    (0, _runloop.run)(() => {
       triggerEvent(dropTarget, 'drop', _dataTransfer.default.makeMockEvent(dragEvent.dataTransfer.get('data.payload')));
     });
-    Ember.run(() => {
+    (0, _runloop.run)(() => {
       triggerEvent($dragHandle, 'dragend', _dataTransfer.default.makeMockEvent());
     });
   }
-  function drag(cssPath, options = {}) {
+  function drag(cssPath) {
+    let options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
     let dragEvent = _dataTransfer.default.makeMockEvent();
     let dragHandle = document.querySelector(cssPath);
-    Ember.run(() => {
+    (0, _runloop.run)(() => {
       triggerEvent(dragHandle, 'mouseover');
     });
-    Ember.run(() => {
+    (0, _runloop.run)(() => {
       triggerEvent(dragHandle, 'dragstart', dragEvent);
     });
     andThen(function () {
@@ -1354,42 +1330,6 @@ define("mdeditor/tests/helpers/ember-drag-drop", ["exports", "mdeditor/tests/hel
         drop(dragHandle, options.drop, dragEvent);
       }
     });
-  }
-});
-define("mdeditor/tests/helpers/ember-power-select", ["exports", "ember-power-select/test-support/helpers"], function (_exports, _helpers) {
-  "use strict";
-
-  Object.defineProperty(_exports, "__esModule", {
-    value: true
-  });
-  _exports.clickTrigger = void 0;
-  _exports.default = deprecatedRegisterHelpers;
-  _exports.typeInSearch = _exports.triggerKeydown = _exports.touchTrigger = _exports.selectChoose = _exports.nativeTouch = _exports.nativeMouseUp = _exports.nativeMouseDown = _exports.findContains = void 0;
-  0; //eaimeta@70e063a35619d71f0,"@ember/debug",0,"ember-power-select/test-support/helpers",0,"ember-power-select/test-support/helpers"eaimeta@70e063a35619d71f
-  function deprecateHelper(fn, name) {
-    return function (...args) {
-      (true && !(false) && Ember.deprecate(`DEPRECATED \`import { ${name} } from '../../tests/helpers/ember-power-select';\` is deprecated. Please, replace it with \`import { ${name} } from 'ember-power-select/test-support/helpers';\``, false, {
-        until: '1.11.0',
-        id: `ember-power-select-test-support-${name}`
-      }));
-      return fn(...args);
-    };
-  }
-  let findContains = _exports.findContains = deprecateHelper(_helpers.findContains, 'findContains');
-  let nativeMouseDown = _exports.nativeMouseDown = deprecateHelper(_helpers.nativeMouseDown, 'nativeMouseDown');
-  let nativeMouseUp = _exports.nativeMouseUp = deprecateHelper(_helpers.nativeMouseUp, 'nativeMouseUp');
-  let triggerKeydown = _exports.triggerKeydown = deprecateHelper(_helpers.triggerKeydown, 'triggerKeydown');
-  let typeInSearch = _exports.typeInSearch = deprecateHelper(_helpers.typeInSearch, 'typeInSearch');
-  let clickTrigger = _exports.clickTrigger = deprecateHelper(_helpers.clickTrigger, 'clickTrigger');
-  let nativeTouch = _exports.nativeTouch = deprecateHelper(_helpers.nativeTouch, 'nativeTouch');
-  let touchTrigger = _exports.touchTrigger = deprecateHelper(_helpers.touchTrigger, 'touchTrigger');
-  let selectChoose = _exports.selectChoose = deprecateHelper(_helpers.selectChoose, 'selectChoose');
-  function deprecatedRegisterHelpers() {
-    (true && !(false) && Ember.deprecate("DEPRECATED `import registerPowerSelectHelpers from '../../tests/helpers/ember-power-select';` is deprecated. Please, replace it with `import registerPowerSelectHelpers from 'ember-power-select/test-support/helpers';`", false, {
-      until: '1.11.0',
-      id: 'ember-power-select-test-support-register-helpers'
-    }));
-    return (0, _helpers.default)();
   }
 });
 define("mdeditor/tests/helpers/flash-message", ["ember-cli-flash/flash/object"], function (_object) {
@@ -1424,7 +1364,8 @@ define("mdeditor/tests/helpers/md-helpers", ["exports"], function (_exports) {
    * @static
    * @return {String|Array}
    */
-  function parseInput(e, delimiter = '|') {
+  function parseInput(e) {
+    let delimiter = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : '|';
     // TODO: Support md-toggle
     let text = Array.from(e.querySelectorAll('input,textarea,.md-select')).map(i => (i.type === 'checkbox' ? i.checked.toString() : false) || i.value || Array.from(i.querySelectorAll('.select-value')).map(n => n.textContent).join('|'));
     return delimiter ? text.join(delimiter) : text;
@@ -1463,7 +1404,8 @@ define("mdeditor/tests/helpers/mock-event", ["exports"], function (_exports) {
       this.data[type] = value;
       return this;
     }
-    getData(type = "Text") {
+    getData() {
+      let type = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : "Text";
       return this.data[type];
     }
     setDragImage() {}
@@ -1471,7 +1413,8 @@ define("mdeditor/tests/helpers/mock-event", ["exports"], function (_exports) {
   window.__CLASSIC_HAS_CONSTRUCTOR__.set(DataTransfer, true);
   window.__CLASSIC_OWN_CLASSES__.set(DataTransfer, true);
   class MockEvent {
-    constructor(options = {}) {
+    constructor() {
+      let options = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
       this.dataTransfer = new DataTransfer();
       this.dataTransfer.setData('Text', options.dataTransferData);
       this.setProperties(options);
@@ -1545,7 +1488,7 @@ define("mdeditor/tests/helpers/modal-asserts", ["exports", "jquery", "qunit"], f
     };
   }
 });
-define("mdeditor/tests/helpers/start-app", ["exports", "mdeditor/app", "mdeditor/config/environment", "mdeditor/tests/helpers/modal-asserts", "mdeditor/tests/helpers/ember-power-select"], function (_exports, _app, _environment, _modalAsserts, _emberPowerSelect) {
+define("mdeditor/tests/helpers/start-app", ["exports", "mdeditor/app", "mdeditor/config/environment", "@ember/polyfills", "@ember/runloop", "mdeditor/tests/helpers/modal-asserts", "mdeditor/tests/helpers/ember-power-select"], function (_exports, _app, _environment, _polyfills, _runloop, _modalAsserts, _emberPowerSelect) {
   "use strict";
 
   Object.defineProperty(_exports, "__esModule", {
@@ -1555,10 +1498,10 @@ define("mdeditor/tests/helpers/start-app", ["exports", "mdeditor/app", "mdeditor
   0; //eaimeta@70e063a35619d71f0,"mdeditor/app",0,"mdeditor/config/environment",0,"@ember/polyfills",0,"@ember/runloop",0,"mdeditor/tests/helpers/modal-asserts",0,"mdeditor/tests/helpers/ember-power-select"eaimeta@70e063a35619d71f
   (0, _emberPowerSelect.default)();
   function startApp(attrs) {
-    let attributes = Ember.merge({}, _environment.default.APP);
-    attributes = Ember.merge(attributes, attrs); // use defaults, but you can override;
+    let attributes = (0, _polyfills.merge)({}, _environment.default.APP);
+    attributes = (0, _polyfills.merge)(attributes, attrs); // use defaults, but you can override;
 
-    return Ember.run(() => {
+    return (0, _runloop.run)(() => {
       let application = _app.default.create(attributes);
       application.setupForTesting();
       application.injectTestHelpers();
@@ -1567,10 +1510,10 @@ define("mdeditor/tests/helpers/start-app", ["exports", "mdeditor/app", "mdeditor
     });
   }
 });
-define("mdeditor/tests/integration/components/feature-form-test", ["@ember/test-helpers", "qunit", "ember-qunit"], function (_testHelpers, _qunit, _emberQunit) {
+define("mdeditor/tests/integration/components/feature-form-test", ["@ember/template-factory", "@ember/test-helpers", "qunit", "ember-qunit"], function (_templateFactory, _testHelpers, _qunit, _emberQunit) {
   "use strict";
 
-  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"htmlbars-inline-precompile"eaimeta@70e063a35619d71f
+  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"@ember/template-factory"eaimeta@70e063a35619d71f
   (0, _qunit.module)('Integration | Component | feature form', function (hooks) {
     (0, _emberQunit.setupRenderingTest)(hooks);
     (0, _qunit.test)('it renders', async function (assert) {
@@ -1583,19 +1526,20 @@ define("mdeditor/tests/integration/components/feature-form-test", ["@ember/test-
           description: 'foobar'
         }
       });
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         {{feature-form model=model}}
       */
       {
-        id: "zqCRS9hC",
-        block: "{\"symbols\":[],\"statements\":[[1,[28,\"feature-form\",null,[[\"model\"],[[24,[\"model\"]]]]],false]],\"hasEval\":false}",
-        meta: {}
+        "id": "7g4WJgts",
+        "block": "[[[1,[28,[35,0],null,[[\"model\"],[[33,1]]]]]],[],false,[\"feature-form\",\"model\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
-      assert.equal((0, _testHelpers.find)('.ember-view').textContent.replace(/[ \n]+/g, '|').trim(), '|Feature|ID|Name|Description|Other|Properties|read-only|Name|Value|None|found.|');
+      assert.equal((0, _testHelpers.find)('.ember-view').textContent.replace(/[ \n]+/g, '|').trim(), '|Feature|ID|Name|Description|Description|Other|Properties|read-only|Name|Value|None|found.|');
 
       // Template block usage:
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         
             {{#feature-form model=model}}
@@ -1604,18 +1548,19 @@ define("mdeditor/tests/integration/components/feature-form-test", ["@ember/test-
           
       */
       {
-        id: "von06tDY",
-        block: "{\"symbols\":[],\"statements\":[[0,\"\\n\"],[4,\"feature-form\",null,[[\"model\"],[[24,[\"model\"]]]],{\"statements\":[[0,\"        template block text\\n\"]],\"parameters\":[]},null],[0,\"    \"]],\"hasEval\":false}",
-        meta: {}
+        "id": "6U/+GIky",
+        "block": "[[[1,\"\\n\"],[6,[39,0],null,[[\"model\"],[[33,1]]],[[\"default\"],[[[[1,\"        template block text\\n\"]],[]]]]],[1,\"    \"]],[],false,[\"feature-form\",\"model\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
-      assert.equal((0, _testHelpers.find)('.ember-view').textContent.replace(/[ \n]+/g, '|').trim(), '|Feature|ID|Name|Description|Other|Properties|read-only|Name|Value|None|found.|template|block|text|');
+      assert.equal((0, _testHelpers.find)('.ember-view').textContent.replace(/[ \n]+/g, '|').trim(), '|Feature|ID|Name|Description|Description|Other|Properties|read-only|Name|Value|None|found.|template|block|text|');
     });
   });
 });
-define("mdeditor/tests/integration/components/feature-group-test", ["@ember/test-helpers", "qunit", "ember-qunit", "mdeditor/tests/helpers/create-map-layer"], function (_testHelpers, _qunit, _emberQunit, _createMapLayer) {
+define("mdeditor/tests/integration/components/feature-group-test", ["@ember/template-factory", "@ember/test-helpers", "qunit", "ember-qunit", "mdeditor/tests/helpers/create-map-layer"], function (_templateFactory, _testHelpers, _qunit, _emberQunit, _createMapLayer) {
   "use strict";
 
-  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"htmlbars-inline-precompile",0,"mdeditor/tests/helpers/create-map-layer"eaimeta@70e063a35619d71f
+  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"mdeditor/tests/helpers/create-map-layer",0,"@ember/template-factory"eaimeta@70e063a35619d71f
   (0, _qunit.module)('Integration | Component | feature group', function (hooks) {
     (0, _emberQunit.setupRenderingTest)(hooks);
     (0, _qunit.test)('it renders', async function (assert) {
@@ -1624,38 +1569,39 @@ define("mdeditor/tests/integration/components/feature-group-test", ["@ember/test
       this.set('layers', (0, _createMapLayer.default)(2));
 
       // Template block usage:
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         
-            {{#leaflet-draw lat=0 lng=0 zoom=2}}
+            <LeafletDraw @lat={{0}} @lng={{0}} @zoom={{2}}>
               {{!-- Specify child layer components here --}}
-              {{#layer-group name="Terrain" baselayer=true default=true}}
+              <LayerGroup @name="Terrain" @baselayer={{true}} @default={{true}}>
                 {{tile-layer url="http://{s}.tile.stamen.com/terrain/{z}/{x}/{y}.png" attribution=mapAttribution}}
-              {{/layer-group}}
+              </LayerGroup>
       
-              {{#feature-group name="Extents" default=true}}
+              <FeatureGroup @name="Extents" @default={{true}}>
                 {{#each layers as |l|}}
                   {{geojson-layer geoJSON=l draw=true}}
                 {{/each}}
-              {{/feature-group}}
+              </FeatureGroup>
       
               {{layer-control}}
-            {{/leaflet-draw}}
+            </LeafletDraw>
           
       */
       {
-        id: "mSlXIeXa",
-        block: "{\"symbols\":[\"l\"],\"statements\":[[0,\"\\n\"],[4,\"leaflet-draw\",null,[[\"lat\",\"lng\",\"zoom\"],[0,0,2]],{\"statements\":[[4,\"layer-group\",null,[[\"name\",\"baselayer\",\"default\"],[\"Terrain\",true,true]],{\"statements\":[[0,\"          \"],[1,[28,\"tile-layer\",null,[[\"url\",\"attribution\"],[\"http://{s}.tile.stamen.com/terrain/{z}/{x}/{y}.png\",[24,[\"mapAttribution\"]]]]],false],[0,\"\\n\"]],\"parameters\":[]},null],[0,\"\\n\"],[4,\"feature-group\",null,[[\"name\",\"default\"],[\"Extents\",true]],{\"statements\":[[4,\"each\",[[24,[\"layers\"]]],null,{\"statements\":[[0,\"            \"],[1,[28,\"geojson-layer\",null,[[\"geoJSON\",\"draw\"],[[23,1,[]],true]]],false],[0,\"\\n\"]],\"parameters\":[1]},null]],\"parameters\":[]},null],[0,\"\\n        \"],[1,[22,\"layer-control\"],false],[0,\"\\n\"]],\"parameters\":[]},null],[0,\"    \"]],\"hasEval\":false}",
-        meta: {}
+        "id": "an/uo72W",
+        "block": "[[[1,\"\\n      \"],[8,[39,0],null,[[\"@lat\",\"@lng\",\"@zoom\"],[0,0,2]],[[\"default\"],[[[[1,\"\\n\"],[1,\"        \"],[8,[39,1],null,[[\"@name\",\"@baselayer\",\"@default\"],[\"Terrain\",true,true]],[[\"default\"],[[[[1,\"\\n          \"],[1,[28,[35,2],null,[[\"url\",\"attribution\"],[\"http://{s}.tile.stamen.com/terrain/{z}/{x}/{y}.png\",[33,3]]]]],[1,\"\\n        \"]],[]]]]],[1,\"\\n\\n        \"],[8,[39,4],null,[[\"@name\",\"@default\"],[\"Extents\",true]],[[\"default\"],[[[[1,\"\\n\"],[42,[28,[37,6],[[28,[37,6],[[33,7]],null]],null],null,[[[1,\"            \"],[1,[28,[35,8],null,[[\"geoJSON\",\"draw\"],[[30,1],true]]]],[1,\"\\n\"]],[1]],null],[1,\"        \"]],[]]]]],[1,\"\\n\\n        \"],[1,[34,9]],[1,\"\\n      \"]],[]]]]],[1,\"\\n    \"]],[\"l\"],false,[\"leaflet-draw\",\"layer-group\",\"tile-layer\",\"mapAttribution\",\"feature-group\",\"each\",\"-track-array\",\"layers\",\"geojson-layer\",\"layer-control\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
-      assert.equal((0, _testHelpers.find)('.leaflet-container').innerText.trim().replace(/\n/g, '|'), '+|−|Draw a polyline|Draw a polygon|Draw a rectangle|Draw a marker|3000 km|2000 mi|Leaflet');
+      assert.equal((0, _testHelpers.find)('.leaflet-container').innerText.trim().replace(/\n/g, '|'), '+|-|Draw a polyline|Draw a polygon|Draw a rectangle|Draw a marker|3000 km|2000 mi|Leaflet');
     });
   });
 });
-define("mdeditor/tests/integration/components/feature-table-test", ["@ember/test-helpers", "qunit", "ember-qunit", "mdeditor/tests/helpers/create-map-layer"], function (_testHelpers, _qunit, _emberQunit, _createMapLayer) {
+define("mdeditor/tests/integration/components/feature-table-test", ["@ember/template-factory", "@ember/test-helpers", "qunit", "ember-qunit", "mdeditor/tests/helpers/create-map-layer"], function (_templateFactory, _testHelpers, _qunit, _emberQunit, _createMapLayer) {
   "use strict";
 
-  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"htmlbars-inline-precompile",0,"mdeditor/tests/helpers/create-map-layer"eaimeta@70e063a35619d71f
+  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"mdeditor/tests/helpers/create-map-layer",0,"@ember/template-factory"eaimeta@70e063a35619d71f
   (0, _qunit.module)('Integration | Component | feature table', function (hooks) {
     (0, _emberQunit.setupRenderingTest)(hooks);
     (0, _qunit.test)('it renders', async function (assert) {
@@ -1671,7 +1617,7 @@ define("mdeditor/tests/integration/components/feature-table-test", ["@ember/test
       };
       this.set('data', (0, _createMapLayer.default)(2));
       assert.expect(4);
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         {{feature-table
             data=data.features
@@ -1684,21 +1630,22 @@ define("mdeditor/tests/integration/components/feature-table-test", ["@ember/test
           }}
       */
       {
-        id: "+59K97qw",
-        block: "{\"symbols\":[],\"statements\":[[1,[28,\"feature-table\",null,[[\"data\",\"columnComponents\"],[[24,[\"data\",\"features\"]],[28,\"hash\",null,[[\"leaflet-table-row-actions\"],[[28,\"component\",[\"leaflet-table-row-actions\"],[[\"showForm\",\"zoomTo\",\"deleteFeature\"],[[24,[\"showForm\"]],[24,[\"zoomTo\"]],[24,[\"deleteFeature\"]]]]]]]]]]],false]],\"hasEval\":false}",
-        meta: {}
+        "id": "atR5tGUl",
+        "block": "[[[1,[28,[35,0],null,[[\"data\",\"columnComponents\"],[[33,1,[\"features\"]],[28,[37,2],null,[[\"leaflet-table-row-actions\"],[[50,\"leaflet-table-row-actions\",0,null,[[\"showForm\",\"zoomTo\",\"deleteFeature\"],[[33,4],[33,5],[33,6]]]]]]]]]]]],[],false,[\"feature-table\",\"data\",\"hash\",\"component\",\"showForm\",\"zoomTo\",\"deleteFeature\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
-      assert.equal((0, _testHelpers.find)('.feature-table').textContent.replace(/[\s, \t]/g, '\n').trim().replace(/[ +\n]+/g, '|'), 'Search:|Columns|Show|All|Hide|All|Restore|Defaults|ID|Name|Description|ID|Name|Description|ID|Name|Description|1|Feature|1|2|Feature|2|Show|1|-|2|of|2|Clear|all|filters|Rows:|10|25|50|500|Page:|1');
+      assert.equal((0, _testHelpers.find)('.feature-table').textContent.replace(/[\s, \t]/g, '\n').trim().replace(/[ +\n]+/g, '|'), 'Search:|Columns|Show|All|Hide|All|Restore|Defaults|ID|Name|Description|Actions|ID|Name|Description|Actions|ID|Name|Description|1|Feature|1|2|Feature|2|Show|1|-|2|of|2|Clear|all|filters|Rows:|10|25|50|Page:|1');
       await (0, _testHelpers.click)((0, _testHelpers.find)('td .btn-success'));
       await (0, _testHelpers.click)((0, _testHelpers.find)('td .btn-info'));
       await (0, _testHelpers.click)((0, _testHelpers.find)('td .btn-danger'));
     });
   });
 });
-define("mdeditor/tests/integration/components/geojson-layer-test", ["@ember/test-helpers", "qunit", "ember-qunit", "mdeditor/tests/helpers/create-map-layer"], function (_testHelpers, _qunit, _emberQunit, _createMapLayer) {
+define("mdeditor/tests/integration/components/geojson-layer-test", ["@ember/template-factory", "@ember/test-helpers", "qunit", "ember-qunit", "mdeditor/tests/helpers/create-map-layer"], function (_templateFactory, _testHelpers, _qunit, _emberQunit, _createMapLayer) {
   "use strict";
 
-  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"htmlbars-inline-precompile",0,"mdeditor/tests/helpers/create-map-layer"eaimeta@70e063a35619d71f
+  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"mdeditor/tests/helpers/create-map-layer",0,"@ember/template-factory"eaimeta@70e063a35619d71f
   (0, _qunit.module)('Integration | Component | geojson layer', function (hooks) {
     (0, _emberQunit.setupRenderingTest)(hooks);
     (0, _qunit.test)('it renders', async function (assert) {
@@ -1708,7 +1655,7 @@ define("mdeditor/tests/integration/components/geojson-layer-test", ["@ember/test
       this.set('layers', (0, _createMapLayer.default)(2));
 
       // Template block usage:
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         
             {{#leaflet-draw lat=0 lng=0 zoom=2}}
@@ -1728,18 +1675,19 @@ define("mdeditor/tests/integration/components/geojson-layer-test", ["@ember/test
           
       */
       {
-        id: "V09y6BZy",
-        block: "{\"symbols\":[\"l\"],\"statements\":[[0,\"\\n\"],[4,\"leaflet-draw\",null,[[\"lat\",\"lng\",\"zoom\"],[0,0,2]],{\"statements\":[[4,\"layer-group\",null,[[\"name\",\"baselayer\",\"default\"],[\"Terrain\",true,true]],{\"statements\":[[0,\"          \"],[1,[28,\"tile-layer\",null,[[\"url\",\"attribution\"],[\"http://{s}.tile.stamen.com/terrain/{z}/{x}/{y}.png\",[24,[\"mapAttribution\"]]]]],false],[0,\"\\n\"]],\"parameters\":[]},null],[0,\"\\n\"],[4,\"feature-group\",null,[[\"name\",\"default\"],[\"Extents\",true]],{\"statements\":[[4,\"each\",[[24,[\"layers\"]]],null,{\"statements\":[[0,\"            \"],[1,[28,\"geojson-layer\",null,[[\"geoJSON\",\"draw\",\"editLayers\"],[[23,1,[]],true,[24,[\"layers\"]]]]],false],[0,\"\\n\"]],\"parameters\":[1]},null]],\"parameters\":[]},null],[0,\"\\n        \"],[1,[22,\"layer-control\"],false],[0,\"\\n\"]],\"parameters\":[]},null],[0,\"    \"]],\"hasEval\":false}",
-        meta: {}
+        "id": "zBjEOjZS",
+        "block": "[[[1,\"\\n\"],[6,[39,0],null,[[\"lat\",\"lng\",\"zoom\"],[0,0,2]],[[\"default\"],[[[[6,[39,1],null,[[\"name\",\"baselayer\",\"default\"],[\"Terrain\",true,true]],[[\"default\"],[[[[1,\"          \"],[1,[28,[35,2],null,[[\"url\",\"attribution\"],[\"http://{s}.tile.stamen.com/terrain/{z}/{x}/{y}.png\",[33,3]]]]],[1,\"\\n\"]],[]]]]],[1,\"\\n\"],[6,[39,4],null,[[\"name\",\"default\"],[\"Extents\",true]],[[\"default\"],[[[[42,[28,[37,6],[[28,[37,6],[[33,7]],null]],null],null,[[[1,\"            \"],[1,[28,[35,8],null,[[\"geoJSON\",\"draw\",\"editLayers\"],[[30,1],true,[33,7]]]]],[1,\"\\n\"]],[1]],null]],[]]]]],[1,\"\\n        \"],[1,[34,9]],[1,\"\\n\"]],[]]]]],[1,\"    \"]],[\"l\"],false,[\"leaflet-draw\",\"layer-group\",\"tile-layer\",\"mapAttribution\",\"feature-group\",\"each\",\"-track-array\",\"layers\",\"geojson-layer\",\"layer-control\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
-      assert.equal((0, _testHelpers.find)('.leaflet-container').innerText.trim().replace(/\n/g, '|'), '+|−|Draw a polyline|Draw a polygon|Draw a rectangle|Draw a marker|3000 km|2000 mi|Leaflet');
+      assert.equal((0, _testHelpers.find)('.leaflet-container').innerText.trim().replace(/\n/g, '|'), '+|-|Draw a polyline|Draw a polygon|Draw a rectangle|Draw a marker|3000 km|2000 mi|Leaflet');
     });
   });
 });
-define("mdeditor/tests/integration/components/leaflet-draw-test", ["@ember/test-helpers", "qunit", "ember-qunit", "mdeditor/tests/helpers/create-map-layer"], function (_testHelpers, _qunit, _emberQunit, _createMapLayer) {
+define("mdeditor/tests/integration/components/leaflet-draw-test", ["@ember/template-factory", "@ember/test-helpers", "qunit", "ember-qunit", "mdeditor/tests/helpers/create-map-layer"], function (_templateFactory, _testHelpers, _qunit, _emberQunit, _createMapLayer) {
   "use strict";
 
-  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"htmlbars-inline-precompile",0,"mdeditor/tests/helpers/create-map-layer"eaimeta@70e063a35619d71f
+  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"mdeditor/tests/helpers/create-map-layer",0,"@ember/template-factory"eaimeta@70e063a35619d71f
   (0, _qunit.module)('Integration | Component | leaflet draw', function (hooks) {
     (0, _emberQunit.setupRenderingTest)(hooks);
     (0, _qunit.test)('it renders', async function (assert) {
@@ -1749,32 +1697,33 @@ define("mdeditor/tests/integration/components/leaflet-draw-test", ["@ember/test-
       this.set('layers', (0, _createMapLayer.default)(2));
 
       // Template block usage:
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         
-            {{#leaflet-draw lat=0 lng=0 zoom=2}}
+            <LeafletDraw @lat={{0}} @lng={{0}} @zoom={{2}}>
               {{!-- Specify child layer components here --}}
-              {{#layer-group name="Terrain" baselayer=true default=true}}
+              <LayerGroup @name="Terrain" @baselayer={{true}} @default={{true}}>
                 {{tile-layer url="http://{s}.tile.stamen.com/terrain/{z}/{x}/{y}.png" attribution=mapAttribution}}
-              {{/layer-group}}
+              </LayerGroup>
       
               {{layer-control}}
-            {{/leaflet-draw}}
+            </LeafletDraw>
           
       */
       {
-        id: "RlgiTreF",
-        block: "{\"symbols\":[],\"statements\":[[0,\"\\n\"],[4,\"leaflet-draw\",null,[[\"lat\",\"lng\",\"zoom\"],[0,0,2]],{\"statements\":[[4,\"layer-group\",null,[[\"name\",\"baselayer\",\"default\"],[\"Terrain\",true,true]],{\"statements\":[[0,\"          \"],[1,[28,\"tile-layer\",null,[[\"url\",\"attribution\"],[\"http://{s}.tile.stamen.com/terrain/{z}/{x}/{y}.png\",[24,[\"mapAttribution\"]]]]],false],[0,\"\\n\"]],\"parameters\":[]},null],[0,\"\\n        \"],[1,[22,\"layer-control\"],false],[0,\"\\n\"]],\"parameters\":[]},null],[0,\"    \"]],\"hasEval\":false}",
-        meta: {}
+        "id": "q35Gbjev",
+        "block": "[[[1,\"\\n      \"],[8,[39,0],null,[[\"@lat\",\"@lng\",\"@zoom\"],[0,0,2]],[[\"default\"],[[[[1,\"\\n\"],[1,\"        \"],[8,[39,1],null,[[\"@name\",\"@baselayer\",\"@default\"],[\"Terrain\",true,true]],[[\"default\"],[[[[1,\"\\n          \"],[1,[28,[35,2],null,[[\"url\",\"attribution\"],[\"http://{s}.tile.stamen.com/terrain/{z}/{x}/{y}.png\",[33,3]]]]],[1,\"\\n        \"]],[]]]]],[1,\"\\n\\n        \"],[1,[34,4]],[1,\"\\n      \"]],[]]]]],[1,\"\\n    \"]],[],false,[\"leaflet-draw\",\"layer-group\",\"tile-layer\",\"mapAttribution\",\"layer-control\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
-      assert.equal((0, _testHelpers.find)('.leaflet-container').innerText.trim().replace(/\n/g, '|'), '+|−|Draw a polyline|Draw a polygon|Draw a rectangle|Draw a marker|3000 km|2000 mi|Leaflet');
+      assert.equal((0, _testHelpers.find)('.leaflet-container').innerText.trim().replace(/\n/g, '|'), '+|-|Draw a polyline|Draw a polygon|Draw a rectangle|Draw a marker|3000 km|2000 mi|Leaflet');
     });
   });
 });
-define("mdeditor/tests/integration/components/leaflet-table-row-actions-test", ["@ember/test-helpers", "qunit", "ember-qunit"], function (_testHelpers, _qunit, _emberQunit) {
+define("mdeditor/tests/integration/components/leaflet-table-row-actions-test", ["@ember/template-factory", "@ember/test-helpers", "qunit", "ember-qunit"], function (_templateFactory, _testHelpers, _qunit, _emberQunit) {
   "use strict";
 
-  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"htmlbars-inline-precompile"eaimeta@70e063a35619d71f
+  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"@ember/template-factory"eaimeta@70e063a35619d71f
   (0, _qunit.module)('Integration | Component | leaflet table row actions', function (hooks) {
     (0, _emberQunit.setupRenderingTest)(hooks);
     (0, _qunit.test)('it renders', async function (assert) {
@@ -1783,7 +1732,7 @@ define("mdeditor/tests/integration/components/leaflet-table-row-actions-test", [
       this.zoomTo = function () {};
       this.showForm = function () {};
       this.deleteFeature = function () {};
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         {{leaflet-table-row-actions
             zoomTo=zoomTo
@@ -1792,124 +1741,131 @@ define("mdeditor/tests/integration/components/leaflet-table-row-actions-test", [
           }}
       */
       {
-        id: "wm33aNOw",
-        block: "{\"symbols\":[],\"statements\":[[1,[28,\"leaflet-table-row-actions\",null,[[\"zoomTo\",\"showForm\",\"deleteFeature\"],[[24,[\"zoomTo\"]],[24,[\"showForm\"]],[24,[\"deleteFeature\"]]]]],false]],\"hasEval\":false}",
-        meta: {}
+        "id": "GJK7uD+f",
+        "block": "[[[1,[28,[35,0],null,[[\"zoomTo\",\"showForm\",\"deleteFeature\"],[[33,1],[33,2],[33,3]]]]]],[],false,[\"leaflet-table-row-actions\",\"zoomTo\",\"showForm\",\"deleteFeature\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       assert.equal((0, _testHelpers.findAll)('button').length, 3);
     });
   });
 });
-define("mdeditor/tests/integration/components/leaflet-table-row-test", ["@ember/test-helpers", "qunit", "ember-qunit"], function (_testHelpers, _qunit, _emberQunit) {
+define("mdeditor/tests/integration/components/leaflet-table-row-test", ["@ember/template-factory", "@ember/test-helpers", "qunit", "ember-qunit"], function (_templateFactory, _testHelpers, _qunit, _emberQunit) {
   "use strict";
 
-  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"htmlbars-inline-precompile"eaimeta@70e063a35619d71f
+  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"@ember/template-factory"eaimeta@70e063a35619d71f
   (0, _qunit.module)('Integration | Component | leaflet table row', function (hooks) {
     (0, _emberQunit.setupRenderingTest)(hooks);
     (0, _qunit.test)('it renders', async function (assert) {
       // Set any properties with this.set('myProperty', 'value');
       // Handle any actions with this.on('myAction', function(val) { ... });
 
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         {{leaflet-table-row}}
       */
       {
-        id: "P92N9X7U",
-        block: "{\"symbols\":[],\"statements\":[[1,[22,\"leaflet-table-row\"],false]],\"hasEval\":false}",
-        meta: {}
+        "id": "8oW3Xl1S",
+        "block": "[[[1,[34,0]]],[],false,[\"leaflet-table-row\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       assert.equal((0, _testHelpers.findAll)('tr').length, 1);
     });
   });
 });
-define("mdeditor/tests/integration/components/leaflet-table-test", ["@ember/test-helpers", "qunit", "ember-qunit", "mdeditor/tests/helpers/create-map-layer"], function (_testHelpers, _qunit, _emberQunit, _createMapLayer) {
+define("mdeditor/tests/integration/components/leaflet-table-test", ["@ember/template-factory", "@ember/test-helpers", "qunit", "ember-qunit", "mdeditor/tests/helpers/create-map-layer"], function (_templateFactory, _testHelpers, _qunit, _emberQunit, _createMapLayer) {
   "use strict";
 
-  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"htmlbars-inline-precompile",0,"mdeditor/tests/helpers/create-map-layer"eaimeta@70e063a35619d71f
+  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"mdeditor/tests/helpers/create-map-layer",0,"@ember/template-factory"eaimeta@70e063a35619d71f
   (0, _qunit.module)('Integration | Component | leaflet table', function (hooks) {
     (0, _emberQunit.setupRenderingTest)(hooks);
     (0, _qunit.test)('it renders', async function (assert) {
       // Set any properties with this.set('myProperty', 'value');
       // Handle any actions with this.on('myAction', function(val) { ... });
       this.set('layers', (0, _createMapLayer.default)(2));
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
-        {{leaflet-table layers=layers.features
+        {{leaflet-table layers=this.layers.features
             resizeDebouncedEventsEnabled=true}}
       */
       {
-        id: "tWrXLNFF",
-        block: "{\"symbols\":[],\"statements\":[[1,[28,\"leaflet-table\",null,[[\"layers\",\"resizeDebouncedEventsEnabled\"],[[24,[\"layers\",\"features\"]],true]]],false]],\"hasEval\":false}",
-        meta: {}
+        "id": "qup18Wvq",
+        "block": "[[[1,[28,[35,0],null,[[\"layers\",\"resizeDebouncedEventsEnabled\"],[[30,0,[\"layers\",\"features\"]],true]]]]],[],false,[\"leaflet-table\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
-      assert.equal((0, _testHelpers.find)('.feature-table').textContent.replace(/[\s\t]/g, '\n').trim().replace(/[ \n]+/g, '|'), 'ID|Name|Description|ID|Name|Description|1|Feature|1|2|Feature|2|Show|1|-|2|of|2|Clear|all|filters|Rows:|10|25|50|500|Page:|1');
+      assert.equal((0, _testHelpers.find)('.feature-table').textContent.replace(/[\s\t]/g, '\n').trim().replace(/[ \n]+/g, '|'), 'ID|Name|Description|Actions|ID|Name|Description|1|Feature|1|2|Feature|2|Show|1|-|2|of|2|Clear|all|filters|Rows:|10|25|50|Page:|1');
     });
   });
 });
-define("mdeditor/tests/integration/components/sb-publisher-test", ["@ember/test-helpers", "qunit", "ember-qunit", "mdeditor/tests/helpers/create-record"], function (_testHelpers, _qunit, _emberQunit, _createRecord) {
+define("mdeditor/tests/integration/components/sb-publisher-test", ["@ember/template-factory", "@ember/test-helpers", "@ember/object", "qunit", "ember-qunit", "mdeditor/tests/helpers/create-record"], function (_templateFactory, _testHelpers, _object, _qunit, _emberQunit, _createRecord) {
   "use strict";
 
-  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"@ember/object",0,"qunit",0,"ember-qunit",0,"htmlbars-inline-precompile",0,"mdeditor/tests/helpers/create-record"eaimeta@70e063a35619d71f
-  (0, _qunit.module)("Integration | Component | sb publisher", function (hooks) {
+  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"@ember/object",0,"qunit",0,"ember-qunit",0,"mdeditor/tests/helpers/create-record",0,"@ember/template-factory"eaimeta@70e063a35619d71f
+  (0, _qunit.module)('Integration | Component | sb publisher', function (hooks) {
     (0, _emberQunit.setupRenderingTest)(hooks);
-    (0, _qunit.test)("it renders", async function (assert) {
-      this.set("config", {
-        name: "ScienceBase",
-        route: "sciencebase",
-        description: "ScienceBase is a collaborative scientific data and information management platform",
-        icon: "globe",
-        rootURI: "https://api.sciencebase.gov/sbmd-service/",
-        rootItemURL: "https://www.sciencebase.gov/catalog/item/",
-        defaultParent: "59ef8a34e4b0220bbd98d449",
-        settingsComponent: "sb-settings"
+    (0, _qunit.test)('it renders', async function (assert) {
+      this.set('config', {
+        name: 'ScienceBase',
+        route: 'sciencebase',
+        description: 'ScienceBase is a collaborative scientific data and information management platform',
+        icon: 'globe',
+        rootURI: 'https://api.sciencebase.gov/sbmd-service/',
+        rootItemURL: 'https://www.sciencebase.gov/catalog/item/',
+        defaultParent: '59ef8a34e4b0220bbd98d449',
+        settingsComponent: 'sb-settings'
       });
-      this.set("settings", Ember.Object.create({
+      this.set('settings', _object.default.create({
         data: {
           publishOptions: []
         }
       }));
-      this.set("records", (0, _createRecord.default)(3));
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      this.set('records', (0, _createRecord.createRecord)(3));
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         {{sb-publisher config=config settings=settings records=records}}
       */
       {
-        id: "q4nF2V5F",
-        block: "{\"symbols\":[],\"statements\":[[1,[28,\"sb-publisher\",null,[[\"config\",\"settings\",\"records\"],[[24,[\"config\"]],[24,[\"settings\"]],[24,[\"records\"]]]]],false]],\"hasEval\":false}",
-        meta: {}
+        "id": "QQbUz8QA",
+        "block": "[[[1,[28,[35,0],null,[[\"config\",\"settings\",\"records\"],[[33,1],[33,2],[33,3]]]]]],[],false,[\"sb-publisher\",\"config\",\"settings\",\"records\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
-      assert.equal((0, _testHelpers.findAll)(".tree-leaf").length, 4);
+      assert.equal((0, _testHelpers.findAll)('.tree-leaf').length, 4);
     });
   });
 });
-define("mdeditor/tests/integration/components/sb-settings-test", ["@ember/test-helpers", "qunit", "ember-qunit"], function (_testHelpers, _qunit, _emberQunit) {
+define("mdeditor/tests/integration/components/sb-settings-test", ["@ember/template-factory", "@ember/test-helpers", "qunit", "ember-qunit"], function (_templateFactory, _testHelpers, _qunit, _emberQunit) {
   "use strict";
 
-  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"htmlbars-inline-precompile"eaimeta@70e063a35619d71f
+  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"@ember/template-factory"eaimeta@70e063a35619d71f
   (0, _qunit.module)('Integration | Component | sb settings', function (hooks) {
     (0, _emberQunit.setupRenderingTest)(hooks);
     (0, _qunit.test)('it renders', async function (assert) {
-      // Set any properties with this.set('myProperty', 'value');
-      // Handle any actions with this.on('myAction', function(val) { ... });
-
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      this.set('model', {
+        publisherEndpoint: '',
+        'sb-defaultParent': ''
+      });
+      this.set('save', () => {});
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
-        {{sb-settings}}
+        {{sb-settings model=this.model save=this.save}}
       */
       {
-        id: "X4SFMJyq",
-        block: "{\"symbols\":[],\"statements\":[[1,[22,\"sb-settings\"],false]],\"hasEval\":false}",
-        meta: {}
+        "id": "q7pKIeCx",
+        "block": "[[[1,[28,[35,0],null,[[\"model\",\"save\"],[[30,0,[\"model\"]],[30,0,[\"save\"]]]]]]],[],false,[\"sb-settings\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
-      assert.equal((0, _testHelpers.findAll)('input').length, 1);
+      assert.equal((0, _testHelpers.findAll)('input').length, 2);
     });
   });
 });
-define("mdeditor/tests/integration/components/sb-tree-label-test", ["@ember/test-helpers", "qunit", "ember-qunit"], function (_testHelpers, _qunit, _emberQunit) {
+define("mdeditor/tests/integration/components/sb-tree-label-test", ["@ember/template-factory", "@ember/test-helpers", "qunit", "ember-qunit"], function (_templateFactory, _testHelpers, _qunit, _emberQunit) {
   "use strict";
 
-  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"htmlbars-inline-precompile"eaimeta@70e063a35619d71f
+  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"@ember/template-factory"eaimeta@70e063a35619d71f
   (0, _qunit.module)('Integration | Component | sb tree label', function (hooks) {
     (0, _emberQunit.setupRenderingTest)(hooks);
     (0, _qunit.test)('it renders', async function (assert) {
@@ -1934,23 +1890,24 @@ define("mdeditor/tests/integration/components/sb-tree-label-test", ["@ember/test
         type: 'application',
         uuid: '4ebb8fe5-f88f-49a4-9964-ff5395e234b8'
       });
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         {{sb-tree-label model=model}}
       */
       {
-        id: "37dk+wnz",
-        block: "{\"symbols\":[],\"statements\":[[1,[28,\"sb-tree-label\",null,[[\"model\"],[[24,[\"model\"]]]]],false]],\"hasEval\":false}",
-        meta: {}
+        "id": "MD0H2Qm6",
+        "block": "[[[1,[28,[35,0],null,[[\"model\"],[[33,1]]]]]],[],false,[\"sb-tree-label\",\"model\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       assert.equal((0, _testHelpers.find)('.tree-cell').innerText.trim(), 'Data Management Strategy : test Parent Id: None --');
     });
   });
 });
-define("mdeditor/tests/integration/components/sb-tree-test", ["@ember/test-helpers", "qunit", "ember-qunit"], function (_testHelpers, _qunit, _emberQunit) {
+define("mdeditor/tests/integration/components/sb-tree-test", ["@ember/template-factory", "@ember/test-helpers", "qunit", "ember-qunit"], function (_templateFactory, _testHelpers, _qunit, _emberQunit) {
   "use strict";
 
-  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"htmlbars-inline-precompile"eaimeta@70e063a35619d71f
+  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"@ember/template-factory"eaimeta@70e063a35619d71f
   (0, _qunit.module)('Integration | Component | sb tree', function (hooks) {
     (0, _emberQunit.setupRenderingTest)(hooks);
     (0, _qunit.test)('it renders', async function (assert) {
@@ -1995,24 +1952,25 @@ define("mdeditor/tests/integration/components/sb-tree-test", ["@ember/test-helpe
         type: 'application',
         uuid: '4ebb8fe5-f88f-49a4-9964-ff5395e234b8'
       }]);
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         {{sb-tree model=model labelComponent="sb-tree-label"}}
       */
       {
-        id: "NDA/Pok4",
-        block: "{\"symbols\":[],\"statements\":[[1,[28,\"sb-tree\",null,[[\"model\",\"labelComponent\"],[[24,[\"model\"]],\"sb-tree-label\"]]],false]],\"hasEval\":false}",
-        meta: {}
+        "id": "L9stbjss",
+        "block": "[[[1,[28,[35,0],null,[[\"model\",\"labelComponent\"],[[33,1],\"sb-tree-label\"]]]]],[],false,[\"sb-tree\",\"model\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       assert.equal((0, _testHelpers.find)('.tree-trunk').innerText.replace(/[\s\t]/g, '\n').trim().replace(/[ \n]+/g, '|'), 'Data|Management|Strategy|:|test|?|Child|1|:|test1|Parent|Id:|None|--|?');
       assert.equal((0, _testHelpers.findAll)('.tree-branch')[1].innerText.replace(/[\s\t]/g, '\n').trim().replace(/[ \n]+/g, '|'), 'Child|1|:|test1|Parent|Id:|None|--|?');
     });
   });
 });
-define("mdeditor/tests/integration/components/tree-branch-test", ["@ember/test-helpers", "qunit", "ember-qunit"], function (_testHelpers, _qunit, _emberQunit) {
+define("mdeditor/tests/integration/components/tree-branch-test", ["@ember/template-factory", "@ember/test-helpers", "qunit", "ember-qunit"], function (_templateFactory, _testHelpers, _qunit, _emberQunit) {
   "use strict";
 
-  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"htmlbars-inline-precompile"eaimeta@70e063a35619d71f
+  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"@ember/template-factory"eaimeta@70e063a35619d71f
   (0, _qunit.module)('Integration | Component | tree branch', function (hooks) {
     (0, _emberQunit.setupRenderingTest)(hooks);
     (0, _qunit.test)('it renders', async function (assert) {
@@ -2046,7 +2004,7 @@ define("mdeditor/tests/integration/components/tree-branch-test", ["@ember/test-h
       this.set('select', function () {
         assert.ok(true, 'called select');
       });
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         
             {{tree-branch model=model
@@ -2057,15 +2015,16 @@ define("mdeditor/tests/integration/components/tree-branch-test", ["@ember/test-h
             }}
       */
       {
-        id: "OJKnbKHR",
-        block: "{\"symbols\":[],\"statements\":[[0,\"\\n      \"],[1,[28,\"tree-branch\",null,[[\"model\",\"select\",\"selected\",\"nodeDepth\",\"path\"],[[24,[\"model\"]],[24,[\"select\"]],[24,[\"selected\"]],3,[24,[\"path\"]]]]],false]],\"hasEval\":false}",
-        meta: {}
+        "id": "T/zWEoEa",
+        "block": "[[[1,\"\\n      \"],[1,[28,[35,0],null,[[\"model\",\"select\",\"selected\",\"nodeDepth\",\"path\"],[[33,1],[33,2],[33,3],3,[33,4]]]]]],[],false,[\"tree-branch\",\"model\",\"select\",\"selected\",\"path\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       assert.expect(3);
       assert.equal((0, _testHelpers.find)('.tree-branch').innerText.trim(), 'foo1label');
 
       // Template block usage:
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         
             {{#tree-branch model=model
@@ -2079,9 +2038,10 @@ define("mdeditor/tests/integration/components/tree-branch-test", ["@ember/test-h
           
       */
       {
-        id: "S915ZCbU",
-        block: "{\"symbols\":[],\"statements\":[[0,\"\\n\"],[4,\"tree-branch\",null,[[\"model\",\"select\",\"selected\",\"nodeDepth\",\"path\"],[[24,[\"model\"]],[24,[\"select\"]],[24,[\"selected\"]],3,[24,[\"path\"]]]],{\"statements\":[[0,\"        template block text\\n\"]],\"parameters\":[]},null],[0,\"    \"]],\"hasEval\":false}",
-        meta: {}
+        "id": "olyCkhbz",
+        "block": "[[[1,\"\\n\"],[6,[39,0],null,[[\"model\",\"select\",\"selected\",\"nodeDepth\",\"path\"],[[33,1],[33,2],[33,3],3,[33,4]]],[[\"default\"],[[[[1,\"        template block text\\n\"]],[]]]]],[1,\"    \"]],[],false,[\"tree-branch\",\"model\",\"select\",\"selected\",\"path\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       await (0, _testHelpers.click)('.tree-leaf .toggle-icon');
       assert.equal((0, _testHelpers.find)('.tree-branch').innerText.replace(/[\s\n]+/g, '|'), '|foo1label|foo2label');
@@ -2089,10 +2049,10 @@ define("mdeditor/tests/integration/components/tree-branch-test", ["@ember/test-h
     });
   });
 });
-define("mdeditor/tests/integration/components/tree-label-test", ["@ember/test-helpers", "qunit", "ember-qunit"], function (_testHelpers, _qunit, _emberQunit) {
+define("mdeditor/tests/integration/components/tree-label-test", ["@ember/template-factory", "@ember/test-helpers", "qunit", "ember-qunit"], function (_templateFactory, _testHelpers, _qunit, _emberQunit) {
   "use strict";
 
-  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"htmlbars-inline-precompile"eaimeta@70e063a35619d71f
+  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"@ember/template-factory"eaimeta@70e063a35619d71f
   (0, _qunit.module)('Integration | Component | tree label', function (hooks) {
     (0, _emberQunit.setupRenderingTest)(hooks);
     (0, _qunit.test)('it renders', async function (assert) {
@@ -2110,19 +2070,20 @@ define("mdeditor/tests/integration/components/tree-label-test", ["@ember/test-he
       });
       // Handle any actions with this.on('myAction', function(val) { ... });
 
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         {{tree-label model=model}}
       */
       {
-        id: "fkICw9HE",
-        block: "{\"symbols\":[],\"statements\":[[1,[28,\"tree-label\",null,[[\"model\"],[[24,[\"model\"]]]]],false]],\"hasEval\":false}",
-        meta: {}
+        "id": "fdry4LFo",
+        "block": "[[[1,[28,[35,0],null,[[\"model\"],[[33,1]]]]]],[],false,[\"tree-label\",\"model\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       assert.equal((0, _testHelpers.find)('.tree-label-text').innerText.trim(), 'foo1label');
 
       // Template block usage:
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         
             {{#tree-label model=model}}
@@ -2131,18 +2092,19 @@ define("mdeditor/tests/integration/components/tree-label-test", ["@ember/test-he
           
       */
       {
-        id: "udnZOytJ",
-        block: "{\"symbols\":[],\"statements\":[[0,\"\\n\"],[4,\"tree-label\",null,[[\"model\"],[[24,[\"model\"]]]],{\"statements\":[[0,\"        template block text\\n\"]],\"parameters\":[]},null],[0,\"    \"]],\"hasEval\":false}",
-        meta: {}
+        "id": "AlmDD608",
+        "block": "[[[1,\"\\n\"],[6,[39,0],null,[[\"model\"],[[33,1]]],[[\"default\"],[[[[1,\"        template block text\\n\"]],[]]]]],[1,\"    \"]],[],false,[\"tree-label\",\"model\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       assert.equal((0, _testHelpers.find)('.tree-label-text').innerText.trim(), 'foo1label');
     });
   });
 });
-define("mdeditor/tests/integration/components/tree-leaf-test", ["@ember/test-helpers", "qunit", "ember-qunit"], function (_testHelpers, _qunit, _emberQunit) {
+define("mdeditor/tests/integration/components/tree-leaf-test", ["@ember/template-factory", "@ember/test-helpers", "qunit", "ember-qunit"], function (_templateFactory, _testHelpers, _qunit, _emberQunit) {
   "use strict";
 
-  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"htmlbars-inline-precompile"eaimeta@70e063a35619d71f
+  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"@ember/template-factory"eaimeta@70e063a35619d71f
   (0, _qunit.module)('Integration | Component | tree leaf', function (hooks) {
     (0, _emberQunit.setupRenderingTest)(hooks);
     (0, _qunit.test)('it renders', async function (assert) {
@@ -2176,7 +2138,7 @@ define("mdeditor/tests/integration/components/tree-leaf-test", ["@ember/test-hel
       this.set('select', function () {
         assert.ok(true, 'called select');
       });
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         {{tree-leaf model=model
             inTree=true
@@ -2187,40 +2149,38 @@ define("mdeditor/tests/integration/components/tree-leaf-test", ["@ember/test-hel
           }}
       */
       {
-        id: "quSG1G17",
-        block: "{\"symbols\":[],\"statements\":[[1,[28,\"tree-leaf\",null,[[\"model\",\"inTree\",\"select\",\"selected\",\"nodeDepth\",\"nodePath\"],[[24,[\"model\"]],true,[24,[\"select\"]],[24,[\"selected\"]],3,[24,[\"nodePath\"]]]]],false]],\"hasEval\":false}",
-        meta: {}
+        "id": "J8Z/58l4",
+        "block": "[[[1,[28,[35,0],null,[[\"model\",\"inTree\",\"select\",\"selected\",\"nodeDepth\",\"nodePath\"],[[33,1],true,[33,2],[33,3],3,[33,4]]]]]],[],false,[\"tree-leaf\",\"model\",\"select\",\"selected\",\"nodePath\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       await (0, _testHelpers.click)('.toggle-icon');
       assert.equal((0, _testHelpers.find)('.tree-leaf').innerText.trim(), 'foo1label');
 
       // Template block usage:
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         
-            {{#tree-leaf model=model
-              inTree=false
-              select=select
-              selected=selected
-            }}
+            <TreeLeaf @model={{model}} @inTree={{false}} @select={{select}} @selected={{selected}}>
               template block text
-            {{/tree-leaf}}
+            </TreeLeaf>
           
       */
       {
-        id: "wcFrt4pB",
-        block: "{\"symbols\":[],\"statements\":[[0,\"\\n\"],[4,\"tree-leaf\",null,[[\"model\",\"inTree\",\"select\",\"selected\"],[[24,[\"model\"]],false,[24,[\"select\"]],[24,[\"selected\"]]]],{\"statements\":[[0,\"        template block text\\n\"]],\"parameters\":[]},null],[0,\"    \"]],\"hasEval\":false}",
-        meta: {}
+        "id": "1B6C7y3m",
+        "block": "[[[1,\"\\n      \"],[8,[39,0],null,[[\"@model\",\"@inTree\",\"@select\",\"@selected\"],[[99,1,[\"@model\"]],false,[99,2,[\"@select\"]],[99,3,[\"@selected\"]]]],[[\"default\"],[[[[1,\"\\n        template block text\\n      \"]],[]]]]],[1,\"\\n    \"]],[],false,[\"tree-leaf\",\"model\",\"select\",\"selected\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       assert.equal((0, _testHelpers.find)('.tree-leaf').innerText.trim(), 'foo1label');
       assert.equal((0, _testHelpers.findAll)('.tree-indent').length, 0, 'not in tree');
     });
   });
 });
-define("mdeditor/tests/integration/components/tree-search-test", ["@ember/test-helpers", "qunit", "ember-qunit"], function (_testHelpers, _qunit, _emberQunit) {
+define("mdeditor/tests/integration/components/tree-search-test", ["@ember/template-factory", "@ember/test-helpers", "qunit", "ember-qunit"], function (_templateFactory, _testHelpers, _qunit, _emberQunit) {
   "use strict";
 
-  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"htmlbars-inline-precompile"eaimeta@70e063a35619d71f
+  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"@ember/template-factory"eaimeta@70e063a35619d71f
   (0, _qunit.module)('Integration | Component | tree search', function (hooks) {
     (0, _emberQunit.setupRenderingTest)(hooks);
     (0, _qunit.test)('it renders', async function (assert) {
@@ -2249,7 +2209,7 @@ define("mdeditor/tests/integration/components/tree-search-test", ["@ember/test-h
         assert.ok(true, 'called select');
       });
       this.set('searchString', 'foo');
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         
             {{tree-search
@@ -2261,16 +2221,17 @@ define("mdeditor/tests/integration/components/tree-search-test", ["@ember/test-h
             }}
       */
       {
-        id: "uGb817V1",
-        block: "{\"symbols\":[],\"statements\":[[0,\"\\n      \"],[1,[28,\"tree-search\",null,[[\"model\",\"selected\",\"select\",\"searchString\",\"exactMatch\"],[[24,[\"model\"]],[24,[\"selected\"]],[24,[\"select\"]],[24,[\"searchString\"]],[24,[\"exactMatch\"]]]]],false]],\"hasEval\":false}",
-        meta: {}
+        "id": "9vlaP6IR",
+        "block": "[[[1,\"\\n      \"],[1,[28,[35,0],null,[[\"model\",\"selected\",\"select\",\"searchString\",\"exactMatch\"],[[33,1],[33,2],[33,3],[33,4],[33,5]]]]]],[],false,[\"tree-search\",\"model\",\"selected\",\"select\",\"searchString\",\"exactMatch\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       assert.equal((0, _testHelpers.find)('.tree-search').innerText.replace(/[ \n]+/g, '|'), 'Search|Tree:|Exact|Match|3|matches|found.|barfoo1label|foo1label|foo2label', 'search OK');
       this.set('exactMatch', true);
       assert.equal((0, _testHelpers.find)('.tree-search').innerText.replace(/[ \n]+/g, '|'), 'Search|Tree:|Exact|Match|2|matches|found.|foo1label|foo2label', 'exact match');
 
       // Template block usage:
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         
             {{#tree-search
@@ -2283,18 +2244,19 @@ define("mdeditor/tests/integration/components/tree-search-test", ["@ember/test-h
           
       */
       {
-        id: "1QAiNJP7",
-        block: "{\"symbols\":[],\"statements\":[[0,\"\\n\"],[4,\"tree-search\",null,[[\"model\",\"selected\",\"select\"],[[24,[\"model\"]],[24,[\"selected\"]],[24,[\"select\"]]]],{\"statements\":[[0,\"        template block text\\n\"]],\"parameters\":[]},null],[0,\"    \"]],\"hasEval\":false}",
-        meta: {}
+        "id": "Enml9au0",
+        "block": "[[[1,\"\\n\"],[6,[39,0],null,[[\"model\",\"selected\",\"select\"],[[33,1],[33,2],[33,3]]],[[\"default\"],[[[[1,\"        template block text\\n\"]],[]]]]],[1,\"    \"]],[],false,[\"tree-search\",\"model\",\"selected\",\"select\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       assert.equal((0, _testHelpers.find)('.tree-search').innerText.replace(/[ \n]+/g, '|'), 'Search|Tree:|Exact|Match|template|block|text', 'block');
     });
   });
 });
-define("mdeditor/tests/integration/components/tree-view-test", ["@ember/test-helpers", "qunit", "ember-qunit"], function (_testHelpers, _qunit, _emberQunit) {
+define("mdeditor/tests/integration/components/tree-view-test", ["@ember/template-factory", "@ember/test-helpers", "qunit", "ember-qunit"], function (_templateFactory, _testHelpers, _qunit, _emberQunit) {
   "use strict";
 
-  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"htmlbars-inline-precompile"eaimeta@70e063a35619d71f
+  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"@ember/template-factory"eaimeta@70e063a35619d71f
   (0, _qunit.module)('Integration | Component | tree view', function (hooks) {
     (0, _emberQunit.setupRenderingTest)(hooks);
     (0, _qunit.test)('it renders and expands', async function (assert) {
@@ -2323,14 +2285,15 @@ define("mdeditor/tests/integration/components/tree-view-test", ["@ember/test-hel
       });
       // Handle any actions with this.on('myAction', function(val) { ... });
       assert.expect(7);
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         {{tree-view model=model selected=selected}}
       */
       {
-        id: "UwSxCJQ6",
-        block: "{\"symbols\":[],\"statements\":[[1,[28,\"tree-view\",null,[[\"model\",\"selected\"],[[24,[\"model\"]],[24,[\"selected\"]]]]],false]],\"hasEval\":false}",
-        meta: {}
+        "id": "/vTUWHcG",
+        "block": "[[[1,[28,[35,0],null,[[\"model\",\"selected\"],[[33,1],[33,2]]]]]],[],false,[\"tree-view\",\"model\",\"selected\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       assert.equal((0, _testHelpers.find)('.tree-trunk').innerText.replace(/[\s\n]+/g, '|'), '|bar1label|foo1label');
       assert.ok((0, _testHelpers.find)('.tree-leaf').classList.contains('tree-highlight'), 'selected leaf highlighted');
@@ -2339,7 +2302,7 @@ define("mdeditor/tests/integration/components/tree-view-test", ["@ember/test-hel
       assert.equal((0, _testHelpers.findAll)('.tree-leaf').length, 3, 'node expanded');
 
       // Template block usage:
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         
             {{#tree-view model=model select=select}}
@@ -2348,9 +2311,10 @@ define("mdeditor/tests/integration/components/tree-view-test", ["@ember/test-hel
           
       */
       {
-        id: "OHjnoj3O",
-        block: "{\"symbols\":[],\"statements\":[[0,\"\\n\"],[4,\"tree-view\",null,[[\"model\",\"select\"],[[24,[\"model\"]],[24,[\"select\"]]]],{\"statements\":[[0,\"        template block text\\n\"]],\"parameters\":[]},null],[0,\"    \"]],\"hasEval\":false}",
-        meta: {}
+        "id": "G622DizZ",
+        "block": "[[[1,\"\\n\"],[6,[39,0],null,[[\"model\",\"select\"],[[33,1],[33,2]]],[[\"default\"],[[[[1,\"        template block text\\n\"]],[]]]]],[1,\"    \"]],[],false,[\"tree-view\",\"model\",\"select\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       assert.equal((0, _testHelpers.find)('.tree-trunk').innerText.replace(/[\s\n]+/g, '|'), '|bar1label|foo1label|foo2label');
       await (0, _testHelpers.click)((0, _testHelpers.findAll)('.tree-leaf')[1]);
@@ -2358,79 +2322,82 @@ define("mdeditor/tests/integration/components/tree-view-test", ["@ember/test-hel
     });
   });
 });
-define("mdeditor/tests/integration/helpers/object-each-test", ["qunit", "ember-qunit", "@ember/test-helpers"], function (_qunit, _emberQunit, _testHelpers) {
+define("mdeditor/tests/integration/helpers/object-each-test", ["@ember/template-factory", "qunit", "ember-qunit", "@ember/test-helpers"], function (_templateFactory, _qunit, _emberQunit, _testHelpers) {
   "use strict";
 
-  0; //eaimeta@70e063a35619d71f0,"qunit",0,"ember-qunit",0,"@ember/test-helpers",0,"htmlbars-inline-precompile"eaimeta@70e063a35619d71f
+  0; //eaimeta@70e063a35619d71f0,"qunit",0,"ember-qunit",0,"@ember/test-helpers",0,"@ember/template-factory"eaimeta@70e063a35619d71f
   (0, _qunit.module)('Integration | Helper | object-each', function (hooks) {
     (0, _emberQunit.setupRenderingTest)(hooks);
 
     // Replace this with your real tests.
     (0, _qunit.test)('it renders', async function (assert) {
       this.set('inputValue', '1234');
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         {{object-each inputValue}}
       */
       {
-        id: "iTKkLi3e",
-        block: "{\"symbols\":[],\"statements\":[[1,[28,\"object-each\",[[24,[\"inputValue\"]]],null],false]],\"hasEval\":false}",
-        meta: {}
+        "id": "KlUbCV+R",
+        "block": "[[[1,[28,[35,0],[[33,1]],null]]],[],false,[\"object-each\",\"inputValue\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       assert.equal(this.element.textContent.trim(), '1234');
     });
   });
 });
-define("mdeditor/tests/integration/helpers/object-is-empty-test", ["qunit", "ember-qunit", "@ember/test-helpers"], function (_qunit, _emberQunit, _testHelpers) {
+define("mdeditor/tests/integration/helpers/object-is-empty-test", ["@ember/template-factory", "qunit", "ember-qunit", "@ember/test-helpers"], function (_templateFactory, _qunit, _emberQunit, _testHelpers) {
   "use strict";
 
-  0; //eaimeta@70e063a35619d71f0,"qunit",0,"ember-qunit",0,"@ember/test-helpers",0,"htmlbars-inline-precompile"eaimeta@70e063a35619d71f
+  0; //eaimeta@70e063a35619d71f0,"qunit",0,"ember-qunit",0,"@ember/test-helpers",0,"@ember/template-factory"eaimeta@70e063a35619d71f
   (0, _qunit.module)('Integration | Helper | object-is-empty', function (hooks) {
     (0, _emberQunit.setupRenderingTest)(hooks);
 
     // Replace this with your real tests.
     (0, _qunit.test)('it renders', async function (assert) {
       this.set('inputValue', '1234');
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         {{object-is-empty inputValue}}
       */
       {
-        id: "GSagCU8j",
-        block: "{\"symbols\":[],\"statements\":[[1,[28,\"object-is-empty\",[[24,[\"inputValue\"]]],null],false]],\"hasEval\":false}",
-        meta: {}
+        "id": "NRarIBPJ",
+        "block": "[[[1,[28,[35,0],[[33,1]],null]]],[],false,[\"object-is-empty\",\"inputValue\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       assert.equal(this.element.textContent.trim(), "false");
     });
   });
 });
-define("mdeditor/tests/integration/helpers/present-test", ["@ember/test-helpers", "qunit", "ember-qunit"], function (_testHelpers, _qunit, _emberQunit) {
+define("mdeditor/tests/integration/helpers/present-test", ["@ember/template-factory", "@ember/test-helpers", "qunit", "ember-qunit"], function (_templateFactory, _testHelpers, _qunit, _emberQunit) {
   "use strict";
 
-  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"htmlbars-inline-precompile"eaimeta@70e063a35619d71f
+  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"@ember/template-factory"eaimeta@70e063a35619d71f
   (0, _qunit.module)('helper:present', function (hooks) {
     (0, _emberQunit.setupRenderingTest)(hooks);
 
     // Replace this with your real tests.
     (0, _qunit.test)('it renders', async function (assert) {
       this.set('inputValue', '1234');
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         <section>{{present inputValue}}</section>
       */
       {
-        id: "wL4s7BkC",
-        block: "{\"symbols\":[],\"statements\":[[7,\"section\",true],[8],[1,[28,\"present\",[[24,[\"inputValue\"]]],null],false],[9]],\"hasEval\":false}",
-        meta: {}
+        "id": "JwEH4ZHt",
+        "block": "[[[10,\"section\"],[12],[1,[28,[35,0],[[33,1]],null]],[13]],[],false,[\"present\",\"inputValue\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       assert.equal((0, _testHelpers.find)('section').textContent.trim(), 'true');
     });
   });
 });
-define("mdeditor/tests/integration/helpers/word-limit-test", ["@ember/test-helpers", "qunit", "ember-qunit"], function (_testHelpers, _qunit, _emberQunit) {
+define("mdeditor/tests/integration/helpers/word-limit-test", ["@ember/template-factory", "@ember/test-helpers", "qunit", "ember-qunit"], function (_templateFactory, _testHelpers, _qunit, _emberQunit) {
   "use strict";
 
-  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"htmlbars-inline-precompile"eaimeta@70e063a35619d71f
+  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"@ember/template-factory"eaimeta@70e063a35619d71f
   (0, _qunit.module)('helper:word-limit', function (hooks) {
     (0, _emberQunit.setupRenderingTest)(hooks);
 
@@ -2439,30 +2406,31 @@ define("mdeditor/tests/integration/helpers/word-limit-test", ["@ember/test-helpe
       this.set('inputValue', `Lorem ipsum dolor sit amet, consectetur adipiscing elit. Etiam rutrum, neque
       nec sagittis maximus, lacus lectus placerat libero, finibus varius arcu enim
       eget ante. Duis.`);
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         <section>{{word-limit inputValue limit=20 wordLength=10}}</section>
       */
       {
-        id: "Xr1JHQPo",
-        block: "{\"symbols\":[],\"statements\":[[7,\"section\",true],[8],[1,[28,\"word-limit\",[[24,[\"inputValue\"]]],[[\"limit\",\"wordLength\"],[20,10]]],false],[9]],\"hasEval\":false}",
-        meta: {}
+        "id": "OWO2irMk",
+        "block": "[[[10,\"section\"],[12],[1,[28,[35,0],[[33,1]],[[\"limit\",\"wordLength\"],[20,10]]]],[13]],[],false,[\"word-limit\",\"inputValue\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       assert.equal((0, _testHelpers.find)('section').textContent.trim(), `Lorem ipsum dolor sit amet,  consectetu... adipiscing...elit. Etiam rutrum, neque nec sagittis maximus, lacus lectus placerat libero, finibus varius ...`);
     });
   });
 });
-define("mdeditor/tests/integration/pods/components/control/md-alert-table/component-test", ["qunit", "ember-qunit", "@ember/test-helpers", "ember-tooltips/test-support/dom"], function (_qunit, _emberQunit, _testHelpers, _dom) {
+define("mdeditor/tests/integration/pods/components/control/md-alert-table/component-test", ["@ember/template-factory", "qunit", "ember-qunit", "@ember/test-helpers", "ember-tooltips/test-support/dom"], function (_templateFactory, _qunit, _emberQunit, _testHelpers, _dom) {
   "use strict";
 
-  0; //eaimeta@70e063a35619d71f0,"qunit",0,"ember-qunit",0,"@ember/test-helpers",0,"htmlbars-inline-precompile",0,"ember-tooltips/test-support/dom"eaimeta@70e063a35619d71f
+  0; //eaimeta@70e063a35619d71f0,"qunit",0,"ember-qunit",0,"@ember/test-helpers",0,"ember-tooltips/test-support/dom",0,"@ember/template-factory"eaimeta@70e063a35619d71f
   (0, _qunit.module)('Integration | Component | control/md-alert-table', function (hooks) {
     (0, _emberQunit.setupRenderingTest)(hooks);
     (0, _qunit.test)('it renders', async function (assert) {
       // Set any properties with this.set('myProperty', 'value');
       // Handle any actions with this.set('myAction', function(val) { ... });
 
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         {{control/md-alert-table
             title="Foos"
@@ -2471,9 +2439,10 @@ define("mdeditor/tests/integration/pods/components/control/md-alert-table/compon
           }}
       */
       {
-        id: "db5ZT1dX",
-        block: "{\"symbols\":[],\"statements\":[[1,[28,\"control/md-alert-table\",null,[[\"title\",\"required\",\"tipMessage\"],[\"Foos\",true,\"Biz is baz.\"]]],false]],\"hasEval\":false}",
-        meta: {}
+        "id": "vtqfCig9",
+        "block": "[[[1,[28,[35,0],null,[[\"title\",\"required\",\"tipMessage\"],[\"Foos\",true,\"Biz is baz.\"]]]]],[],false,[\"control/md-alert-table\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       assert.equal(this.element.textContent.replace(/[\s\n]+/g, '|').trim(), 'No|Foos|found.|Add|Foo|');
       await (0, _testHelpers.triggerEvent)('.md-danger.ember-tooltip-target', 'mouseenter');
@@ -2482,7 +2451,7 @@ define("mdeditor/tests/integration/pods/components/control/md-alert-table/compon
       });
       assert.dom('.md-alert-table.alert-danger').exists();
       // Template block usage:
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         
             {{#control/md-alert-table title="Bars"}}
@@ -2491,37 +2460,39 @@ define("mdeditor/tests/integration/pods/components/control/md-alert-table/compon
           
       */
       {
-        id: "QiwhbZXM",
-        block: "{\"symbols\":[],\"statements\":[[0,\"\\n\"],[4,\"control/md-alert-table\",null,[[\"title\"],[\"Bars\"]],{\"statements\":[[0,\"        template block text\\n\"]],\"parameters\":[]},null],[0,\"    \"]],\"hasEval\":false}",
-        meta: {}
+        "id": "IExny986",
+        "block": "[[[1,\"\\n\"],[6,[39,0],null,[[\"title\"],[\"Bars\"]],[[\"default\"],[[[[1,\"        template block text\\n\"]],[]]]]],[1,\"    \"]],[],false,[\"control/md-alert-table\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       assert.equal(this.element.textContent.replace(/[\s\n]+/g, '|').trim(), '|No|Bars|found.|Add|Bar|template|block|text|');
     });
   });
 });
-define("mdeditor/tests/integration/pods/components/control/md-button-confirm/component-test", ["@ember/test-helpers", "qunit", "ember-qunit"], function (_testHelpers, _qunit, _emberQunit) {
+define("mdeditor/tests/integration/pods/components/control/md-button-confirm/component-test", ["@ember/template-factory", "@ember/test-helpers", "qunit", "ember-qunit"], function (_templateFactory, _testHelpers, _qunit, _emberQunit) {
   "use strict";
 
-  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"htmlbars-inline-precompile"eaimeta@70e063a35619d71f
+  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"@ember/template-factory"eaimeta@70e063a35619d71f
   (0, _qunit.module)('Integration | Component | control/md button confirm', function (hooks) {
     (0, _emberQunit.setupRenderingTest)(hooks);
     (0, _qunit.test)('it renders', async function (assert) {
       // Set any properties with this.set('myProperty', 'value');
       // Handle any actions with this.on('myAction', function(val) { ... });" + EOL + EOL +
 
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         {{control/md-button-confirm}}
       */
       {
-        id: "tqvrE4qs",
-        block: "{\"symbols\":[],\"statements\":[[1,[22,\"control/md-button-confirm\"],false]],\"hasEval\":false}",
-        meta: {}
+        "id": "jg3ahzQE",
+        "block": "[[[1,[34,0]]],[],false,[\"control/md-button-confirm\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       assert.equal((0, _testHelpers.find)('button').innerText.trim(), '');
 
       // Template block usage:" + EOL +
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         
             {{#control/md-button-confirm}}
@@ -2530,9 +2501,10 @@ define("mdeditor/tests/integration/pods/components/control/md-button-confirm/com
           
       */
       {
-        id: "RGc0SS/2",
-        block: "{\"symbols\":[],\"statements\":[[0,\"\\n\"],[4,\"control/md-button-confirm\",null,null,{\"statements\":[[0,\"        template block text\\n\"]],\"parameters\":[]},null],[0,\"    \"]],\"hasEval\":false}",
-        meta: {}
+        "id": "DVDZ7c7g",
+        "block": "[[[1,\"\\n\"],[6,[39,0],null,null,[[\"default\"],[[[[1,\"        template block text\\n\"]],[]]]]],[1,\"    \"]],[],false,[\"control/md-button-confirm\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       assert.equal((0, _testHelpers.find)('button').innerText.trim(), 'template block text');
     });
@@ -2541,7 +2513,7 @@ define("mdeditor/tests/integration/pods/components/control/md-button-confirm/com
       // Handle any actions with this.on('myAction', function(val) { ... });" + EOL + EOL +
 
       // Template block usage:" + EOL +
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         
             <a href="#">Test</a>
@@ -2551,9 +2523,10 @@ define("mdeditor/tests/integration/pods/components/control/md-button-confirm/com
           
       */
       {
-        id: "FyQue1/5",
-        block: "{\"symbols\":[],\"statements\":[[0,\"\\n      \"],[7,\"a\",true],[10,\"href\",\"#\"],[8],[0,\"Test\"],[9],[0,\"\\n\"],[4,\"control/md-button-confirm\",null,null,{\"statements\":[[0,\"        Test\\n\"]],\"parameters\":[]},null],[0,\"    \"]],\"hasEval\":false}",
-        meta: {}
+        "id": "awBXpA86",
+        "block": "[[[1,\"\\n      \"],[10,3],[14,6,\"#\"],[12],[1,\"Test\"],[13],[1,\"\\n\"],[6,[39,0],null,null,[[\"default\"],[[[[1,\"        Test\\n\"]],[]]]]],[1,\"    \"]],[],false,[\"control/md-button-confirm\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       assert.equal((0, _testHelpers.find)('button').innerText.trim(), 'Test', 'renders button');
       await (0, _testHelpers.click)('button');
@@ -2569,7 +2542,7 @@ define("mdeditor/tests/integration/pods/components/control/md-button-confirm/com
       });
 
       // Template block usage:" + EOL +
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         
             {{#control/md-button-confirm onConfirm=(action externalAction "onConfirm")}}
@@ -2578,19 +2551,20 @@ define("mdeditor/tests/integration/pods/components/control/md-button-confirm/com
           
       */
       {
-        id: "cwKh8wcL",
-        block: "{\"symbols\":[],\"statements\":[[0,\"\\n\"],[4,\"control/md-button-confirm\",null,[[\"onConfirm\"],[[28,\"action\",[[23,0,[]],[24,[\"externalAction\"]],\"onConfirm\"],null]]],{\"statements\":[[0,\"        Test\\n\"]],\"parameters\":[]},null],[0,\"    \"]],\"hasEval\":false}",
-        meta: {}
+        "id": "MSpOYrC1",
+        "block": "[[[1,\"\\n\"],[6,[39,0],null,[[\"onConfirm\"],[[28,[37,1],[[30,0],[33,2],\"onConfirm\"],null]]],[[\"default\"],[[[[1,\"        Test\\n\"]],[]]]]],[1,\"    \"]],[],false,[\"control/md-button-confirm\",\"action\",\"externalAction\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       await (0, _testHelpers.click)('button');
       await (0, _testHelpers.click)('button');
     });
   });
 });
-define("mdeditor/tests/integration/pods/components/control/md-button-modal/component-test", ["@ember/test-helpers", "qunit", "ember-qunit", "mdeditor/tests/helpers/modal-asserts"], function (_testHelpers, _qunit, _emberQunit, _modalAsserts) {
+define("mdeditor/tests/integration/pods/components/control/md-button-modal/component-test", ["@ember/template-factory", "@ember/test-helpers", "qunit", "ember-qunit", "mdeditor/tests/helpers/modal-asserts"], function (_templateFactory, _testHelpers, _qunit, _emberQunit, _modalAsserts) {
   "use strict";
 
-  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"htmlbars-inline-precompile",0,"mdeditor/tests/helpers/modal-asserts"eaimeta@70e063a35619d71f
+  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"mdeditor/tests/helpers/modal-asserts",0,"@ember/template-factory"eaimeta@70e063a35619d71f
   (0, _modalAsserts.default)();
   (0, _qunit.module)('Integration | Component | control/md button modal', function (hooks) {
     (0, _emberQunit.setupRenderingTest)(hooks);
@@ -2598,19 +2572,20 @@ define("mdeditor/tests/integration/pods/components/control/md-button-modal/compo
       // Set any properties with this.set('myProperty', 'value');
       // Handle any actions with this.on('myAction', function(val) { ... });" + EOL + EOL +
 
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         {{control/md-button-modal}}
       */
       {
-        id: "ZSKm2QLB",
-        block: "{\"symbols\":[],\"statements\":[[1,[22,\"control/md-button-modal\"],false]],\"hasEval\":false}",
-        meta: {}
+        "id": "VqlfJ2ig",
+        "block": "[[[1,[34,0]]],[],false,[\"control/md-button-modal\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       assert.equal((0, _testHelpers.find)('.md-button-modal').innerText.trim(), '');
 
       // Template block usage:" + EOL +
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         
             {{#control/md-button-modal}}
@@ -2619,9 +2594,10 @@ define("mdeditor/tests/integration/pods/components/control/md-button-modal/compo
           
       */
       {
-        id: "F6rZnLP/",
-        block: "{\"symbols\":[],\"statements\":[[0,\"\\n\"],[4,\"control/md-button-modal\",null,null,{\"statements\":[[0,\"        template block text\\n\"]],\"parameters\":[]},null],[0,\"    \"]],\"hasEval\":false}",
-        meta: {}
+        "id": "KDVBXhht",
+        "block": "[[[1,\"\\n\"],[6,[39,0],null,null,[[\"default\"],[[[[1,\"        template block text\\n\"]],[]]]]],[1,\"    \"]],[],false,[\"control/md-button-modal\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       assert.equal((0, _testHelpers.find)('.md-button-modal').innerText.trim(), 'template block text', 'block');
     });
@@ -2634,7 +2610,7 @@ define("mdeditor/tests/integration/pods/components/control/md-button-modal/compo
       this.set('externalAction', type => {
         assert.ok(type, `${type} called`);
       });
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         
             <div id='test-div'></div>
@@ -2645,16 +2621,17 @@ define("mdeditor/tests/integration/pods/components/control/md-button-modal/compo
           
       */
       {
-        id: "7TD1VSEX",
-        block: "{\"symbols\":[],\"statements\":[[0,\"\\n      \"],[7,\"div\",true],[10,\"id\",\"test-div\"],[8],[9],[0,\"\\n      \"],[4,\"control/md-button-modal\",null,[[\"message\",\"onConfirm\",\"onCancel\"],[\"Hello\",[28,\"action\",[[23,0,[]],[24,[\"externalAction\"]],\"confirm\"],null],[28,\"action\",[[23,0,[]],[24,[\"externalAction\"]],\"cancel\"],null]]],{\"statements\":[[0,\" Test\\n\"]],\"parameters\":[]},null],[0,\"    \"]],\"hasEval\":false}",
-        meta: {}
+        "id": "3Bp1lVEE",
+        "block": "[[[1,\"\\n      \"],[10,0],[14,1,\"test-div\"],[12],[13],[1,\"\\n      \"],[6,[39,0],null,[[\"message\",\"onConfirm\",\"onCancel\"],[\"Hello\",[28,[37,1],[[30,0],[33,2],\"confirm\"],null],[28,[37,1],[[30,0],[33,2],\"cancel\"],null]]],[[\"default\"],[[[[1,\" Test\\n\"]],[]]]]],[1,\"    \"]],[],false,[\"control/md-button-modal\",\"action\",\"externalAction\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
 
       // click the button
       await (0, _testHelpers.click)('.md-button-modal');
       assert.isPresentOnce('.md-modal-overlay');
       await (0, _testHelpers.clearRender)();
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         
             <div id='test-div'></div>
@@ -2666,9 +2643,10 @@ define("mdeditor/tests/integration/pods/components/control/md-button-modal/compo
           
       */
       {
-        id: "A8QcUo7q",
-        block: "{\"symbols\":[],\"statements\":[[0,\"\\n      \"],[7,\"div\",true],[10,\"id\",\"test-div\"],[8],[9],[0,\"\\n      \"],[4,\"control/md-button-modal\",null,[[\"renderInPlace\",\"message\",\"onConfirm\",\"onCancel\"],[true,\"Hello\",[28,\"action\",[[23,0,[]],[24,[\"externalAction\"]],\"confirm\"],null],[28,\"action\",[[23,0,[]],[24,[\"externalAction\"]],\"cancel\"],null]]],{\"statements\":[[0,\" Test\\n\"]],\"parameters\":[]},null],[0,\"    \"]],\"hasEval\":false}",
-        meta: {}
+        "id": "rGsaVwd3",
+        "block": "[[[1,\"\\n      \"],[10,0],[14,1,\"test-div\"],[12],[13],[1,\"\\n      \"],[6,[39,0],null,[[\"renderInPlace\",\"message\",\"onConfirm\",\"onCancel\"],[true,\"Hello\",[28,[37,1],[[30,0],[33,2],\"confirm\"],null],[28,[37,1],[[30,0],[33,2],\"cancel\"],null]]],[[\"default\"],[[[[1,\" Test\\n\"]],[]]]]],[1,\"    \"]],[],false,[\"control/md-button-modal\",\"action\",\"externalAction\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       // click the button
       await (0, _testHelpers.click)('.md-button-modal');
@@ -2686,10 +2664,10 @@ define("mdeditor/tests/integration/pods/components/control/md-button-modal/compo
     });
   });
 });
-define("mdeditor/tests/integration/pods/components/control/md-button/component-test", ["qunit", "ember-qunit", "@ember/test-helpers"], function (_qunit, _emberQunit, _testHelpers) {
+define("mdeditor/tests/integration/pods/components/control/md-button/component-test", ["@ember/template-factory", "qunit", "ember-qunit", "@ember/test-helpers"], function (_templateFactory, _qunit, _emberQunit, _testHelpers) {
   "use strict";
 
-  0; //eaimeta@70e063a35619d71f0,"qunit",0,"ember-qunit",0,"@ember/test-helpers",0,"htmlbars-inline-precompile"eaimeta@70e063a35619d71f
+  0; //eaimeta@70e063a35619d71f0,"qunit",0,"ember-qunit",0,"@ember/test-helpers",0,"@ember/template-factory"eaimeta@70e063a35619d71f
   (0, _qunit.module)('Integration | Component | control/md-button', function (hooks) {
     (0, _emberQunit.setupRenderingTest)(hooks);
     (0, _qunit.test)('it renders', async function (assert) {
@@ -2698,40 +2676,42 @@ define("mdeditor/tests/integration/pods/components/control/md-button/component-t
       this.set('myAction', function (val) {
         assert.ok(val, 'Click action');
       });
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         {{control/md-button text="Click me" click=(action myAction true)}}
       */
       {
-        id: "ZC0cOZ/H",
-        block: "{\"symbols\":[],\"statements\":[[1,[28,\"control/md-button\",null,[[\"text\",\"click\"],[\"Click me\",[28,\"action\",[[23,0,[]],[24,[\"myAction\"]],true],null]]]],false]],\"hasEval\":false}",
-        meta: {}
+        "id": "WqPYNPsR",
+        "block": "[[[1,[28,[35,0],null,[[\"text\",\"click\"],[\"Click me\",[28,[37,1],[[30,0],[33,2],true],null]]]]]],[],false,[\"control/md-button\",\"action\",\"myAction\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       assert.equal(this.element.textContent.trim(), 'Click me');
       (0, _testHelpers.click)('.md-button');
 
       // Template block usage:
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         
-            {{#control/md-button}}
+            <Control::MdButton>
               template block text
-            {{/control/md-button}}
+            </Control::MdButton>
           
       */
       {
-        id: "03k2SbUy",
-        block: "{\"symbols\":[],\"statements\":[[0,\"\\n\"],[4,\"control/md-button\",null,null,{\"statements\":[[0,\"        template block text\\n\"]],\"parameters\":[]},null],[0,\"    \"]],\"hasEval\":false}",
-        meta: {}
+        "id": "L++Qn3vS",
+        "block": "[[[1,\"\\n      \"],[8,[39,0],null,null,[[\"default\"],[[[[1,\"\\n        template block text\\n      \"]],[]]]]],[1,\"\\n    \"]],[],false,[\"control/md-button\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       assert.equal(this.element.textContent.trim(), 'template block text');
     });
   });
 });
-define("mdeditor/tests/integration/pods/components/control/md-contact-link/component-test", ["@ember/test-helpers", "qunit", "ember-qunit", "mdeditor/tests/helpers/create-contact"], function (_testHelpers, _qunit, _emberQunit, _createContact) {
+define("mdeditor/tests/integration/pods/components/control/md-contact-link/component-test", ["@ember/template-factory", "@ember/test-helpers", "qunit", "ember-qunit", "mdeditor/tests/helpers/create-contact"], function (_templateFactory, _testHelpers, _qunit, _emberQunit, _createContact) {
   "use strict";
 
-  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"htmlbars-inline-precompile",0,"mdeditor/tests/helpers/create-contact"eaimeta@70e063a35619d71f
+  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"mdeditor/tests/helpers/create-contact",0,"@ember/template-factory"eaimeta@70e063a35619d71f
   (0, _qunit.module)('Integration | Component | control/md contact link', function (hooks) {
     (0, _emberQunit.setupRenderingTest)(hooks);
     (0, _qunit.test)('it renders', async function (assert) {
@@ -2742,39 +2722,41 @@ define("mdeditor/tests/integration/pods/components/control/md-contact-link/compo
       // Set any properties with this.set('myProperty', 'value');
       // Handle any actions with this.on('myAction', function(val) { ... });
 
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         {{control/md-contact-link contacts=contacts contactId=0}}
       */
       {
-        id: "pxFJU6dO",
-        block: "{\"symbols\":[],\"statements\":[[1,[28,\"control/md-contact-link\",null,[[\"contacts\",\"contactId\"],[[24,[\"contacts\"]],0]]],false]],\"hasEval\":false}",
-        meta: {}
+        "id": "+7ZP4cJv",
+        "block": "[[[1,[28,[35,0],null,[[\"contacts\",\"contactId\"],[[33,1],0]]]]],[],false,[\"control/md-contact-link\",\"contacts\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       assert.equal((0, _testHelpers.find)('a').innerText.trim(), 'Contact0', 'renders link');
 
       // Template block usage:
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         
-            {{#control/md-contact-link contacts=contacts contactId=0 block=true}}
+            <Control::MdContactLink @contacts={{contacts}} @contactId={{0}} @block={{true}}>
               template block text
-            {{/control/md-contact-link}}
+            </Control::MdContactLink>
           
       */
       {
-        id: "qHXG9RZE",
-        block: "{\"symbols\":[],\"statements\":[[0,\"\\n\"],[4,\"control/md-contact-link\",null,[[\"contacts\",\"contactId\",\"block\"],[[24,[\"contacts\"]],0,true]],{\"statements\":[[0,\"        template block text\\n\"]],\"parameters\":[]},null],[0,\"    \"]],\"hasEval\":false}",
-        meta: {}
+        "id": "lYqoS84X",
+        "block": "[[[1,\"\\n      \"],[8,[39,0],null,[[\"@contacts\",\"@contactId\",\"@block\"],[[99,1,[\"@contacts\"]],0,true]],[[\"default\"],[[[[1,\"\\n        template block text\\n      \"]],[]]]]],[1,\"\\n    \"]],[],false,[\"control/md-contact-link\",\"contacts\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       assert.equal((0, _testHelpers.find)('a').textContent.trim(), 'template block text', 'renders as block');
     });
   });
 });
-define("mdeditor/tests/integration/pods/components/control/md-contact-title/component-test", ["@ember/test-helpers", "qunit", "ember-qunit", "mdeditor/tests/helpers/create-contact"], function (_testHelpers, _qunit, _emberQunit, _createContact) {
+define("mdeditor/tests/integration/pods/components/control/md-contact-title/component-test", ["@ember/template-factory", "@ember/test-helpers", "qunit", "ember-qunit", "mdeditor/tests/helpers/create-contact"], function (_templateFactory, _testHelpers, _qunit, _emberQunit, _createContact) {
   "use strict";
 
-  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"htmlbars-inline-precompile",0,"mdeditor/tests/helpers/create-contact"eaimeta@70e063a35619d71f
+  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"mdeditor/tests/helpers/create-contact",0,"@ember/template-factory"eaimeta@70e063a35619d71f
   (0, _qunit.module)('Integration | Component | control/md contact title', function (hooks) {
     (0, _emberQunit.setupRenderingTest)(hooks);
     (0, _qunit.test)('it renders', async function (assert) {
@@ -2782,40 +2764,42 @@ define("mdeditor/tests/integration/pods/components/control/md-contact-title/comp
       // Handle any actions with this.on('myAction', function(val) { ... });
       var store = this.owner.lookup('service:store');
       store.createRecord('contact', (0, _createContact.default)(1)[0]);
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         <span>{{control/md-contact-title contactId=0}}</span>
       */
       {
-        id: "bk26CxWD",
-        block: "{\"symbols\":[],\"statements\":[[7,\"span\",true],[8],[1,[28,\"control/md-contact-title\",null,[[\"contactId\"],[0]]],false],[9]],\"hasEval\":false}",
-        meta: {}
+        "id": "tWOURiaG",
+        "block": "[[[10,1],[12],[1,[28,[35,0],null,[[\"contactId\"],[0]]]],[13]],[],false,[\"control/md-contact-title\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       assert.equal((0, _testHelpers.find)('span').textContent.trim(), 'Contact0');
 
       // Template block usage:
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         <div class="test1">
-            {{#control/md-contact-title contactId=0 as |c|}}
+            <Control::MdContactTitle @contactId={{0}} as |c|>
               template block text {{c.title}}
-            {{/control/md-contact-title}}
+            </Control::MdContactTitle>
             </div>
           
       */
       {
-        id: "jMQvLy2k",
-        block: "{\"symbols\":[\"c\"],\"statements\":[[7,\"div\",true],[10,\"class\",\"test1\"],[8],[0,\"\\n\"],[4,\"control/md-contact-title\",null,[[\"contactId\"],[0]],{\"statements\":[[0,\"        template block text \"],[1,[23,1,[\"title\"]],false],[0,\"\\n\"]],\"parameters\":[1]},null],[0,\"      \"],[9],[0,\"\\n    \"]],\"hasEval\":false}",
-        meta: {}
+        "id": "f9wbp5i2",
+        "block": "[[[10,0],[14,0,\"test1\"],[12],[1,\"\\n      \"],[8,[39,0],null,[[\"@contactId\"],[0]],[[\"default\"],[[[[1,\"\\n        template block text \"],[1,[30,1,[\"title\"]]],[1,\"\\n      \"]],[1]]]]],[1,\"\\n      \"],[13],[1,\"\\n    \"]],[\"c\"],false,[\"control/md-contact-title\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       assert.equal((0, _testHelpers.find)('.test1').textContent.trim(), 'template block text Contact0');
     });
   });
 });
-define("mdeditor/tests/integration/pods/components/control/md-crud-buttons/component-test", ["@ember/test-helpers", "qunit", "ember-qunit"], function (_testHelpers, _qunit, _emberQunit) {
+define("mdeditor/tests/integration/pods/components/control/md-crud-buttons/component-test", ["@ember/template-factory", "@ember/test-helpers", "qunit", "ember-qunit"], function (_templateFactory, _testHelpers, _qunit, _emberQunit) {
   "use strict";
 
-  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"htmlbars-inline-precompile"eaimeta@70e063a35619d71f
+  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"@ember/template-factory"eaimeta@70e063a35619d71f
   (0, _qunit.module)('Integration | Component | control/md crud buttons', function (hooks) {
     (0, _emberQunit.setupRenderingTest)(hooks);
     (0, _qunit.test)('it renders', async function (assert) {
@@ -2824,20 +2808,21 @@ define("mdeditor/tests/integration/pods/components/control/md-crud-buttons/compo
       // Set any properties with this.set('myProperty', 'value');
       // Handle any actions with this.on('myAction', function(val) { ... });" + EOL + EOL +
 
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         {{control/md-crud-buttons allowCopy=true allowDelete=true}}
       */
       {
-        id: "y/mjSNGw",
-        block: "{\"symbols\":[],\"statements\":[[1,[28,\"control/md-crud-buttons\",null,[[\"allowCopy\",\"allowDelete\"],[true,true]]],false]],\"hasEval\":false}",
-        meta: {}
+        "id": "aF5RXqgG",
+        "block": "[[[1,[28,[35,0],null,[[\"allowCopy\",\"allowDelete\"],[true,true]]]]],[],false,[\"control/md-crud-buttons\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       await (0, _testHelpers.triggerEvent)('.md-crud-buttons', 'mouseenter');
       assert.equal((0, _testHelpers.find)('.md-crud-buttons').textContent.replace(/[ \n]+/g, '|'), '|Copy|Delete|');
 
       // Template block usage:" + EOL +
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         
             {{#control/md-crud-buttons doSave=true allowCopy=true}}
@@ -2846,9 +2831,10 @@ define("mdeditor/tests/integration/pods/components/control/md-crud-buttons/compo
           
       */
       {
-        id: "ADZvkhqU",
-        block: "{\"symbols\":[],\"statements\":[[0,\"\\n\"],[4,\"control/md-crud-buttons\",null,[[\"doSave\",\"allowCopy\"],[true,true]],{\"statements\":[[0,\"        template block text\\n\"]],\"parameters\":[]},null],[0,\"    \"]],\"hasEval\":false}",
-        meta: {}
+        "id": "gk4MdhEP",
+        "block": "[[[1,\"\\n\"],[6,[39,0],null,[[\"doSave\",\"allowCopy\"],[true,true]],[[\"default\"],[[[[1,\"        template block text\\n\"]],[]]]]],[1,\"    \"]],[],false,[\"control/md-crud-buttons\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       assert.equal((0, _testHelpers.find)('.md-crud-buttons').textContent.replace(/[ \n]+/g, '|'), '|Save|Cancel|Copy|template|block|text|', 'block, doSave');
       assert.equal((0, _testHelpers.find)('.md-crud-buttons .btn-success').disabled, true, 'save disabled');
@@ -2866,16 +2852,17 @@ define("mdeditor/tests/integration/pods/components/control/md-crud-buttons/compo
         hasDirtyHash: true,
         canRevert: true
       });
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         {{control/md-crud-buttons model=model doSave=(action externalAction
         'doSave') doCancel=(action externalAction 'doCancel') doCopy=(action
         externalAction 'doCopy') doDelete=(action externalAction 'doDelete') allowCopy=true allowDelete=true}}
       */
       {
-        id: "s88SE2b/",
-        block: "{\"symbols\":[],\"statements\":[[1,[28,\"control/md-crud-buttons\",null,[[\"model\",\"doSave\",\"doCancel\",\"doCopy\",\"doDelete\",\"allowCopy\",\"allowDelete\"],[[24,[\"model\"]],[28,\"action\",[[23,0,[]],[24,[\"externalAction\"]],\"doSave\"],null],[28,\"action\",[[23,0,[]],[24,[\"externalAction\"]],\"doCancel\"],null],[28,\"action\",[[23,0,[]],[24,[\"externalAction\"]],\"doCopy\"],null],[28,\"action\",[[23,0,[]],[24,[\"externalAction\"]],\"doDelete\"],null],true,true]]],false]],\"hasEval\":false}",
-        meta: {}
+        "id": "PlJnCB+u",
+        "block": "[[[1,[28,[35,0],null,[[\"model\",\"doSave\",\"doCancel\",\"doCopy\",\"doDelete\",\"allowCopy\",\"allowDelete\"],[[33,1],[28,[37,2],[[30,0],[33,3],\"doSave\"],null],[28,[37,2],[[30,0],[33,3],\"doCancel\"],null],[28,[37,2],[[30,0],[33,3],\"doCopy\"],null],[28,[37,2],[[30,0],[33,3],\"doDelete\"],null],true,true]]]]],[],false,[\"control/md-crud-buttons\",\"model\",\"action\",\"externalAction\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
 
       // click the buttons
@@ -2888,69 +2875,72 @@ define("mdeditor/tests/integration/pods/components/control/md-crud-buttons/compo
     });
   });
 });
-define("mdeditor/tests/integration/pods/components/control/md-definition/component-test", ["@ember/test-helpers", "qunit", "ember-qunit"], function (_testHelpers, _qunit, _emberQunit) {
+define("mdeditor/tests/integration/pods/components/control/md-definition/component-test", ["@ember/template-factory", "@ember/test-helpers", "qunit", "ember-qunit"], function (_templateFactory, _testHelpers, _qunit, _emberQunit) {
   "use strict";
 
-  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"htmlbars-inline-precompile"eaimeta@70e063a35619d71f
+  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"@ember/template-factory"eaimeta@70e063a35619d71f
   (0, _qunit.module)('Integration | Component | control/md definition', function (hooks) {
     (0, _emberQunit.setupRenderingTest)(hooks);
     (0, _qunit.test)('it renders', async function (assert) {
       // Set any properties with this.set('myProperty', 'value');
       // Handle any actions with this.on('myAction', function(val) { ... });
 
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         {{control/md-definition title="foobar" text="bizbaz"}}
       */
       {
-        id: "K/9FE+vQ",
-        block: "{\"symbols\":[],\"statements\":[[1,[28,\"control/md-definition\",null,[[\"title\",\"text\"],[\"foobar\",\"bizbaz\"]]],false]],\"hasEval\":false}",
-        meta: {}
+        "id": "+7gG0/BJ",
+        "block": "[[[1,[28,[35,0],null,[[\"title\",\"text\"],[\"foobar\",\"bizbaz\"]]]]],[],false,[\"control/md-definition\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
-      assert.equal((0, _testHelpers.find)('.ember-view').textContent.replace(/[ \n]+/g, '|').trim(), 'foobar|bizbaz|');
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      assert.equal(this.element.textContent.replace(/[ \n]+/g, '|').trim(), 'foobar|bizbaz|');
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         {{control/md-definition title="foobar"}}
       */
       {
-        id: "/bfdiis0",
-        block: "{\"symbols\":[],\"statements\":[[1,[28,\"control/md-definition\",null,[[\"title\"],[\"foobar\"]]],false]],\"hasEval\":false}",
-        meta: {}
+        "id": "I5pMjPrO",
+        "block": "[[[1,[28,[35,0],null,[[\"title\"],[\"foobar\"]]]]],[],false,[\"control/md-definition\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
-      assert.equal((0, _testHelpers.find)('.ember-view').textContent.replace(/[ \n]+/g, '|').trim(), 'foobar|Not|Defined|', 'no text');
+      assert.equal(this.element.textContent.replace(/[ \n]+/g, '|').trim(), 'foobar|Not|Defined|', 'no text');
 
       // Template block usage:
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         
-            {{#control/md-definition title="foobar"}}
+            <Control::MdDefinition @title="foobar">
               template block text
-            {{/control/md-definition}}
+            </Control::MdDefinition>
           
       */
       {
-        id: "86A/wYHV",
-        block: "{\"symbols\":[],\"statements\":[[0,\"\\n\"],[4,\"control/md-definition\",null,[[\"title\"],[\"foobar\"]],{\"statements\":[[0,\"        template block text\\n\"]],\"parameters\":[]},null],[0,\"    \"]],\"hasEval\":false}",
-        meta: {}
+        "id": "VCu6KGrk",
+        "block": "[[[1,\"\\n      \"],[8,[39,0],null,[[\"@title\"],[\"foobar\"]],[[\"default\"],[[[[1,\"\\n        template block text\\n      \"]],[]]]]],[1,\"\\n    \"]],[],false,[\"control/md-definition\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
-      assert.equal((0, _testHelpers.find)('.ember-view').textContent.replace(/[ \n]+/g, '|').trim(), '|foobar|template|block|text|');
+      assert.equal(this.element.textContent.replace(/[ \n]+/g, '|').trim(), '|foobar|template|block|text|');
     });
   });
 });
-define("mdeditor/tests/integration/pods/components/control/md-edit-table/component-test", ["qunit", "ember-qunit", "@ember/test-helpers"], function (_qunit, _emberQunit, _testHelpers) {
+define("mdeditor/tests/integration/pods/components/control/md-edit-table/component-test", ["@ember/template-factory", "qunit", "ember-qunit", "@ember/test-helpers", "@ember/object"], function (_templateFactory, _qunit, _emberQunit, _testHelpers, _object) {
   "use strict";
 
-  0; //eaimeta@70e063a35619d71f0,"qunit",0,"ember-qunit",0,"@ember/test-helpers",0,"htmlbars-inline-precompile",0,"@ember/object"eaimeta@70e063a35619d71f
+  0; //eaimeta@70e063a35619d71f0,"qunit",0,"ember-qunit",0,"@ember/test-helpers",0,"@ember/object",0,"@ember/template-factory"eaimeta@70e063a35619d71f
   (0, _qunit.module)('Integration | Component | control/md-edit-table', function (hooks) {
     (0, _emberQunit.setupRenderingTest)(hooks);
     (0, _qunit.test)('it renders', async function (assert) {
       // Set any properties with this.set('myProperty', 'value');
       // Handle any actions with this.set('myAction', function(val) { ... });
 
-      this.set('data', [Ember.Object.create({
+      this.set('data', [_object.default.create({
         title: 'foo',
         type: 'bar'
-      }), Ember.Object.create({
+      }), _object.default.create({
         title: 'biz',
         type: 'baz'
       })]);
@@ -2961,26 +2951,27 @@ define("mdeditor/tests/integration/pods/components/control/md-edit-table/compone
         propertyName: 'type',
         title: 'Type'
       }]);
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         {{control/md-edit-table data=data dataColumns=columns rowBodyComponent="object/md-schema"}}
       */
       {
-        id: "clR+HHnt",
-        block: "{\"symbols\":[],\"statements\":[[1,[28,\"control/md-edit-table\",null,[[\"data\",\"dataColumns\",\"rowBodyComponent\"],[[24,[\"data\"]],[24,[\"columns\"]],\"object/md-schema\"]]],false]],\"hasEval\":false}",
-        meta: {}
+        "id": "pIptU+Lo",
+        "block": "[[[1,[28,[35,0],null,[[\"data\",\"dataColumns\",\"rowBodyComponent\"],[[33,1],[33,2],\"object/md-schema\"]]]]],[],false,[\"control/md-edit-table\",\"data\",\"columns\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
-      assert.equal(this.element.textContent.replace(/[ \s\n]+/g, '|').trim(), '|Search:|Columns|Show|All|Hide|All|Restore|Defaults|Title|Type|Title|Type|Title|Type|foo|bar|Edit|Delete|biz|baz|Edit|Delete|Show|1|-|2|of|2|Clear|all|filters|Rows:|10|25|50|500|Page:|1|');
+      assert.equal(this.element.textContent.replace(/[ \s\n]+/g, '|').trim(), '|Search:|Columns|Show|All|Hide|All|Restore|Defaults|Title|Type|Title|Type|Title|Type|foo|bar|Edit|Delete|biz|baz|Edit|Delete|Show|1|-|2|of|2|Clear|all|filters|Rows:|10|25|50|Page:|1|');
       await (0, _testHelpers.click)('.md-row-buttons .btn-success');
       assert.dom('.md-schema').exists('expanded row');
       assert.equal((0, _testHelpers.find)('.md-schema input').value, 'foo', 'render row contents');
     });
   });
 });
-define("mdeditor/tests/integration/pods/components/control/md-errors/component-test", ["@ember/test-helpers", "qunit", "ember-qunit"], function (_testHelpers, _qunit, _emberQunit) {
+define("mdeditor/tests/integration/pods/components/control/md-errors/component-test", ["@ember/template-factory", "@ember/test-helpers", "qunit", "ember-qunit"], function (_templateFactory, _testHelpers, _qunit, _emberQunit) {
   "use strict";
 
-  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"htmlbars-inline-precompile"eaimeta@70e063a35619d71f
+  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"@ember/template-factory"eaimeta@70e063a35619d71f
   (0, _qunit.module)('Integration | Component | control/md errors', function (hooks) {
     (0, _emberQunit.setupRenderingTest)(hooks);
     (0, _qunit.test)('it renders', async function (assert) {
@@ -2999,20 +2990,21 @@ define("mdeditor/tests/integration/pods/components/control/md-errors/component-t
         title: 'Test2',
         errors: []
       }]);
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         {{control/md-errors errors=errors}}
       */
       {
-        id: "PqxTYhO9",
-        block: "{\"symbols\":[],\"statements\":[[1,[28,\"control/md-errors\",null,[[\"errors\"],[[24,[\"errors\"]]]]],false]],\"hasEval\":false}",
-        meta: {}
+        "id": "aFOuF2za",
+        "block": "[[[1,[28,[35,0],null,[[\"errors\"],[[33,1]]]]]],[],false,[\"control/md-errors\",\"errors\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
-      assert.equal((0, _testHelpers.find)('.md-error-list').textContent.replace(/[ \n]+/g, '|').trim(), '|Test|0|message1|/foo/biz|1|message2|Test2|');
+      assert.equal((0, _testHelpers.find)('.md-error-list').textContent.replace(/[ \n]+/g, '|').trim(), '|Test|1|Validation|Error|in|foo|>|biz|message1|Schema|Path:|/foo/biz|Go|To|Error|2|Validation|Error|in|the|record|message2|Go|To|Error|Test2|');
       assert.ok((0, _testHelpers.findAll)('.md-error-list .label')[1].classList.contains('label-danger'), 'class applied');
 
       // Template block usage:
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         
             {{#control/md-errors  errors=errors}}
@@ -3021,49 +3013,51 @@ define("mdeditor/tests/integration/pods/components/control/md-errors/component-t
           
       */
       {
-        id: "gwY/Irt/",
-        block: "{\"symbols\":[],\"statements\":[[0,\"\\n\"],[4,\"control/md-errors\",null,[[\"errors\"],[[24,[\"errors\"]]]],{\"statements\":[[0,\"        template block text\\n\"]],\"parameters\":[]},null],[0,\"    \"]],\"hasEval\":false}",
-        meta: {}
+        "id": "MnPpGYLR",
+        "block": "[[[1,\"\\n\"],[6,[39,0],null,[[\"errors\"],[[33,1]]],[[\"default\"],[[[[1,\"        template block text\\n\"]],[]]]]],[1,\"    \"]],[],false,[\"control/md-errors\",\"errors\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
-      assert.equal((0, _testHelpers.find)('.md-error-list').textContent.replace(/[ \n]+/g, '|').trim(), '|Test|0|message1|/foo/biz|1|message2|Test2|template|block|text|', 'block');
+      assert.equal((0, _testHelpers.find)('.md-error-list').textContent.replace(/[ \n]+/g, '|').trim(), '|Test|1|Validation|Error|in|foo|>|biz|message1|Schema|Path:|/foo/biz|Go|To|Error|2|Validation|Error|in|the|record|message2|Go|To|Error|Test2|template|block|text|', 'block');
     });
   });
 });
-define("mdeditor/tests/integration/pods/components/control/md-fiscalyear/component-test", ["@ember/test-helpers", "qunit", "ember-qunit", "ember-power-select/test-support", "ember-power-select/test-support/helpers", "moment"], function (_testHelpers, _qunit, _emberQunit, _testSupport, _helpers, _moment) {
+define("mdeditor/tests/integration/pods/components/control/md-fiscalyear/component-test", ["@ember/template-factory", "@ember/test-helpers", "qunit", "ember-qunit", "ember-power-select/test-support", "ember-power-select/test-support/helpers", "moment", "@ember/object"], function (_templateFactory, _testHelpers, _qunit, _emberQunit, _testSupport, _helpers, _moment, _object) {
   "use strict";
 
-  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"htmlbars-inline-precompile",0,"ember-power-select/test-support",0,"ember-power-select/test-support/helpers",0,"moment"eaimeta@70e063a35619d71f
+  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"ember-power-select/test-support",0,"ember-power-select/test-support/helpers",0,"moment",0,"@ember/object",0,"@ember/template-factory"eaimeta@70e063a35619d71f
   (0, _qunit.module)('Integration | Component | control/md fiscalyear', function (hooks) {
     (0, _emberQunit.setupRenderingTest)(hooks);
     (0, _qunit.test)('it renders', async function (assert) {
       // Set any properties with this.set('myProperty', 'value');
       // Handle any actions with this.on('myAction', function(val) { ... });
 
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         {{control/md-fiscalyear context=this}}
       */
       {
-        id: "9P55wWdL",
-        block: "{\"symbols\":[],\"statements\":[[1,[28,\"control/md-fiscalyear\",null,[[\"context\"],[[23,0,[]]]]],false]],\"hasEval\":false}",
-        meta: {}
+        "id": "9E+5IRcF",
+        "block": "[[[1,[28,[35,0],null,[[\"context\"],[[30,0]]]]]],[],false,[\"control/md-fiscalyear\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       assert.equal((0, _testHelpers.find)('.md-select.md-fiscalyear').innerText.replace(/[\n]+/g, '|').trim(), 'Pick Fiscal Year|Pick a Fiscal Year');
     });
     (0, _qunit.test)('select a year', async function (assert) {
-      assert.expect(3);
+      assert.expect(2);
 
       // Set any properties with this.set('myProperty', 'value');
       this.set('end', null);
       this.set('start', null);
-      this.set('settings', {
-        data: {
+      this.set('settings', _object.default.create({
+        data: _object.default.create({
           fiscalStartMonth: 1
-        }
-      });
+        })
+      }));
       // Handle any actions with this.on('myAction', function(val) { ... });
       var year = new Date().getFullYear();
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         
             {{input/md-datetime
@@ -3082,23 +3076,22 @@ define("mdeditor/tests/integration/pods/components/control/md-fiscalyear/compone
             {{control/md-fiscalyear context=this settings=settings}}
       */
       {
-        id: "M3yGHXNh",
-        block: "{\"symbols\":[],\"statements\":[[0,\"\\n      \"],[1,[28,\"input/md-datetime\",null,[[\"class\",\"valuePath\",\"model\",\"label\",\"placeholder\"],[\"start\",\"start\",[23,0,[]],\"Start Date\",\"Enter start dateTime\"]]],false],[0,\"\\n      \"],[1,[28,\"input/md-datetime\",null,[[\"class\",\"valuePath\",\"model\",\"label\"],[\"end\",\"end\",[23,0,[]],\"End Date\"]]],false],[0,\"\\n      \"],[1,[28,\"control/md-fiscalyear\",null,[[\"context\",\"settings\"],[[23,0,[]],[24,[\"settings\"]]]]],false]],\"hasEval\":false}",
-        meta: {}
+        "id": "M2XirI2r",
+        "block": "[[[1,\"\\n      \"],[1,[28,[35,0],null,[[\"class\",\"valuePath\",\"model\",\"label\",\"placeholder\"],[\"start\",\"start\",[30,0],\"Start Date\",\"Enter start dateTime\"]]]],[1,\"\\n      \"],[1,[28,[35,0],null,[[\"class\",\"valuePath\",\"model\",\"label\"],[\"end\",\"end\",[30,0],\"End Date\"]]]],[1,\"\\n      \"],[1,[28,[35,1],null,[[\"context\",\"settings\"],[[30,0],[33,2]]]]]],[],false,[\"input/md-datetime\",\"control/md-fiscalyear\",\"settings\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       await (0, _helpers.clickTrigger)('.md-fiscalyear');
       await (0, _testSupport.selectChoose)('.md-fiscalyear', year);
-      assert.equal(this.end, (0, _moment.default)(year, 'YYYY').month(this.settings.data.fiscalStartMonth + 10).endOf('month').toISOString(), 'end set');
-      assert.equal(this.start, (0, _moment.default)(year, 'YYYY').month(this.settings.data.fiscalStartMonth - 1).startOf('month').toISOString(), 'start set');
-      this.set('settings.data.fiscalStartMonth', null);
-      assert.equal((0, _testHelpers.find)('.md-fiscalyear .ember-power-select-trigger').getAttribute('aria-disabled'), 'true', 'disabled if fiscalStartMonth empty');
+      assert.equal((0, _moment.default)(this.end).format('YYYY-MM-DD'), (0, _moment.default)(year, 'YYYY').month(this.settings.data.fiscalStartMonth + 10).endOf('month').format('YYYY-MM-DD'), 'end set');
+      assert.equal((0, _moment.default)(this.start).format('YYYY-MM-DD'), (0, _moment.default)(year, 'YYYY').month(this.settings.data.fiscalStartMonth - 1).startOf('month').format('YYYY-MM-DD'), 'start set');
     });
   });
 });
-define("mdeditor/tests/integration/pods/components/control/md-import-csv/component-test", ["@ember/test-helpers", "qunit", "ember-qunit"], function (_testHelpers, _qunit, _emberQunit) {
+define("mdeditor/tests/integration/pods/components/control/md-import-csv/component-test", ["@ember/template-factory", "@ember/test-helpers", "qunit", "ember-qunit"], function (_templateFactory, _testHelpers, _qunit, _emberQunit) {
   "use strict";
 
-  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"htmlbars-inline-precompile"eaimeta@70e063a35619d71f
+  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"@ember/template-factory"eaimeta@70e063a35619d71f
   (0, _qunit.module)('Integration | Component | control/md import csv', function (hooks) {
     (0, _emberQunit.setupRenderingTest)(hooks);
     (0, _qunit.test)('it renders', async function (assert) {
@@ -3108,24 +3101,26 @@ define("mdeditor/tests/integration/pods/components/control/md-import-csv/compone
       this.set('progress', 0);
       // Handle any actions with this.on('myAction', function(val) { ... });
 
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         {{control/md-import-csv}}
       */
       {
-        id: "niQlXi6v",
-        block: "{\"symbols\":[],\"statements\":[[1,[22,\"control/md-import-csv\"],false]],\"hasEval\":false}",
-        meta: {}
+        "id": "MSsOFkkr",
+        "block": "[[[1,[34,0]]],[],false,[\"control/md-import-csv\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       assert.equal((0, _testHelpers.find)('.md-import-picker').textContent.trim(), 'Click or Drop a CSV here.');
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         {{control/md-import-csv isProcessing=true progress=progress}}
       */
       {
-        id: "aLxICkyw",
-        block: "{\"symbols\":[],\"statements\":[[1,[28,\"control/md-import-csv\",null,[[\"isProcessing\",\"progress\"],[true,[24,[\"progress\"]]]]],false]],\"hasEval\":false}",
-        meta: {}
+        "id": "ZcK3PeF4",
+        "block": "[[[1,[28,[35,0],null,[[\"isProcessing\",\"progress\"],[true,[33,1]]]]]],[],false,[\"control/md-import-csv\",\"progress\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       assert.equal((0, _testHelpers.find)('.ember-view').textContent.replace(/[ \n]+/g, '|').trim(), '|Processing...|Stop|0%|Complete|', 'renders progressbar');
       this.set('progress', 57);
@@ -3136,10 +3131,10 @@ define("mdeditor/tests/integration/pods/components/control/md-import-csv/compone
     });
   });
 });
-define("mdeditor/tests/integration/pods/components/control/md-indicator/component-test", ["qunit", "ember-qunit", "@ember/test-helpers", "ember-tooltips/test-support/dom"], function (_qunit, _emberQunit, _testHelpers, _dom) {
+define("mdeditor/tests/integration/pods/components/control/md-indicator/component-test", ["@ember/template-factory", "qunit", "ember-qunit", "@ember/test-helpers", "ember-tooltips/test-support/dom"], function (_templateFactory, _qunit, _emberQunit, _testHelpers, _dom) {
   "use strict";
 
-  0; //eaimeta@70e063a35619d71f0,"qunit",0,"ember-qunit",0,"@ember/test-helpers",0,"ember-tooltips/test-support/dom",0,"htmlbars-inline-precompile"eaimeta@70e063a35619d71f
+  0; //eaimeta@70e063a35619d71f0,"qunit",0,"ember-qunit",0,"@ember/test-helpers",0,"ember-tooltips/test-support/dom",0,"@ember/template-factory"eaimeta@70e063a35619d71f
   (0, _qunit.module)('Integration | Component | control/md-indicator', function (hooks) {
     (0, _emberQunit.setupRenderingTest)(hooks);
     (0, _qunit.test)('it renders', async function (assert) {
@@ -3150,7 +3145,7 @@ define("mdeditor/tests/integration/pods/components/control/md-indicator/componen
         foo: 'This',
         bar: 'warning'
       });
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         {{control/md-indicator
             icon="sticky-note"
@@ -3161,9 +3156,10 @@ define("mdeditor/tests/integration/pods/components/control/md-indicator/componen
             
       */
       {
-        id: "Dl4Oe9ox",
-        block: "{\"symbols\":[],\"statements\":[[1,[28,\"control/md-indicator\",null,[[\"icon\",\"title\",\"note\",\"values\",\"type\"],[\"sticky-note\",\"Hello\",\"${foo} is a ${bar}\",[24,[\"values\"]],\"danger\"]]],false],[0,\"\\n      \"]],\"hasEval\":false}",
-        meta: {}
+        "id": "FpjjGUEw",
+        "block": "[[[1,[28,[35,0],null,[[\"icon\",\"title\",\"note\",\"values\",\"type\"],[\"sticky-note\",\"Hello\",\"${foo} is a ${bar}\",[33,1],\"danger\"]]]],[1,\"\\n      \"]],[],false,[\"control/md-indicator\",\"values\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       assert.dom('.md-indicator').isVisible({
         count: 1
@@ -3175,24 +3171,24 @@ define("mdeditor/tests/integration/pods/components/control/md-indicator/componen
     });
   });
 });
-define("mdeditor/tests/integration/pods/components/control/md-indicator/related/component-test", ["qunit", "ember-qunit", "@ember/test-helpers", "mdeditor/tests/helpers/create-dictionary", "ember-tooltips/test-support/dom"], function (_qunit, _emberQunit, _testHelpers, _createDictionary, _dom) {
+define("mdeditor/tests/integration/pods/components/control/md-indicator/related/component-test", ["@ember/template-factory", "qunit", "ember-qunit", "@ember/test-helpers", "@ember/object", "mdeditor/tests/helpers/create-dictionary", "ember-tooltips/test-support/dom", "@ember/service"], function (_templateFactory, _qunit, _emberQunit, _testHelpers, _object, _createDictionary, _dom, _service) {
   "use strict";
 
-  0; //eaimeta@70e063a35619d71f0,"qunit",0,"ember-qunit",0,"@ember/test-helpers",0,"htmlbars-inline-precompile",0,"mdeditor/tests/helpers/create-dictionary",0,"ember-tooltips/test-support/dom",0,"@ember/service"eaimeta@70e063a35619d71f
+  0; //eaimeta@70e063a35619d71f0,"qunit",0,"ember-qunit",0,"@ember/test-helpers",0,"@ember/object",0,"mdeditor/tests/helpers/create-dictionary",0,"ember-tooltips/test-support/dom",0,"@ember/service",0,"@ember/template-factory"eaimeta@70e063a35619d71f
   (0, _qunit.module)('Integration | Component | control/md-indicator/related', function (hooks) {
     (0, _emberQunit.setupRenderingTest)(hooks);
     hooks.beforeEach(function (assert) {
-      let router = Ember.Service.extend({
+      let router = _service.default.extend({
         transitionTo() {
           assert.ok(true, 'Transition started');
         },
         generateURL(route, models) {
-          assert.equal(route, 'dictionary.show.edit.entity', 'route OK');
-          assert.deepEqual(models, ['attribute1'], 'model ids OK');
+          assert.equal(route, 'dictionary.show.edit.domain.edit', 'route OK');
+          assert.deepEqual(models, [0], 'model ids OK');
+          return '#';
         }
       });
       this.owner.register('service:-routing', router);
-      //this.router=router;
       this.owner.setupRouter();
     });
     (0, _qunit.test)('it renders', async function (assert) {
@@ -3201,16 +3197,15 @@ define("mdeditor/tests/integration/pods/components/control/md-indicator/related/
         foo: 'attribute1',
         bar: 'codeName0'
       });
-      this.set('dictionary', (0, _createDictionary.createDictionary)(1)[0].json.dataDictionary);
+      this.set('dictionary', _object.default.create((0, _createDictionary.createDictionary)(1)[0].json.dataDictionary));
       this.set('model', this.dictionary.entity[0].attribute[0]);
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         {{control/md-indicator/related
             model=model
-            route=true
             icon="cog"
             note="The attribute ${foo} has an associated domain: ${bar}."
-            route="dictionary.show.edit.entity"
+            route="dictionary.show.edit.domain.edit"
             values=values
             parent=dictionary
             relatedId="domainId"
@@ -3219,19 +3214,20 @@ define("mdeditor/tests/integration/pods/components/control/md-indicator/related/
             linkText="Go to Domain"
             type="warning"
             popperContainer="#ember-testing"
-            routeIdPaths=(array "values.foo")
+            routeIdPaths=(array "relatedIndex")
           }}
       */
       {
-        id: "a1Hq5omP",
-        block: "{\"symbols\":[],\"statements\":[[1,[28,\"control/md-indicator/related\",null,[[\"model\",\"route\",\"icon\",\"note\",\"route\",\"values\",\"parent\",\"relatedId\",\"path\",\"title\",\"linkText\",\"type\",\"popperContainer\",\"routeIdPaths\"],[[24,[\"model\"]],true,\"cog\",\"The attribute ${foo} has an associated domain: ${bar}.\",\"dictionary.show.edit.entity\",[24,[\"values\"]],[24,[\"dictionary\"]],\"domainId\",\"domain\",\"Related Indicator Test\",\"Go to Domain\",\"warning\",\"#ember-testing\",[28,\"array\",[\"values.foo\"],null]]]],false]],\"hasEval\":false}",
-        meta: {}
+        "id": "AArbHIWM",
+        "block": "[[[1,[28,[35,0],null,[[\"model\",\"icon\",\"note\",\"route\",\"values\",\"parent\",\"relatedId\",\"path\",\"title\",\"linkText\",\"type\",\"popperContainer\",\"routeIdPaths\"],[[33,1],\"cog\",\"The attribute ${foo} has an associated domain: ${bar}.\",\"dictionary.show.edit.domain.edit\",[33,2],[33,3],\"domainId\",\"domain\",\"Related Indicator Test\",\"Go to Domain\",\"warning\",\"#ember-testing\",[28,[37,4],[\"relatedIndex\"],null]]]]]],[],false,[\"control/md-indicator/related\",\"model\",\"values\",\"dictionary\",\"array\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
-      assert.dom('.md-indicator-related .md-indicator').isVisible({
+      assert.dom('.md-indicator-related').exists({
         count: 1
       });
-      assert.dom('.md-indicator .fa').hasClass('fa-cog');
-      await (0, _testHelpers.triggerEvent)('.md-indicator-related .md-indicator', 'mouseenter');
+      assert.dom('.md-indicator-related .fa').hasClass('fa-cog');
+      await (0, _testHelpers.triggerEvent)('.md-indicator-related .fa', 'mouseenter');
       (0, _dom.assertTooltipContent)(assert, {
         contentString: `Related Indicator Test\nThe attribute attribute1 has an associated domain: codeName0.\nGo to Domain`
       });
@@ -3239,49 +3235,51 @@ define("mdeditor/tests/integration/pods/components/control/md-indicator/related/
     });
   });
 });
-define("mdeditor/tests/integration/pods/components/control/md-infotip/component-test", ["qunit", "ember-qunit", "@ember/test-helpers"], function (_qunit, _emberQunit, _testHelpers) {
+define("mdeditor/tests/integration/pods/components/control/md-infotip/component-test", ["@ember/template-factory", "qunit", "ember-qunit", "@ember/test-helpers"], function (_templateFactory, _qunit, _emberQunit, _testHelpers) {
   "use strict";
 
-  0; //eaimeta@70e063a35619d71f0,"qunit",0,"ember-qunit",0,"@ember/test-helpers",0,"htmlbars-inline-precompile"eaimeta@70e063a35619d71f
+  0; //eaimeta@70e063a35619d71f0,"qunit",0,"ember-qunit",0,"@ember/test-helpers",0,"@ember/template-factory"eaimeta@70e063a35619d71f
   (0, _qunit.module)('Integration | Component | control/md-infotip', function (hooks) {
     (0, _emberQunit.setupRenderingTest)(hooks);
     (0, _qunit.test)('it renders', async function (assert) {
       // Set any properties with this.set('myProperty', 'value');
       // Handle any actions with this.set('myAction', function(val) { ... });
 
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         {{control/md-infotip}}
       */
       {
-        id: "ZykxUW8s",
-        block: "{\"symbols\":[],\"statements\":[[1,[22,\"control/md-infotip\"],false]],\"hasEval\":false}",
-        meta: {}
+        "id": "bd83AGPX",
+        "block": "[[[1,[34,0]]],[],false,[\"control/md-infotip\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       assert.equal(this.element.textContent.trim(), '');
 
       // Template block usage:
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         
-            {{#control/md-infotip}}
+            <Control::MdInfotip>
               template block text
-            {{/control/md-infotip}}
+            </Control::MdInfotip>
           
       */
       {
-        id: "ltvhuIeV",
-        block: "{\"symbols\":[],\"statements\":[[0,\"\\n\"],[4,\"control/md-infotip\",null,null,{\"statements\":[[0,\"        template block text\\n\"]],\"parameters\":[]},null],[0,\"    \"]],\"hasEval\":false}",
-        meta: {}
+        "id": "75cxgldD",
+        "block": "[[[1,\"\\n      \"],[8,[39,0],null,null,[[\"default\"],[[[[1,\"\\n        template block text\\n      \"]],[]]]]],[1,\"\\n    \"]],[],false,[\"control/md-infotip\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       assert.equal(this.element.textContent.trim(), 'template block text');
     });
   });
 });
-define("mdeditor/tests/integration/pods/components/control/md-itis/component-test", ["@ember/test-helpers", "qunit", "ember-qunit"], function (_testHelpers, _qunit, _emberQunit) {
+define("mdeditor/tests/integration/pods/components/control/md-itis/component-test", ["@ember/template-factory", "@ember/test-helpers", "qunit", "ember-qunit", "@ember/object"], function (_templateFactory, _testHelpers, _qunit, _emberQunit, _object) {
   "use strict";
 
-  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"htmlbars-inline-precompile",0,"@ember/object"eaimeta@70e063a35619d71f
+  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"@ember/object",0,"@ember/template-factory"eaimeta@70e063a35619d71f
   (0, _qunit.module)('Integration | Component | control/md itis', function (hooks) {
     (0, _emberQunit.setupRenderingTest)(hooks);
     (0, _qunit.test)('it renders', async function (assert) {
@@ -3290,7 +3288,7 @@ define("mdeditor/tests/integration/pods/components/control/md-itis/component-tes
       this.set('taxonomy', {
         taxonomicClassification: []
       });
-      this.set('taxa', [Ember.Object.create({
+      this.set('taxa', [_object.default.create({
         "kingdom": "Animalia",
         "name": "Calotes rouxii",
         "rank": "Species",
@@ -3328,14 +3326,15 @@ define("mdeditor/tests/integration/pods/components/control/md-itis/component-tes
       })]);
       // Handle any actions with this.on('myAction', function(val) { ... });
 
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         {{control/md-itis taxonomy=taxonomy}}
       */
       {
-        id: "e6jUvnI0",
-        block: "{\"symbols\":[],\"statements\":[[1,[28,\"control/md-itis\",null,[[\"taxonomy\"],[[24,[\"taxonomy\"]]]]],false]],\"hasEval\":false}",
-        meta: {}
+        "id": "hpIO+AGl",
+        "block": "[[[1,[28,[35,0],null,[[\"taxonomy\"],[[33,1]]]]]],[],false,[\"control/md-itis\",\"taxonomy\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       assert.equal((0, _testHelpers.find)('.md-itis').textContent.replace(/[ \n]+/g, '|').trim(), '|Search|Value|Kingdom|(optional)|Select|a|kingdom.|Search|');
 
@@ -3343,14 +3342,15 @@ define("mdeditor/tests/integration/pods/components/control/md-itis/component-tes
       // await click('button[type=submit]');
       // await settled();
 
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
-        {{control/md-itis taxonomy=taxonomy searchResult=taxa found=true}}
+        {{control/md-itis taxonomy=taxonomy searchResult=taxa}}
       */
       {
-        id: "+9DGhqWP",
-        block: "{\"symbols\":[],\"statements\":[[1,[28,\"control/md-itis\",null,[[\"taxonomy\",\"searchResult\",\"found\"],[[24,[\"taxonomy\"]],[24,[\"taxa\"]],true]]],false]],\"hasEval\":false}",
-        meta: {}
+        "id": "PKEOP6gA",
+        "block": "[[[1,[28,[35,0],null,[[\"taxonomy\",\"searchResult\"],[[33,1],[33,2]]]]]],[],false,[\"control/md-itis\",\"taxonomy\",\"taxa\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       assert.ok((0, _testHelpers.find)('.md-itis-taxalist'), 'renders search result');
       await (0, _testHelpers.click)('.md-itis-taxalist .list-group-item .btn-success');
@@ -3358,10 +3358,10 @@ define("mdeditor/tests/integration/pods/components/control/md-itis/component-tes
     });
   });
 });
-define("mdeditor/tests/integration/pods/components/control/md-json-button/component-test", ["@ember/test-helpers", "qunit", "ember-qunit"], function (_testHelpers, _qunit, _emberQunit) {
+define("mdeditor/tests/integration/pods/components/control/md-json-button/component-test", ["@ember/template-factory", "@ember/test-helpers", "qunit", "ember-qunit"], function (_templateFactory, _testHelpers, _qunit, _emberQunit) {
   "use strict";
 
-  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"htmlbars-inline-precompile"eaimeta@70e063a35619d71f
+  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"@ember/template-factory"eaimeta@70e063a35619d71f
   (0, _qunit.module)('Integration | Component | control/md json button', function (hooks) {
     (0, _emberQunit.setupRenderingTest)(hooks);
     (0, _qunit.test)('it renders', async function (assert) {
@@ -3370,19 +3370,20 @@ define("mdeditor/tests/integration/pods/components/control/md-json-button/compon
       this.set('json', {
         foo: 'bar'
       });
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         {{control/md-json-button}}
       */
       {
-        id: "FdHCZTIy",
-        block: "{\"symbols\":[],\"statements\":[[1,[22,\"control/md-json-button\"],false]],\"hasEval\":false}",
-        meta: {}
+        "id": "Bkh+36cf",
+        "block": "[[[1,[34,0]]],[],false,[\"control/md-json-button\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       assert.equal((0, _testHelpers.find)('button').textContent.trim(), 'Preview JSON');
 
       // Template block usage:
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         
             {{#control/md-json-button}}
@@ -3391,9 +3392,10 @@ define("mdeditor/tests/integration/pods/components/control/md-json-button/compon
           
       */
       {
-        id: "hEVqRZ6K",
-        block: "{\"symbols\":[],\"statements\":[[0,\"\\n\"],[4,\"control/md-json-button\",null,null,{\"statements\":[[0,\"        template block text\\n\"]],\"parameters\":[]},null],[0,\"    \"]],\"hasEval\":false}",
-        meta: {}
+        "id": "ZfaNNAyx",
+        "block": "[[[1,\"\\n\"],[6,[39,0],null,null,[[\"default\"],[[[[1,\"        template block text\\n\"]],[]]]]],[1,\"    \"]],[],false,[\"control/md-json-button\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       assert.equal((0, _testHelpers.find)('button').textContent.trim(), 'template block text');
     });
@@ -3403,14 +3405,15 @@ define("mdeditor/tests/integration/pods/components/control/md-json-button/compon
       this.set('json', {
         foo: 'bar'
       });
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         {{control/md-json-button json=json preview=true}}
       */
       {
-        id: "+2fTwcpF",
-        block: "{\"symbols\":[],\"statements\":[[1,[28,\"control/md-json-button\",null,[[\"json\",\"preview\"],[[24,[\"json\"]],true]]],false]],\"hasEval\":false}",
-        meta: {}
+        "id": "SITVNmDT",
+        "block": "[[[1,[28,[35,0],null,[[\"json\",\"preview\"],[[33,1],true]]]]],[],false,[\"control/md-json-button\",\"json\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       await (0, _testHelpers.click)('button.btn');
       assert.equal(document.querySelector('.md-jsmodal-container').textContent.trim(), '{"foo": "bar"}');
@@ -3421,7 +3424,7 @@ define("mdeditor/tests/integration/pods/components/control/md-json-button/compon
       this.set('json', {
         foo: 'bar'
       });
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         {{control/md-json-button json=json title="foobar"}}
             <div class="slider">
@@ -3433,19 +3436,20 @@ define("mdeditor/tests/integration/pods/components/control/md-json-button/compon
             </div>
       */
       {
-        id: "u5Xr56f1",
-        block: "{\"symbols\":[\"slider\"],\"statements\":[[1,[28,\"control/md-json-button\",null,[[\"json\",\"title\"],[[24,[\"json\"]],\"foobar\"]]],false],[0,\"\\n      \"],[7,\"div\",true],[10,\"class\",\"slider\"],[8],[0,\"\\n\"],[4,\"from-elsewhere\",null,[[\"name\"],[\"md-slider-json\"]],{\"statements\":[[0,\"          \"],[7,\"h3\",true],[10,\"class\",\"text-info\"],[8],[1,[23,1,[\"title\"]],false],[9],[0,\"\\n          \"],[7,\"hr\",true],[8],[9],[0,\"\\n          \"],[1,[28,\"component\",[[23,1,[\"body\"]]],null],false],[0,\"\\n\"]],\"parameters\":[1]},null],[0,\"      \"],[9]],\"hasEval\":false}",
-        meta: {}
+        "id": "r8516kJn",
+        "block": "[[[1,[28,[35,0],null,[[\"json\",\"title\"],[[33,1],\"foobar\"]]]],[1,\"\\n      \"],[10,0],[14,0,\"slider\"],[12],[1,\"\\n\"],[6,[39,2],null,[[\"name\"],[\"md-slider-json\"]],[[\"default\"],[[[[1,\"          \"],[10,\"h3\"],[14,0,\"text-info\"],[12],[1,[30,1,[\"title\"]]],[13],[1,\"\\n          \"],[10,\"hr\"],[12],[13],[1,\"\\n          \"],[46,[30,1,[\"body\"]],null,null,null],[1,\"\\n\"]],[1]]]]],[1,\"      \"],[13]],[\"slider\"],false,[\"control/md-json-button\",\"json\",\"from-elsewhere\",\"component\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       await (0, _testHelpers.click)('button.btn');
       assert.equal((0, _testHelpers.find)('.slider').textContent.replace(/[ \n]+/g, '|').trim(), '|Viewing|JSON|for:|foobar|{"foo":|"bar"}|');
     });
   });
 });
-define("mdeditor/tests/integration/pods/components/control/md-json-viewer/component-test", ["@ember/test-helpers", "jquery", "qunit", "ember-qunit"], function (_testHelpers, _jquery, _qunit, _emberQunit) {
+define("mdeditor/tests/integration/pods/components/control/md-json-viewer/component-test", ["@ember/template-factory", "@ember/test-helpers", "jquery", "qunit", "ember-qunit"], function (_templateFactory, _testHelpers, _jquery, _qunit, _emberQunit) {
   "use strict";
 
-  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"jquery",0,"qunit",0,"ember-qunit",0,"htmlbars-inline-precompile"eaimeta@70e063a35619d71f
+  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"jquery",0,"qunit",0,"ember-qunit",0,"@ember/template-factory"eaimeta@70e063a35619d71f
   (0, _qunit.module)('Integration | Component | control/md json viewer', function (hooks) {
     (0, _emberQunit.setupRenderingTest)(hooks);
     (0, _qunit.test)('render json modal', async function (assert) {
@@ -3454,14 +3458,15 @@ define("mdeditor/tests/integration/pods/components/control/md-json-viewer/compon
       this.set('json', {
         foo: 'bar'
       });
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         {{control/md-json-viewer json=json}}
       */
       {
-        id: "TcOCWF/H",
-        block: "{\"symbols\":[],\"statements\":[[1,[28,\"control/md-json-viewer\",null,[[\"json\"],[[24,[\"json\"]]]]],false]],\"hasEval\":false}",
-        meta: {}
+        "id": "OK8gjCMC",
+        "block": "[[[1,[28,[35,0],null,[[\"json\"],[[33,1]]]]]],[],false,[\"control/md-json-viewer\",\"json\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       assert.equal((0, _jquery.default)('.md-jsmodal-container').text().trim(), '{"foo": "bar"}');
     });
@@ -3471,62 +3476,65 @@ define("mdeditor/tests/integration/pods/components/control/md-json-viewer/compon
       this.set('json', {
         foo: 'bar'
       });
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         {{control/md-json-viewer json=json modal=false}}
       */
       {
-        id: "EQYsgPf9",
-        block: "{\"symbols\":[],\"statements\":[[1,[28,\"control/md-json-viewer\",null,[[\"json\",\"modal\"],[[24,[\"json\"]],false]]],false]],\"hasEval\":false}",
-        meta: {}
+        "id": "RNdP+sqz",
+        "block": "[[[1,[28,[35,0],null,[[\"json\",\"modal\"],[[33,1],false]]]]],[],false,[\"control/md-json-viewer\",\"json\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       assert.equal((0, _testHelpers.find)('.md-json-viewer').textContent.trim(), '{"foo": "bar"}');
     });
   });
 });
-define("mdeditor/tests/integration/pods/components/control/md-modal/component-test", ["qunit", "ember-qunit", "@ember/test-helpers"], function (_qunit, _emberQunit, _testHelpers) {
+define("mdeditor/tests/integration/pods/components/control/md-modal/component-test", ["@ember/template-factory", "qunit", "ember-qunit", "@ember/test-helpers"], function (_templateFactory, _qunit, _emberQunit, _testHelpers) {
   "use strict";
 
-  0; //eaimeta@70e063a35619d71f0,"qunit",0,"ember-qunit",0,"@ember/test-helpers",0,"htmlbars-inline-precompile"eaimeta@70e063a35619d71f
+  0; //eaimeta@70e063a35619d71f0,"qunit",0,"ember-qunit",0,"@ember/test-helpers",0,"@ember/template-factory"eaimeta@70e063a35619d71f
   (0, _qunit.module)('Integration | Component | control/md modal', function (hooks) {
     (0, _emberQunit.setupRenderingTest)(hooks);
     (0, _qunit.test)('it renders', async function (assert) {
       // Set any properties with this.set('myProperty', 'value');
       // Handle any actions with this.on('myAction', function(val) { ... });
 
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         {{control/md-modal isShowing=true}}
       */
       {
-        id: "SzJXlXQ8",
-        block: "{\"symbols\":[],\"statements\":[[1,[28,\"control/md-modal\",null,[[\"isShowing\"],[true]]],false]],\"hasEval\":false}",
-        meta: {}
+        "id": "2YES7m2M",
+        "block": "[[[1,[28,[35,0],null,[[\"isShowing\"],[true]]]]],[],false,[\"control/md-modal\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       assert.ok(document.querySelector('.md-modal-container'));
 
       // Template block usage:
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         
-            {{#control/md-modal isShowing=true}}
+            <Control::MdModal @isShowing={{true}}>
               template block text
-            {{/control/md-modal}}
+            </Control::MdModal>
           
       */
       {
-        id: "f3JPqgHv",
-        block: "{\"symbols\":[],\"statements\":[[0,\"\\n\"],[4,\"control/md-modal\",null,[[\"isShowing\"],[true]],{\"statements\":[[0,\"        template block text\\n\"]],\"parameters\":[]},null],[0,\"    \"]],\"hasEval\":false}",
-        meta: {}
+        "id": "yRUvWC3w",
+        "block": "[[[1,\"\\n      \"],[8,[39,0],null,[[\"@isShowing\"],[true]],[[\"default\"],[[[[1,\"\\n        template block text\\n      \"]],[]]]]],[1,\"\\n    \"]],[],false,[\"control/md-modal\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       assert.equal(document.querySelector('.md-modal-container').textContent.trim(), 'template block text');
     });
   });
 });
-define("mdeditor/tests/integration/pods/components/control/md-record-table/buttons/component-test", ["@ember/test-helpers", "qunit", "ember-qunit"], function (_testHelpers, _qunit, _emberQunit) {
+define("mdeditor/tests/integration/pods/components/control/md-record-table/buttons/component-test", ["@ember/template-factory", "@ember/test-helpers", "qunit", "ember-qunit"], function (_templateFactory, _testHelpers, _qunit, _emberQunit) {
   "use strict";
 
-  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"htmlbars-inline-precompile"eaimeta@70e063a35619d71f
+  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"@ember/template-factory"eaimeta@70e063a35619d71f
   (0, _qunit.module)('Integration | Component | control/md record table/buttons', function (hooks) {
     (0, _emberQunit.setupRenderingTest)(hooks);
     (0, _qunit.test)('it renders', async function (assert) {
@@ -3538,38 +3546,40 @@ define("mdeditor/tests/integration/pods/components/control/md-record-table/butto
       });
       // Handle any actions with this.on('myAction', function(val) { ... });
 
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         {{control/md-record-table/buttons record=model}}
       */
       {
-        id: "9HtadClo",
-        block: "{\"symbols\":[],\"statements\":[[1,[28,\"control/md-record-table/buttons\",null,[[\"record\"],[[24,[\"model\"]]]]],false]],\"hasEval\":false}",
-        meta: {}
+        "id": "1RH58l2S",
+        "block": "[[[1,[28,[35,0],null,[[\"record\"],[[33,1]]]]]],[],false,[\"control/md-record-table/buttons\",\"model\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       assert.equal((0, _testHelpers.find)('.md-dashboard-buttons').textContent.replace(/[ \n]+/g, '|').trim(), '|Show|Edit|Delete|Preview|JSON|');
-      assert.dom('.md-status-icon .btn-danger').isVisible();
-      assert.dom('.md-status-icon .btn-warning').isVisible();
+      assert.dom('.md-status-icon .btn-danger').exists();
+      assert.dom('.md-status-icon .btn-warning').exists();
       // Template block usage:
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
-        {{#control/md-record-table/buttons}}
+        <Control::MdRecordTable::Buttons>
                 template block text
-              {{/control/md-record-table/buttons}}
+              </Control::MdRecordTable::Buttons>
       */
       {
-        id: "EZ0t44CS",
-        block: "{\"symbols\":[],\"statements\":[[4,\"control/md-record-table/buttons\",null,null,{\"statements\":[[0,\"          template block text\\n\"]],\"parameters\":[]},null]],\"hasEval\":false}",
-        meta: {}
+        "id": "7CBdNZkK",
+        "block": "[[[8,[39,0],null,null,[[\"default\"],[[[[1,\"\\n          template block text\\n        \"]],[]]]]]],[],false,[\"control/md-record-table/buttons\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       assert.equal((0, _testHelpers.find)('.md-dashboard-buttons').textContent.replace(/[ \n]+/g, '|').trim(), '|Show|Edit|Delete|Preview|JSON|template|block|text|', 'block');
     });
   });
 });
-define("mdeditor/tests/integration/pods/components/control/md-record-table/buttons/custom/component-test", ["@ember/test-helpers", "qunit", "ember-qunit"], function (_testHelpers, _qunit, _emberQunit) {
+define("mdeditor/tests/integration/pods/components/control/md-record-table/buttons/custom/component-test", ["@ember/template-factory", "@ember/test-helpers", "qunit", "ember-qunit"], function (_templateFactory, _testHelpers, _qunit, _emberQunit) {
   "use strict";
 
-  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"htmlbars-inline-precompile"eaimeta@70e063a35619d71f
+  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"@ember/template-factory"eaimeta@70e063a35619d71f
   (0, _qunit.module)('Integration | Component | control/md record table/buttons/custom', function (hooks) {
     (0, _emberQunit.setupRenderingTest)(hooks);
     (0, _qunit.test)('it renders', async function (assert) {
@@ -3589,24 +3599,25 @@ define("mdeditor/tests/integration/pods/components/control/md-record-table/butto
 
       // Handle any actions with this.on('myAction', function(val) { ... });
 
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         {{control/md-record-table/buttons/custom column=column record=rec}}
       */
       {
-        id: "MGlm/+qB",
-        block: "{\"symbols\":[],\"statements\":[[1,[28,\"control/md-record-table/buttons/custom\",null,[[\"column\",\"record\"],[[24,[\"column\"]],[24,[\"rec\"]]]]],false]],\"hasEval\":false}",
-        meta: {}
+        "id": "PNPCLno1",
+        "block": "[[[1,[28,[35,0],null,[[\"column\",\"record\"],[[33,1],[33,2]]]]]],[],false,[\"control/md-record-table/buttons/custom\",\"column\",\"rec\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       assert.equal((0, _testHelpers.find)('button.btn-warning').textContent.trim(), 'foobar');
       (0, _testHelpers.click)('button.btn-warning');
     });
   });
 });
-define("mdeditor/tests/integration/pods/components/control/md-record-table/buttons/filter/component-test", ["@ember/test-helpers", "qunit", "ember-qunit"], function (_testHelpers, _qunit, _emberQunit) {
+define("mdeditor/tests/integration/pods/components/control/md-record-table/buttons/filter/component-test", ["@ember/template-factory", "@ember/test-helpers", "qunit", "ember-qunit"], function (_templateFactory, _testHelpers, _qunit, _emberQunit) {
   "use strict";
 
-  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"htmlbars-inline-precompile"eaimeta@70e063a35619d71f
+  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"@ember/template-factory"eaimeta@70e063a35619d71f
   (0, _qunit.module)('Integration | Component | control/md record table/buttons/filter', function (hooks) {
     (0, _emberQunit.setupRenderingTest)(hooks);
     (0, _qunit.test)('it renders', async function (assert) {
@@ -3618,47 +3629,49 @@ define("mdeditor/tests/integration/pods/components/control/md-record-table/butto
       this.set('deleteSelected', function (selectedItems) {
         assert.equal(selectedItems, items, 'fires action');
       });
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         {{control/md-record-table/buttons/filter deleteSelected=deleteSelected selectedItems=selectedItems}}
       */
       {
-        id: "JUHx4BI6",
-        block: "{\"symbols\":[],\"statements\":[[1,[28,\"control/md-record-table/buttons/filter\",null,[[\"deleteSelected\",\"selectedItems\"],[[24,[\"deleteSelected\"]],[24,[\"selectedItems\"]]]]],false]],\"hasEval\":false}",
-        meta: {}
+        "id": "jdwUnuui",
+        "block": "[[[1,[28,[35,0],null,[[\"deleteSelected\",\"selectedItems\"],[[33,1],[33,2]]]]]],[],false,[\"control/md-record-table/buttons/filter\",\"deleteSelected\",\"selectedItems\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       assert.equal((0, _testHelpers.find)('button.btn-danger').textContent.trim(), 'Delete Selected');
       (0, _testHelpers.doubleClick)('button.btn-danger');
     });
   });
 });
-define("mdeditor/tests/integration/pods/components/control/md-record-table/buttons/show/component-test", ["@ember/test-helpers", "qunit", "ember-qunit"], function (_testHelpers, _qunit, _emberQunit) {
+define("mdeditor/tests/integration/pods/components/control/md-record-table/buttons/show/component-test", ["@ember/template-factory", "@ember/test-helpers", "qunit", "ember-qunit"], function (_templateFactory, _testHelpers, _qunit, _emberQunit) {
   "use strict";
 
-  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"htmlbars-inline-precompile"eaimeta@70e063a35619d71f
+  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"@ember/template-factory"eaimeta@70e063a35619d71f
   (0, _qunit.module)('Integration | Component | control/md record table/buttons/show', function (hooks) {
     (0, _emberQunit.setupRenderingTest)(hooks);
     (0, _qunit.test)('it renders', async function (assert) {
       // Set any properties with this.set('myProperty', 'value');
       // Handle any actions with this.on('myAction', function(val) { ... });
 
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         {{control/md-record-table/buttons/show}}
       */
       {
-        id: "CIQW3h35",
-        block: "{\"symbols\":[],\"statements\":[[1,[22,\"control/md-record-table/buttons/show\"],false]],\"hasEval\":false}",
-        meta: {}
+        "id": "c+dlENyT",
+        "block": "[[[1,[34,0]]],[],false,[\"control/md-record-table/buttons/show\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       assert.equal((0, _testHelpers.find)('.btn-info').textContent.trim(), 'Show');
     });
   });
 });
-define("mdeditor/tests/integration/pods/components/control/md-record-table/component-test", ["@ember/test-helpers", "qunit", "ember-qunit"], function (_testHelpers, _qunit, _emberQunit) {
+define("mdeditor/tests/integration/pods/components/control/md-record-table/component-test", ["@ember/template-factory", "@ember/test-helpers", "qunit", "ember-qunit"], function (_templateFactory, _testHelpers, _qunit, _emberQunit) {
   "use strict";
 
-  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"htmlbars-inline-precompile"eaimeta@70e063a35619d71f
+  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"@ember/template-factory"eaimeta@70e063a35619d71f
   (0, _qunit.module)('Integration | Component | control/md record table', function (hooks) {
     (0, _emberQunit.setupRenderingTest)(hooks);
     (0, _qunit.test)('it renders', async function (assert) {
@@ -3680,39 +3693,41 @@ define("mdeditor/tests/integration/pods/components/control/md-record-table/compo
 
       // Handle any actions with this.on('myAction', function(val) { ... });
 
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         {{control/md-record-table dataColumns=columns data=data}}
       */
       {
-        id: "OuB9O86R",
-        block: "{\"symbols\":[],\"statements\":[[1,[28,\"control/md-record-table\",null,[[\"dataColumns\",\"data\"],[[24,[\"columns\"]],[24,[\"data\"]]]]],false]],\"hasEval\":false}",
-        meta: {}
+        "id": "x2iZT0e2",
+        "block": "[[[1,[28,[35,0],null,[[\"dataColumns\",\"data\"],[[33,1],[33,2]]]]]],[],false,[\"control/md-record-table\",\"columns\",\"data\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
-      assert.equal((0, _testHelpers.find)('.md-record-table').textContent.replace(/[ \n\t\s]+/g, '|').trim(), '|Search:|Columns|Show|All|Hide|All|Restore|Defaults|Title|Type|Actions|Title|Type|Actions|Title|Type|foo|bar|Show|biz|baz|Show|Show|1|-|2|of|2|Clear|all|filters|Rows:|10|25|50|500|Page:|1|');
+      assert.equal((0, _testHelpers.find)('.md-record-table').textContent.replace(/[ \n\t\s]+/g, '|').trim(), '|Search:|Columns|Show|All|Hide|All|Restore|Defaults|Title|Type|Actions|Title|Type|Actions|Title|Type|foo|bar|Show|biz|baz|Show|Show|1|-|2|of|2|Clear|all|filters|Rows:|10|25|50|Page:|1|');
 
       // Template block usage:
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         
-            {{#control/md-record-table dataColumns=columns data=data}}
+            <Control::MdRecordTable @dataColumns={{columns}} @data={{data}}>
               template block text
-            {{/control/md-record-table}}
+            </Control::MdRecordTable>
           
       */
       {
-        id: "KOiBYcL2",
-        block: "{\"symbols\":[],\"statements\":[[0,\"\\n\"],[4,\"control/md-record-table\",null,[[\"dataColumns\",\"data\"],[[24,[\"columns\"]],[24,[\"data\"]]]],{\"statements\":[[0,\"        template block text\\n\"]],\"parameters\":[]},null],[0,\"    \"]],\"hasEval\":false}",
-        meta: {}
+        "id": "mwcLtWcC",
+        "block": "[[[1,\"\\n      \"],[8,[39,0],null,[[\"@dataColumns\",\"@data\"],[[99,1,[\"@dataColumns\"]],[99,2,[\"@data\"]]]],[[\"default\"],[[[[1,\"\\n        template block text\\n      \"]],[]]]]],[1,\"\\n    \"]],[],false,[\"control/md-record-table\",\"columns\",\"data\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       assert.equal((0, _testHelpers.find)('.md-record-table').textContent.trim(), 'template block text');
     });
   });
 });
-define("mdeditor/tests/integration/pods/components/control/md-repo-link/component-test", ["@ember/test-helpers", "qunit", "ember-qunit", "mdeditor/config/environment"], function (_testHelpers, _qunit, _emberQunit, _environment) {
+define("mdeditor/tests/integration/pods/components/control/md-repo-link/component-test", ["@ember/template-factory", "@ember/test-helpers", "qunit", "ember-qunit", "mdeditor/config/environment"], function (_templateFactory, _testHelpers, _qunit, _emberQunit, _environment) {
   "use strict";
 
-  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"htmlbars-inline-precompile",0,"mdeditor/config/environment"eaimeta@70e063a35619d71f
+  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"mdeditor/config/environment",0,"@ember/template-factory"eaimeta@70e063a35619d71f
   const {
     APP: {
       repository,
@@ -3725,20 +3740,21 @@ define("mdeditor/tests/integration/pods/components/control/md-repo-link/componen
       // Set any properties with this.set('myProperty', 'value');
       // Handle any actions with this.on('myAction', function(val) { ... });
 
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         {{control/md-repo-link}}
       */
       {
-        id: "F+AIyKwT",
-        block: "{\"symbols\":[],\"statements\":[[1,[22,\"control/md-repo-link\"],false]],\"hasEval\":false}",
-        meta: {}
+        "id": "qA4Or2hP",
+        "block": "[[[1,[34,0]]],[],false,[\"control/md-repo-link\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       assert.equal((0, _testHelpers.find)('a').textContent.trim(), version);
       assert.equal((0, _testHelpers.find)('a').getAttribute('href'), `${repository}/tree/${version.substring(version.indexOf('+') + 1)}`, 'link ok');
 
       // Template block usage:
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         
             {{#control/md-repo-link}}
@@ -3747,57 +3763,60 @@ define("mdeditor/tests/integration/pods/components/control/md-repo-link/componen
           
       */
       {
-        id: "J/VwpCTq",
-        block: "{\"symbols\":[],\"statements\":[[0,\"\\n\"],[4,\"control/md-repo-link\",null,null,{\"statements\":[[0,\"        template block text\\n\"]],\"parameters\":[]},null],[0,\"    \"]],\"hasEval\":false}",
-        meta: {}
+        "id": "ekcN5Qc4",
+        "block": "[[[1,\"\\n\"],[6,[39,0],null,null,[[\"default\"],[[[[1,\"        template block text\\n\"]],[]]]]],[1,\"    \"]],[],false,[\"control/md-repo-link\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       assert.equal((0, _testHelpers.find)('a').textContent.trim(), 'template block text', 'block ok');
     });
   });
 });
-define("mdeditor/tests/integration/pods/components/control/md-scroll-into-view/component-test", ["qunit", "ember-qunit", "@ember/test-helpers"], function (_qunit, _emberQunit, _testHelpers) {
+define("mdeditor/tests/integration/pods/components/control/md-scroll-into-view/component-test", ["@ember/template-factory", "qunit", "ember-qunit", "@ember/test-helpers"], function (_templateFactory, _qunit, _emberQunit, _testHelpers) {
   "use strict";
 
-  0; //eaimeta@70e063a35619d71f0,"qunit",0,"ember-qunit",0,"@ember/test-helpers",0,"htmlbars-inline-precompile"eaimeta@70e063a35619d71f
+  0; //eaimeta@70e063a35619d71f0,"qunit",0,"ember-qunit",0,"@ember/test-helpers",0,"@ember/template-factory"eaimeta@70e063a35619d71f
   (0, _qunit.module)('Integration | Component | control/md-scroll-into-view', function (hooks) {
     (0, _emberQunit.setupRenderingTest)(hooks);
     (0, _qunit.test)('it renders', async function (assert) {
       // Set any properties with this.set('myProperty', 'value');
       // Handle any actions with this.set('myAction', function(val) { ... });
 
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         {{control/md-scroll-into-view}}
       */
       {
-        id: "vrCTc9ZH",
-        block: "{\"symbols\":[],\"statements\":[[1,[22,\"control/md-scroll-into-view\"],false]],\"hasEval\":false}",
-        meta: {}
+        "id": "jPkmQaCc",
+        "block": "[[[1,[34,0]]],[],false,[\"control/md-scroll-into-view\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       assert.equal(this.element.textContent.trim(), '');
 
       // Template block usage:
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         
-            {{#control/md-scroll-into-view}}
+            <Control::MdScrollIntoView>
               template block text
-            {{/control/md-scroll-into-view}}
+            </Control::MdScrollIntoView>
           
       */
       {
-        id: "7z4D/Vlt",
-        block: "{\"symbols\":[],\"statements\":[[0,\"\\n\"],[4,\"control/md-scroll-into-view\",null,null,{\"statements\":[[0,\"        template block text\\n\"]],\"parameters\":[]},null],[0,\"    \"]],\"hasEval\":false}",
-        meta: {}
+        "id": "CfulgPva",
+        "block": "[[[1,\"\\n      \"],[8,[39,0],null,null,[[\"default\"],[[[[1,\"\\n        template block text\\n      \"]],[]]]]],[1,\"\\n    \"]],[],false,[\"control/md-scroll-into-view\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       assert.equal(this.element.textContent.trim(), 'template block text');
     });
   });
 });
-define("mdeditor/tests/integration/pods/components/control/md-scroll-spy/component-test", ["@ember/test-helpers", "qunit", "ember-qunit"], function (_testHelpers, _qunit, _emberQunit) {
+define("mdeditor/tests/integration/pods/components/control/md-scroll-spy/component-test", ["@ember/template-factory", "@ember/test-helpers", "qunit", "ember-qunit"], function (_templateFactory, _testHelpers, _qunit, _emberQunit) {
   "use strict";
 
-  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"htmlbars-inline-precompile"eaimeta@70e063a35619d71f
+  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"@ember/template-factory"eaimeta@70e063a35619d71f
   (0, _qunit.module)('Integration | Component | control/md scroll spy', function (hooks) {
     (0, _emberQunit.setupRenderingTest)(hooks);
     (0, _qunit.test)('it renders', async function (assert) {
@@ -3811,45 +3830,47 @@ define("mdeditor/tests/integration/pods/components/control/md-scroll-spy/compone
       // });
       // Handle any actions with this.on('myAction', function(val) { ... });
 
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         <div data-spy="Foo" id="foo1">Foo</div>
             <div data-spy="Bar" id="bar1">Bar</div>
             {{control/md-scroll-spy setScrollTo=setScrollTo}}
       */
       {
-        id: "7Fz0P+T0",
-        block: "{\"symbols\":[],\"statements\":[[7,\"div\",true],[10,\"data-spy\",\"Foo\"],[10,\"id\",\"foo1\"],[8],[0,\"Foo\"],[9],[0,\"\\n      \"],[7,\"div\",true],[10,\"data-spy\",\"Bar\"],[10,\"id\",\"bar1\"],[8],[0,\"Bar\"],[9],[0,\"\\n      \"],[1,[28,\"control/md-scroll-spy\",null,[[\"setScrollTo\"],[[24,[\"setScrollTo\"]]]]],false]],\"hasEval\":false}",
-        meta: {}
+        "id": "L8z1fM3l",
+        "block": "[[[10,0],[14,\"data-spy\",\"Foo\"],[14,1,\"foo1\"],[12],[1,\"Foo\"],[13],[1,\"\\n      \"],[10,0],[14,\"data-spy\",\"Bar\"],[14,1,\"bar1\"],[12],[1,\"Bar\"],[13],[1,\"\\n      \"],[1,[28,[35,0],null,[[\"setScrollTo\"],[[33,1]]]]]],[],false,[\"control/md-scroll-spy\",\"setScrollTo\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       assert.equal((0, _testHelpers.find)('ul').textContent.replace(/[ \n\t\s]+/g, '|').trim(), '|Foo|Bar|');
       await (0, _testHelpers.click)('ul a');
       // Template block usage:
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         
-            {{#control/md-scroll-spy setScrollTo=setScrollTo}}
+            <Control::MdScrollSpy @setScrollTo={{setScrollTo}}>
               template block text
-            {{/control/md-scroll-spy}}
+            </Control::MdScrollSpy>
           
       */
       {
-        id: "7eHiwVrX",
-        block: "{\"symbols\":[],\"statements\":[[0,\"\\n\"],[4,\"control/md-scroll-spy\",null,[[\"setScrollTo\"],[[24,[\"setScrollTo\"]]]],{\"statements\":[[0,\"        template block text\\n\"]],\"parameters\":[]},null],[0,\"    \"]],\"hasEval\":false}",
-        meta: {}
+        "id": "s4vcCp20",
+        "block": "[[[1,\"\\n      \"],[8,[39,0],null,[[\"@setScrollTo\"],[[99,1,[\"@setScrollTo\"]]]],[[\"default\"],[[[[1,\"\\n        template block text\\n      \"]],[]]]]],[1,\"\\n    \"]],[],false,[\"control/md-scroll-spy\",\"setScrollTo\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       assert.equal((0, _testHelpers.find)('ul').textContent.trim(), 'template block text');
     });
   });
 });
-define("mdeditor/tests/integration/pods/components/control/md-select-table/component-test", ["@ember/test-helpers", "qunit", "ember-qunit"], function (_testHelpers, _qunit, _emberQunit) {
+define("mdeditor/tests/integration/pods/components/control/md-select-table/component-test", ["@ember/template-factory", "@ember/test-helpers", "qunit", "ember-qunit"], function (_templateFactory, _testHelpers, _qunit, _emberQunit) {
   "use strict";
 
-  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"htmlbars-inline-precompile"eaimeta@70e063a35619d71f
+  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"@ember/template-factory"eaimeta@70e063a35619d71f
   (0, _qunit.module)('Integration | Component | control/md select table', function (hooks) {
     (0, _emberQunit.setupRenderingTest)(hooks);
     (0, _qunit.test)('it renders', async function (assert) {
-      assert.expect(3);
+      assert.expect(2);
 
       // Set any properties with this.set('myProperty', 'value');
       this.set('data', [{
@@ -3869,86 +3890,71 @@ define("mdeditor/tests/integration/pods/components/control/md-select-table/compo
       this.set('select', function (selected) {
         assert.equal(selected[0].title, 'foo', 'calls action');
       });
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         {{control/md-select-table columns=columns data=data select=select}}
       */
       {
-        id: "Fy+rfgpM",
-        block: "{\"symbols\":[],\"statements\":[[1,[28,\"control/md-select-table\",null,[[\"columns\",\"data\",\"select\"],[[24,[\"columns\"]],[24,[\"data\"]],[24,[\"select\"]]]]],false]],\"hasEval\":false}",
-        meta: {}
+        "id": "yKrcKaMl",
+        "block": "[[[1,[28,[35,0],null,[[\"columns\",\"data\",\"select\"],[[33,1],[33,2],[33,3]]]]]],[],false,[\"control/md-select-table\",\"columns\",\"data\",\"select\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
-      assert.equal((0, _testHelpers.find)('.md-select-table').textContent.replace(/[ \n\t\s]+/g, '|').trim(), '|Search:|Columns|Show|All|Hide|All|Restore|Defaults|Title|Type|Title|Type|Title|Type|foo|bar|biz|baz|Show|1|-|2|of|2|Clear|all|filters|Rows:|10|25|50|500|Page:|1|');
-      (0, _testHelpers.click)('.md-select-table tbody tr');
-
-      // Template block usage:
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
-      /*
-        
-            {{#control/md-select-table}}
-              template block text
-            {{/control/md-select-table}}
-          
-      */
-      {
-        id: "LI4m+FX9",
-        block: "{\"symbols\":[],\"statements\":[[0,\"\\n\"],[4,\"control/md-select-table\",null,null,{\"statements\":[[0,\"        template block text\\n\"]],\"parameters\":[]},null],[0,\"    \"]],\"hasEval\":false}",
-        meta: {}
-      }));
-      assert.equal((0, _testHelpers.find)('.md-select-table').textContent.replace(/[ \n\t\s]+/g, '|').trim(), '|template|block|text|', 'block ok');
+      assert.equal((0, _testHelpers.find)('.md-select-table').textContent.replace(/[ \n\t\s]+/g, '|').trim(), '|Search:|Columns|Show|All|Hide|All|Restore|Defaults|Title|Type|Title|Type|Title|Type|foo|bar|biz|baz|Show|1|-|2|of|2|Clear|all|filters|Rows:|10|25|50|Page:|1|');
+      await (0, _testHelpers.click)('.md-select-table tbody tr');
     });
   });
 });
-define("mdeditor/tests/integration/pods/components/control/md-spinner/component-test", ["@ember/test-helpers", "qunit", "ember-qunit"], function (_testHelpers, _qunit, _emberQunit) {
+define("mdeditor/tests/integration/pods/components/control/md-spinner/component-test", ["@ember/template-factory", "@ember/test-helpers", "qunit", "ember-qunit"], function (_templateFactory, _testHelpers, _qunit, _emberQunit) {
   "use strict";
 
-  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"htmlbars-inline-precompile"eaimeta@70e063a35619d71f
+  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"@ember/template-factory"eaimeta@70e063a35619d71f
   (0, _qunit.module)('Integration | Component | control/md spinner', function (hooks) {
     (0, _emberQunit.setupRenderingTest)(hooks);
     (0, _qunit.test)('it renders', async function (assert) {
       // Set any properties with this.set('myProperty', 'value');
       // Handle any actions with this.on('myAction', function(val) { ... });
 
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         {{control/md-spinner text="foobar" size="5"}}
       */
       {
-        id: "vOezijb2",
-        block: "{\"symbols\":[],\"statements\":[[1,[28,\"control/md-spinner\",null,[[\"text\",\"size\"],[\"foobar\",\"5\"]]],false]],\"hasEval\":false}",
-        meta: {}
+        "id": "sSGrImXH",
+        "block": "[[[1,[28,[35,0],null,[[\"text\",\"size\"],[\"foobar\",\"5\"]]]]],[],false,[\"control/md-spinner\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       assert.equal((0, _testHelpers.find)('.md-spinner').textContent.trim(), 'foobar');
       assert.ok((0, _testHelpers.find)('.md-spinner .md-spinner-text').classList.contains('size-5'), 'adds class');
 
       // Template block usage:
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         
-            {{#control/md-spinner}}
+            <Control::MdSpinner>
               template block text
-            {{/control/md-spinner}}
+            </Control::MdSpinner>
           
       */
       {
-        id: "NJovIzPH",
-        block: "{\"symbols\":[],\"statements\":[[0,\"\\n\"],[4,\"control/md-spinner\",null,null,{\"statements\":[[0,\"        template block text\\n\"]],\"parameters\":[]},null],[0,\"    \"]],\"hasEval\":false}",
-        meta: {}
+        "id": "Q+F8mAdr",
+        "block": "[[[1,\"\\n      \"],[8,[39,0],null,null,[[\"default\"],[[[[1,\"\\n        template block text\\n      \"]],[]]]]],[1,\"\\n    \"]],[],false,[\"control/md-spinner\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       assert.equal((0, _testHelpers.find)('.md-spinner').textContent.trim(), 'template block text', 'block ok');
     });
   });
 });
-define("mdeditor/tests/integration/pods/components/control/md-spotlight/component-test", ["@ember/test-helpers", "qunit", "ember-qunit"], function (_testHelpers, _qunit, _emberQunit) {
+define("mdeditor/tests/integration/pods/components/control/md-spotlight/component-test", ["@ember/template-factory", "@ember/test-helpers", "qunit", "ember-qunit"], function (_templateFactory, _testHelpers, _qunit, _emberQunit) {
   "use strict";
 
-  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"htmlbars-inline-precompile"eaimeta@70e063a35619d71f
+  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"@ember/template-factory"eaimeta@70e063a35619d71f
   (0, _qunit.module)('Integration | Component | control/md spotlight', function (hooks) {
     (0, _emberQunit.setupRenderingTest)(hooks);
     (0, _qunit.test)('it renders', async function (assert) {
       assert.expect(4);
-      // Set any properties with this.set('myProperty', 'value');
-      // Handle any actions with this.on('myAction', function(val) { ... });
       var spotlight = this.owner.lookup('service:spotlight');
       var scope = {
         foo: 'bar'
@@ -3956,28 +3962,29 @@ define("mdeditor/tests/integration/pods/components/control/md-spotlight/componen
       var close = function () {
         assert.equal(this.foo, 'bar', 'calls close action');
       };
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         <div id="foo">foobar</div>
-            {{control/md-spotlight}}
+            {{control/md-spotlight renderInPlace=true}}
       */
       {
-        id: "Rf1nF6/x",
-        block: "{\"symbols\":[],\"statements\":[[7,\"div\",true],[10,\"id\",\"foo\"],[8],[0,\"foobar\"],[9],[0,\"\\n      \"],[1,[22,\"control/md-spotlight\"],false]],\"hasEval\":false}",
-        meta: {}
+        "id": "JfF/Izrz",
+        "block": "[[[10,0],[14,1,\"foo\"],[12],[1,\"foobar\"],[13],[1,\"\\n      \"],[1,[28,[35,0],null,[[\"renderInPlace\"],[true]]]]],[],false,[\"control/md-spotlight\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       spotlight.setTarget('foo', close, scope);
-      assert.ok(document.querySelector('.md-modal-overlay'), 'render overlay');
+      assert.ok(document.querySelector('.md-spotlight-modal'), 'render modal container');
       assert.equal((0, _testHelpers.find)('#foo').textContent.trim(), 'foobar', 'render target');
       assert.ok((0, _testHelpers.find)('#foo').classList.contains('md-spotlight-target'), 'adds class');
-      spotlight.setTarget('foo');
+      close.call(scope);
     });
   });
 });
-define("mdeditor/tests/integration/pods/components/control/md-status/component-test", ["@ember/test-helpers", "qunit", "ember-qunit"], function (_testHelpers, _qunit, _emberQunit) {
+define("mdeditor/tests/integration/pods/components/control/md-status/component-test", ["@ember/template-factory", "@ember/test-helpers", "qunit", "ember-qunit"], function (_templateFactory, _testHelpers, _qunit, _emberQunit) {
   "use strict";
 
-  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"htmlbars-inline-precompile"eaimeta@70e063a35619d71f
+  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"@ember/template-factory"eaimeta@70e063a35619d71f
   (0, _qunit.module)('Integration | Component | control/md status', function (hooks) {
     (0, _emberQunit.setupRenderingTest)(hooks);
     (0, _qunit.test)('it renders', async function (assert) {
@@ -3988,86 +3995,90 @@ define("mdeditor/tests/integration/pods/components/control/md-status/component-t
       });
       // Handle any actions with this.on('myAction', function(val) { ... });
 
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         {{control/md-status model=model}}
       */
       {
-        id: "iGtHxXTA",
-        block: "{\"symbols\":[],\"statements\":[[1,[28,\"control/md-status\",null,[[\"model\"],[[24,[\"model\"]]]]],false]],\"hasEval\":false}",
-        meta: {}
+        "id": "aIfw8Mub",
+        "block": "[[[1,[28,[35,0],null,[[\"model\"],[[33,1]]]]]],[],false,[\"control/md-status\",\"model\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       assert.dom('.md-status-icon .md-error').isVisible();
       this.set('model.hasDirtyHash', false);
       this.set('model.hasSchemaErrors', true);
       assert.dom('.md-status-icon .md-error').isNotVisible();
       // Template block usage:
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         
-            {{#control/md-status model=model}}
+            <Control::MdStatus @model={{model}}>
               template block text
-            {{/control/md-status}}
+            </Control::MdStatus>
           
       */
       {
-        id: "w9tnfYpE",
-        block: "{\"symbols\":[],\"statements\":[[0,\"\\n\"],[4,\"control/md-status\",null,[[\"model\"],[[24,[\"model\"]]]],{\"statements\":[[0,\"        template block text\\n\"]],\"parameters\":[]},null],[0,\"    \"]],\"hasEval\":false}",
-        meta: {}
+        "id": "HpOG+KRK",
+        "block": "[[[1,\"\\n      \"],[8,[39,0],null,[[\"@model\"],[[99,1,[\"@model\"]]]],[[\"default\"],[[[[1,\"\\n        template block text\\n      \"]],[]]]]],[1,\"\\n    \"]],[],false,[\"control/md-status\",\"model\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       assert.dom('.md-status-icon .md-warning').isVisible();
     });
   });
 });
-define("mdeditor/tests/integration/pods/components/control/subbar-citation/component-test", ["@ember/test-helpers", "qunit", "ember-qunit"], function (_testHelpers, _qunit, _emberQunit) {
+define("mdeditor/tests/integration/pods/components/control/subbar-citation/component-test", ["@ember/template-factory", "@ember/test-helpers", "qunit", "ember-qunit"], function (_templateFactory, _testHelpers, _qunit, _emberQunit) {
   "use strict";
 
-  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"htmlbars-inline-precompile"eaimeta@70e063a35619d71f
+  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"@ember/template-factory"eaimeta@70e063a35619d71f
   (0, _qunit.module)('Integration | Component | control/subbar citation', function (hooks) {
     (0, _emberQunit.setupRenderingTest)(hooks);
     (0, _qunit.test)('it renders', async function (assert) {
       // Set any properties with this.set('myProperty', 'value');
       // Handle any actions with this.on('myAction', function(val) { ... });
 
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         {{control/subbar-citation text="foobar"}}
       */
       {
-        id: "Gj4Ac28l",
-        block: "{\"symbols\":[],\"statements\":[[1,[28,\"control/subbar-citation\",null,[[\"text\"],[\"foobar\"]]],false]],\"hasEval\":false}",
-        meta: {}
+        "id": "VXpSWujS",
+        "block": "[[[1,[28,[35,0],null,[[\"text\"],[\"foobar\"]]]]],[],false,[\"control/subbar-citation\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       assert.equal((0, _testHelpers.find)('.btn-group-vertical').textContent.replace(/[ \n\t\s]+/g, '|').trim(), '|Select|a|Record|foobar|');
 
       // Template block usage:
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         
-            {{#control/subbar-citation}}
+            <Control::SubbarCitation>
               template block text
-            {{/control/subbar-citation}}
+            </Control::SubbarCitation>
           
       */
       {
-        id: "dySsOj+Q",
-        block: "{\"symbols\":[],\"statements\":[[0,\"\\n\"],[4,\"control/subbar-citation\",null,null,{\"statements\":[[0,\"        template block text\\n\"]],\"parameters\":[]},null],[0,\"    \"]],\"hasEval\":false}",
-        meta: {}
+        "id": "un9HvI1Y",
+        "block": "[[[1,\"\\n      \"],[8,[39,0],null,null,[[\"default\"],[[[[1,\"\\n        template block text\\n      \"]],[]]]]],[1,\"\\n    \"]],[],false,[\"control/subbar-citation\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       assert.equal((0, _testHelpers.find)('.btn-group-vertical').textContent.replace(/[ \n\t\s]+/g, '|').trim(), '|Select|a|Record|template|block|text|');
     });
   });
 });
-define("mdeditor/tests/integration/pods/components/control/subbar-importcsv/component-test", ["@ember/test-helpers", "qunit", "ember-qunit"], function (_testHelpers, _qunit, _emberQunit) {
+define("mdeditor/tests/integration/pods/components/control/subbar-importcsv/component-test", ["@ember/template-factory", "@ember/test-helpers", "qunit", "ember-qunit", "@ember/routing/route"], function (_templateFactory, _testHelpers, _qunit, _emberQunit, _route) {
   "use strict";
 
-  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"htmlbars-inline-precompile",0,"@ember/routing/route"eaimeta@70e063a35619d71f
+  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"@ember/routing/route",0,"@ember/template-factory"eaimeta@70e063a35619d71f
   (0, _qunit.module)('Integration | Component | control/subbar importcsv', function (hooks) {
     (0, _emberQunit.setupRenderingTest)(hooks);
     (0, _qunit.test)('it renders', async function (assert) {
       assert.expect(3);
       // Set any properties with this.set('myProperty', 'value');
-      var Target = Ember.Route.extend({
+      var Target = _route.default.extend({
         actions: {
           doImport() {
             assert.ok(true, 'calls target action');
@@ -4078,103 +4089,105 @@ define("mdeditor/tests/integration/pods/components/control/subbar-importcsv/comp
 
       // Handle any actions with this.on('myAction', function(val) { ... });
 
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         {{control/subbar-importcsv class="importcsv" actionContext=foo}}
       */
       {
-        id: "1O8Bx8k+",
-        block: "{\"symbols\":[],\"statements\":[[1,[28,\"control/subbar-importcsv\",null,[[\"class\",\"actionContext\"],[\"importcsv\",[24,[\"foo\"]]]]],false]],\"hasEval\":false}",
-        meta: {}
+        "id": "qhhtVFj0",
+        "block": "[[[1,[28,[35,0],null,[[\"class\",\"actionContext\"],[\"importcsv\",[33,1]]]]]],[],false,[\"control/subbar-importcsv\",\"foo\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       assert.equal((0, _testHelpers.find)('.importcsv').textContent.replace(/[ \n]+/g, '|').trim(), '|Do|Import|Cancel|Import|');
       (0, _testHelpers.click)('.importcsv .btn-info');
 
       // Template block usage:
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         
-            {{#control/subbar-importcsv class="importcsv"}}
+            <Control::SubbarImportcsv @class="importcsv">
               template block text
-            {{/control/subbar-importcsv}}
+            </Control::SubbarImportcsv>
           
       */
       {
-        id: "mNt7Tqm/",
-        block: "{\"symbols\":[],\"statements\":[[0,\"\\n\"],[4,\"control/subbar-importcsv\",null,[[\"class\"],[\"importcsv\"]],{\"statements\":[[0,\"        template block text\\n\"]],\"parameters\":[]},null],[0,\"    \"]],\"hasEval\":false}",
-        meta: {}
+        "id": "2K9qZhng",
+        "block": "[[[1,\"\\n      \"],[8,[39,0],null,[[\"@class\"],[\"importcsv\"]],[[\"default\"],[[[[1,\"\\n        template block text\\n      \"]],[]]]]],[1,\"\\n    \"]],[],false,[\"control/subbar-importcsv\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       assert.equal((0, _testHelpers.find)('.importcsv').textContent.replace(/[ \n]+/g, '|').trim(), '|Do|Import|Cancel|Import|template|block|text|', 'block');
     });
   });
 });
-define("mdeditor/tests/integration/pods/components/control/subbar-link/component-test", ["@ember/test-helpers", "qunit", "ember-qunit"], function (_testHelpers, _qunit, _emberQunit) {
+define("mdeditor/tests/integration/pods/components/control/subbar-link/component-test", ["@ember/template-factory", "@ember/test-helpers", "qunit", "ember-qunit"], function (_templateFactory, _testHelpers, _qunit, _emberQunit) {
   "use strict";
 
-  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"htmlbars-inline-precompile"eaimeta@70e063a35619d71f
+  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"@ember/template-factory"eaimeta@70e063a35619d71f
   (0, _qunit.module)('Integration | Component | control/subbar link', function (hooks) {
     (0, _emberQunit.setupRenderingTest)(hooks);
     (0, _qunit.test)('it renders', async function (assert) {
       assert.expect(3);
-      // Set any properties with this.set('myProperty', 'value');
-      this.set('test', function () {
+      this.set('handleClick', () => {
         assert.ok(true, 'called action');
       });
-      // Handle any actions with this.on('myAction', function(val) { ... });
-
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
-      /*
-        {{control/subbar-link  text="foo" click=test}}
-      */
-      {
-        id: "f0MKUM+9",
-        block: "{\"symbols\":[],\"statements\":[[1,[28,\"control/subbar-link\",null,[[\"text\",\"click\"],[\"foo\",[24,[\"test\"]]]]],false]],\"hasEval\":false}",
-        meta: {}
-      }));
-      assert.equal((0, _testHelpers.find)('button').textContent.trim(), 'foo');
-      await (0, _testHelpers.click)('button');
-
-      // Template block usage:
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         
-            {{#control/subbar-link text="foo" click=test}}
-              <section>template block text</section>
-            {{/control/subbar-link}}
+            <Control::SubbarLink @text="foo" @click={{this.handleClick}} />
           
       */
       {
-        id: "tbPLHl7U",
-        block: "{\"symbols\":[],\"statements\":[[0,\"\\n\"],[4,\"control/subbar-link\",null,[[\"text\",\"click\"],[\"foo\",[24,[\"test\"]]]],{\"statements\":[[0,\"        \"],[7,\"section\",true],[8],[0,\"template block text\"],[9],[0,\"\\n\"]],\"parameters\":[]},null],[0,\"    \"]],\"hasEval\":false}",
-        meta: {}
+        "id": "8Pimu8Am",
+        "block": "[[[1,\"\\n      \"],[8,[39,0],null,[[\"@text\",\"@click\"],[\"foo\",[30,0,[\"handleClick\"]]]],null],[1,\"\\n    \"]],[],false,[\"control/subbar-link\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
+      }));
+      assert.equal((0, _testHelpers.find)('button').textContent.trim(), 'foo');
+      await (0, _testHelpers.click)('button');
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
+      /*
+        
+            <Control::SubbarLink @text="foo" @click={{this.handleClick}}>
+              <section>template block text</section>
+            </Control::SubbarLink>
+          
+      */
+      {
+        "id": "kmtIVx2w",
+        "block": "[[[1,\"\\n      \"],[8,[39,0],null,[[\"@text\",\"@click\"],[\"foo\",[30,0,[\"handleClick\"]]]],[[\"default\"],[[[[1,\"\\n        \"],[10,\"section\"],[12],[1,\"template block text\"],[13],[1,\"\\n      \"]],[]]]]],[1,\"\\n    \"]],[],false,[\"control/subbar-link\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       assert.equal((0, _testHelpers.find)('section').textContent.trim(), 'template block text');
     });
   });
 });
-define("mdeditor/tests/integration/pods/components/control/subbar-spatial/component-test", ["@ember/test-helpers", "qunit", "ember-qunit"], function (_testHelpers, _qunit, _emberQunit) {
+define("mdeditor/tests/integration/pods/components/control/subbar-spatial/component-test", ["@ember/template-factory", "@ember/test-helpers", "qunit", "ember-qunit"], function (_templateFactory, _testHelpers, _qunit, _emberQunit) {
   "use strict";
 
-  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"htmlbars-inline-precompile"eaimeta@70e063a35619d71f
+  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"@ember/template-factory"eaimeta@70e063a35619d71f
   (0, _qunit.module)('Integration | Component | control/subbar spatial', function (hooks) {
     (0, _emberQunit.setupRenderingTest)(hooks);
     (0, _qunit.test)('it renders', async function (assert) {
       // Set any properties with this.set('myProperty', 'value');
       // Handle any actions with this.on('myAction', function(val) { ... });
 
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         {{control/subbar-spatial class="testme"}}
       */
       {
-        id: "7a5bmZfv",
-        block: "{\"symbols\":[],\"statements\":[[1,[28,\"control/subbar-spatial\",null,[[\"class\"],[\"testme\"]]],false]],\"hasEval\":false}",
-        meta: {}
+        "id": "5hHE3INZ",
+        "block": "[[[1,[28,[35,0],null,[[\"class\"],[\"testme\"]]]]],[],false,[\"control/subbar-spatial\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       assert.equal((0, _testHelpers.find)('.testme').textContent.replace(/[ \n]+/g, '|').trim(), '|Zoom|All|Import|Features|Export|Features|Delete|All|Back|to|List|');
 
       // Template block usage:
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         
             {{#control/subbar-spatial class="testme"}}
@@ -4183,9 +4196,10 @@ define("mdeditor/tests/integration/pods/components/control/subbar-spatial/compon
           
       */
       {
-        id: "Y4IOqNAM",
-        block: "{\"symbols\":[],\"statements\":[[0,\"\\n\"],[4,\"control/subbar-spatial\",null,[[\"class\"],[\"testme\"]],{\"statements\":[[0,\"        template block text\\n\"]],\"parameters\":[]},null],[0,\"    \"]],\"hasEval\":false}",
-        meta: {}
+        "id": "8LUib/jP",
+        "block": "[[[1,\"\\n\"],[6,[39,0],null,[[\"class\"],[\"testme\"]],[[\"default\"],[[[[1,\"        template block text\\n\"]],[]]]]],[1,\"    \"]],[],false,[\"control/subbar-spatial\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       assert.equal((0, _testHelpers.find)('.testme').textContent.replace(/[ \n]+/g, '|').trim(), '|Zoom|All|Import|Features|Export|Features|Delete|All|Back|to|List|template|block|text|');
     });
@@ -4211,7 +4225,7 @@ define("mdeditor/tests/integration/pods/components/control/subbar-spatial/compon
           assert.ok(true, 'called toList');
         }
       });
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         {{control/subbar-spatial
             zoomAll=test1
@@ -4222,49 +4236,52 @@ define("mdeditor/tests/integration/pods/components/control/subbar-spatial/compon
           }}
       */
       {
-        id: "1jkyIYKV",
-        block: "{\"symbols\":[],\"statements\":[[1,[28,\"control/subbar-spatial\",null,[[\"zoomAll\",\"uploadData\",\"exportGeoJSON\",\"deleteAllFeatures\",\"toList\"],[[24,[\"test1\"]],[24,[\"test2\"]],[24,[\"test3\"]],[24,[\"test4\"]],[24,[\"test5\"]]]]],false]],\"hasEval\":false}",
-        meta: {}
+        "id": "HrQM5Rj7",
+        "block": "[[[1,[28,[35,0],null,[[\"zoomAll\",\"uploadData\",\"exportGeoJSON\",\"deleteAllFeatures\",\"toList\"],[[33,1],[33,2],[33,3],[33,4],[33,5]]]]]],[],false,[\"control/subbar-spatial\",\"test1\",\"test2\",\"test3\",\"test4\",\"test5\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       (0, _testHelpers.findAll)('button').forEach(async btn => await (0, _testHelpers.click)(btn));
       await (0, _testHelpers.doubleClick)('.btn-danger');
     });
   });
 });
-define("mdeditor/tests/integration/pods/components/ember-tooltip/component-test", ["qunit", "ember-qunit", "@ember/test-helpers", "ember-tooltips/test-support"], function (_qunit, _emberQunit, _testHelpers, _testSupport) {
+define("mdeditor/tests/integration/pods/components/ember-tooltip/component-test", ["@ember/template-factory", "qunit", "ember-qunit", "@ember/test-helpers", "ember-tooltips/test-support"], function (_templateFactory, _qunit, _emberQunit, _testHelpers, _testSupport) {
   "use strict";
 
-  0; //eaimeta@70e063a35619d71f0,"qunit",0,"ember-qunit",0,"@ember/test-helpers",0,"htmlbars-inline-precompile",0,"ember-tooltips/test-support"eaimeta@70e063a35619d71f
+  0; //eaimeta@70e063a35619d71f0,"qunit",0,"ember-qunit",0,"@ember/test-helpers",0,"ember-tooltips/test-support",0,"@ember/template-factory"eaimeta@70e063a35619d71f
   (0, _qunit.module)('Integration | Component | ember-tooltip', function (hooks) {
     (0, _emberQunit.setupRenderingTest)(hooks);
     (0, _qunit.test)('it renders', async function (assert) {
       // Set any properties with this.set('myProperty', 'value');
       // Handle any actions with this.set('myAction', function(val) { ... });
 
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         {{ember-tooltip}}
       */
       {
-        id: "3vKsVbDd",
-        block: "{\"symbols\":[],\"statements\":[[1,[22,\"ember-tooltip\"],false]],\"hasEval\":false}",
-        meta: {}
+        "id": "nrmQcEt7",
+        "block": "[[[1,[34,0]]],[],false,[\"ember-tooltip\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       assert.equal(this.element.textContent.trim(), '');
 
       // Template block usage:
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         
-            {{#ember-tooltip isShown="true"}}
+            <EmberTooltip @isShown="true">
               template block text
-            {{/ember-tooltip}}
+            </EmberTooltip>
           
       */
       {
-        id: "6nHpSXF3",
-        block: "{\"symbols\":[],\"statements\":[[0,\"\\n\"],[4,\"ember-tooltip\",null,[[\"isShown\"],[\"true\"]],{\"statements\":[[0,\"        template block text\\n\"]],\"parameters\":[]},null],[0,\"    \"]],\"hasEval\":false}",
-        meta: {}
+        "id": "rWetjXGg",
+        "block": "[[[1,\"\\n      \"],[8,[39,0],null,[[\"@isShown\"],[\"true\"]],[[\"default\"],[[[[1,\"\\n        template block text\\n      \"]],[]]]]],[1,\"\\n    \"]],[],false,[\"ember-tooltip\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       (0, _testSupport.assertTooltipContent)(assert, {
         contentString: 'template block text'
@@ -4272,29 +4289,30 @@ define("mdeditor/tests/integration/pods/components/ember-tooltip/component-test"
     });
   });
 });
-define("mdeditor/tests/integration/pods/components/input/md-boolean/component-test", ["@ember/test-helpers", "qunit", "ember-qunit"], function (_testHelpers, _qunit, _emberQunit) {
+define("mdeditor/tests/integration/pods/components/input/md-boolean/component-test", ["@ember/template-factory", "@ember/test-helpers", "qunit", "ember-qunit"], function (_templateFactory, _testHelpers, _qunit, _emberQunit) {
   "use strict";
 
-  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"htmlbars-inline-precompile"eaimeta@70e063a35619d71f
+  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"@ember/template-factory"eaimeta@70e063a35619d71f
   (0, _qunit.module)('Integration | Component | input/md boolean', function (hooks) {
     (0, _emberQunit.setupRenderingTest)(hooks);
     (0, _qunit.test)('it renders', async function (assert) {
       // Set any properties with this.set('myProperty', 'value');
       // Handle any actions with this.on('myAction', function(val) { ... });" + EOL + EOL +
 
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         {{input/md-boolean value=false text="Foo Bar" label="Baz" }}
       */
       {
-        id: "gjlo6MFi",
-        block: "{\"symbols\":[],\"statements\":[[1,[28,\"input/md-boolean\",null,[[\"value\",\"text\",\"label\"],[false,\"Foo Bar\",\"Baz\"]]],false]],\"hasEval\":false}",
-        meta: {}
+        "id": "YNMLhSZ4",
+        "block": "[[[1,[28,[35,0],null,[[\"value\",\"text\",\"label\"],[false,\"Foo Bar\",\"Baz\"]]]]],[],false,[\"input/md-boolean\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       assert.equal((0, _testHelpers.find)('.form-group').textContent.replace(/[ \n]+/g, '|'), '|Baz|Foo|Bar|');
 
       // Template block usage:" + EOL +
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         
             {{#input/md-boolean value=true text="Foo Bar" label="Baz"}}
@@ -4303,19 +4321,20 @@ define("mdeditor/tests/integration/pods/components/input/md-boolean/component-te
           
       */
       {
-        id: "X0tl7Ihh",
-        block: "{\"symbols\":[],\"statements\":[[0,\"\\n\"],[4,\"input/md-boolean\",null,[[\"value\",\"text\",\"label\"],[true,\"Foo Bar\",\"Baz\"]],{\"statements\":[[0,\"        template block text\\n\"]],\"parameters\":[]},null],[0,\"    \"]],\"hasEval\":false}",
-        meta: {}
+        "id": "l3S4K2sA",
+        "block": "[[[1,\"\\n\"],[6,[39,0],null,[[\"value\",\"text\",\"label\"],[true,\"Foo Bar\",\"Baz\"]],[[\"default\"],[[[[1,\"        template block text\\n\"]],[]]]]],[1,\"    \"]],[],false,[\"input/md-boolean\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       assert.equal((0, _testHelpers.find)('.form-group').textContent.replace(/[ \n]+/g, '|'), '|Baz|Foo|Bar|template|block|text|');
       assert.ok((0, _testHelpers.find)('input').checked);
     });
   });
 });
-define("mdeditor/tests/integration/pods/components/input/md-codelist-multi/component-test", ["@ember/test-helpers", "qunit", "ember-qunit", "ember-power-select/test-support/helpers"], function (_testHelpers, _qunit, _emberQunit, _helpers) {
+define("mdeditor/tests/integration/pods/components/input/md-codelist-multi/component-test", ["@ember/template-factory", "@ember/test-helpers", "@ember/service", "qunit", "ember-qunit", "ember-power-select/test-support/helpers"], function (_templateFactory, _testHelpers, _service, _qunit, _emberQunit, _helpers) {
   "use strict";
 
-  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"@ember/service",0,"qunit",0,"ember-qunit",0,"htmlbars-inline-precompile",0,"ember-power-select/test-support/helpers"eaimeta@70e063a35619d71f
+  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"@ember/service",0,"qunit",0,"ember-qunit",0,"ember-power-select/test-support/helpers",0,"@ember/template-factory"eaimeta@70e063a35619d71f
   const foobar = {
     codelist: [{
       code: '001',
@@ -4327,14 +4346,20 @@ define("mdeditor/tests/integration/pods/components/input/md-codelist-multi/compo
       description: 'This is bar.'
     }]
   };
-  const codelist = Ember.Service.extend({
+  const codelist = _service.default.extend({
     foobar: foobar
   });
   (0, _qunit.module)('Integration | Component | input/md codelist multi', function (hooks) {
     (0, _emberQunit.setupRenderingTest)(hooks);
     hooks.beforeEach(function () {
+      var _this = this;
       this.actions = {};
-      this.send = (actionName, ...args) => this.actions[actionName].apply(this, args);
+      this.send = function (actionName) {
+        for (var _len = arguments.length, args = new Array(_len > 1 ? _len - 1 : 0), _key = 1; _key < _len; _key++) {
+          args[_key - 1] = arguments[_key];
+        }
+        return _this.actions[actionName].apply(_this, args);
+      };
     });
     hooks.beforeEach(function () {
       this.owner.register('service:codelist', codelist);
@@ -4346,7 +4371,7 @@ define("mdeditor/tests/integration/pods/components/input/md-codelist-multi/compo
       this.set('fooVal', ['foo', 'bar']);
 
       // Template block usage:" + EOL +
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         
             {{#input/md-codelist-multi
@@ -4358,9 +4383,10 @@ define("mdeditor/tests/integration/pods/components/input/md-codelist-multi/compo
           
       */
       {
-        id: "NcoGivXD",
-        block: "{\"symbols\":[],\"statements\":[[0,\"\\n\"],[4,\"input/md-codelist-multi\",null,[[\"mdCodeName\",\"value\"],[\"foobar\",[24,[\"fooVal\"]]]],{\"statements\":[[0,\"        \"],[7,\"p\",true],[8],[0,\"template block text\"],[9],[0,\"\\n\"]],\"parameters\":[]},null],[0,\"    \"]],\"hasEval\":false}",
-        meta: {}
+        "id": "z2yTnRiJ",
+        "block": "[[[1,\"\\n\"],[6,[39,0],null,[[\"mdCodeName\",\"value\"],[\"foobar\",[33,1]]],[[\"default\"],[[[[1,\"        \"],[10,2],[12],[1,\"template block text\"],[13],[1,\"\\n\"]],[]]]]],[1,\"    \"]],[],false,[\"input/md-codelist-multi\",\"fooVal\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       assert.equal((0, _testHelpers.find)('.md-select').textContent.replace(/[ \n]+/g, '|'), '|×|bar|×|foo|', 'renders block with array value');
     });
@@ -4372,7 +4398,7 @@ define("mdeditor/tests/integration/pods/components/input/md-codelist-multi/compo
       this.actions.update = actual => {
         assert.equal(actual, this.value, 'submitted value is passed to external action');
       };
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         {{input/md-codelist-multi
             create=false
@@ -4381,13 +4407,14 @@ define("mdeditor/tests/integration/pods/components/input/md-codelist-multi/compo
             change=(action "update" value)}}
       */
       {
-        id: "j5kBZ74s",
-        block: "{\"symbols\":[],\"statements\":[[1,[28,\"input/md-codelist-multi\",null,[[\"create\",\"value\",\"mdCodeName\",\"change\"],[false,[24,[\"value\"]],\"foobar\",[28,\"action\",[[23,0,[]],\"update\",[24,[\"value\"]]],null]]]],false]],\"hasEval\":false}",
-        meta: {}
+        "id": "f/n13isQ",
+        "block": "[[[1,[28,[35,0],null,[[\"create\",\"value\",\"mdCodeName\",\"change\"],[false,[33,1],\"foobar\",[28,[37,2],[[30,0],\"update\",[33,1]],null]]]]]],[],false,[\"input/md-codelist-multi\",\"value\",\"action\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       await (0, _helpers.clickTrigger)();
       await (0, _testHelpers.triggerEvent)((0, _testHelpers.find)('.ember-power-select-option'), 'mouseup');
-      assert.equal((0, _testHelpers.getRootElement)().textContent.replace(/[ \n]+/g, '|'), '|×|bar|×|foo|bar|foo|', 'value updated');
+      assert.equal((0, _testHelpers.getRootElement)().textContent.replace(/[ \n]+/g, '|'), '|×|bar|×|foo|', 'value updated');
     });
     (0, _qunit.test)('create option', async function (assert) {
       assert.expect(3);
@@ -4395,7 +4422,7 @@ define("mdeditor/tests/integration/pods/components/input/md-codelist-multi/compo
       this.actions.update = actual => {
         assert.equal(actual, this.value, 'submitted value is passed to external action');
       };
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         {{input/md-codelist-multi
             create=true
@@ -4404,21 +4431,43 @@ define("mdeditor/tests/integration/pods/components/input/md-codelist-multi/compo
             change=(action "update" value)}}
       */
       {
-        id: "WC3IpKJw",
-        block: "{\"symbols\":[],\"statements\":[[1,[28,\"input/md-codelist-multi\",null,[[\"create\",\"value\",\"mdCodeName\",\"change\"],[true,[24,[\"value\"]],\"foobar\",[28,\"action\",[[23,0,[]],\"update\",[24,[\"value\"]]],null]]]],false]],\"hasEval\":false}",
-        meta: {}
+        "id": "BFCBc/Es",
+        "block": "[[[1,[28,[35,0],null,[[\"create\",\"value\",\"mdCodeName\",\"change\"],[true,[33,1],\"foobar\",[28,[37,2],[[30,0],\"update\",[33,1]],null]]]]]],[],false,[\"input/md-codelist-multi\",\"value\",\"action\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       await (0, _helpers.clickTrigger)();
       await (0, _helpers.typeInSearch)('biz');
       await (0, _testHelpers.triggerEvent)((0, _testHelpers.find)('.ember-power-select-option'), 'mouseup');
-      assert.equal((0, _testHelpers.getRootElement)().textContent.replace(/[ \n]+/g, '|'), '|×|foo|×|biz|bar|foo|biz|', 'value updated');
+      assert.equal((0, _testHelpers.getRootElement)().textContent.replace(/[ \n]+/g, '|'), '|×|foo|×|biz|', 'value updated');
+    });
+    (0, _qunit.test)('selecting writes back through the two-way binding', async function (assert) {
+      this.set('resource', {
+        status: ['foo']
+      });
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
+      /*
+        {{input/md-codelist-multi
+            create=false
+            value=this.resource.status
+            mdCodeName="foobar"}}
+      */
+      {
+        "id": "CTIOoWV6",
+        "block": "[[[1,[28,[35,0],null,[[\"create\",\"value\",\"mdCodeName\"],[false,[30,0,[\"resource\",\"status\"]],\"foobar\"]]]]],[],false,[\"input/md-codelist-multi\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
+      }));
+      await (0, _helpers.clickTrigger)();
+      await (0, _testHelpers.triggerEvent)((0, _testHelpers.find)('.ember-power-select-option'), 'mouseup');
+      assert.deepEqual([...this.resource.status].sort(), ['bar', 'foo'], 'selection propagates to the bound property');
     });
   });
 });
-define("mdeditor/tests/integration/pods/components/input/md-codelist/component-test", ["@ember/test-helpers", "qunit", "ember-qunit", "ember-power-select/test-support", "ember-power-select/test-support/helpers"], function (_testHelpers, _qunit, _emberQunit, _testSupport, _helpers) {
+define("mdeditor/tests/integration/pods/components/input/md-codelist/component-test", ["@ember/template-factory", "@ember/test-helpers", "@ember/service", "qunit", "ember-qunit", "ember-power-select/test-support", "ember-power-select/test-support/helpers"], function (_templateFactory, _testHelpers, _service, _qunit, _emberQunit, _testSupport, _helpers) {
   "use strict";
 
-  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"@ember/service",0,"qunit",0,"ember-qunit",0,"htmlbars-inline-precompile",0,"ember-power-select/test-support",0,"ember-power-select/test-support/helpers"eaimeta@70e063a35619d71f
+  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"@ember/service",0,"qunit",0,"ember-qunit",0,"ember-power-select/test-support",0,"ember-power-select/test-support/helpers",0,"@ember/template-factory"eaimeta@70e063a35619d71f
   const foobar = {
     codelist: [{
       code: '001',
@@ -4430,14 +4479,20 @@ define("mdeditor/tests/integration/pods/components/input/md-codelist/component-t
       description: 'This is bar.'
     }]
   };
-  const codelist = Ember.Service.extend({
+  const codelist = _service.default.extend({
     foobar: foobar
   });
   (0, _qunit.module)('Integration | Component | input/md-codelist', function (hooks) {
     (0, _emberQunit.setupRenderingTest)(hooks);
     hooks.beforeEach(function () {
+      var _this = this;
       this.actions = {};
-      this.send = (actionName, ...args) => this.actions[actionName].apply(this, args);
+      this.send = function (actionName) {
+        for (var _len = arguments.length, args = new Array(_len > 1 ? _len - 1 : 0), _key = 1; _key < _len; _key++) {
+          args[_key - 1] = arguments[_key];
+        }
+        return _this.actions[actionName].apply(_this, args);
+      };
     });
     hooks.beforeEach(function () {
       this.owner.register('service:codelist', codelist);
@@ -4448,15 +4503,16 @@ define("mdeditor/tests/integration/pods/components/input/md-codelist/component-t
       // Set any properties with this.set('myProperty', 'value');
       // Handle any actions with this.on('myAction', function(val) { ... });" + EOL + EOL +
 
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         {{input/md-codelist
             value='foo' mdCodeName="foobar"}}
       */
       {
-        id: "EVnEW5ZO",
-        block: "{\"symbols\":[],\"statements\":[[1,[28,\"input/md-codelist\",null,[[\"value\",\"mdCodeName\"],[\"foo\",\"foobar\"]]],false]],\"hasEval\":false}",
-        meta: {}
+        "id": "B4wdJ7II",
+        "block": "[[[1,[28,[35,0],null,[[\"value\",\"mdCodeName\"],[\"foo\",\"foobar\"]]]]],[],false,[\"input/md-codelist\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       assert.equal((0, _testHelpers.find)('.md-select').textContent.replace(/[ \n]+/g, '|'), '|foo|×|');
     });
@@ -4466,16 +4522,17 @@ define("mdeditor/tests/integration/pods/components/input/md-codelist/component-t
       this.actions.update = actual => {
         assert.equal(actual, this.value, 'submitted value is passed to external action');
       };
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         {{input/md-codelist
             value=value mdCodeName="foobar"
             change=(action "update" value)}}
       */
       {
-        id: "OAhxYgBp",
-        block: "{\"symbols\":[],\"statements\":[[1,[28,\"input/md-codelist\",null,[[\"value\",\"mdCodeName\",\"change\"],[[24,[\"value\"]],\"foobar\",[28,\"action\",[[23,0,[]],\"update\",[24,[\"value\"]]],null]]]],false]],\"hasEval\":false}",
-        meta: {}
+        "id": "SXwZHn2j",
+        "block": "[[[1,[28,[35,0],null,[[\"value\",\"mdCodeName\",\"change\"],[[33,1],\"foobar\",[28,[37,2],[[30,0],\"update\",[33,1]],null]]]]]],[],false,[\"input/md-codelist\",\"value\",\"action\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       await (0, _testSupport.selectChoose)('.md-select', 'bar');
 
@@ -4489,7 +4546,7 @@ define("mdeditor/tests/integration/pods/components/input/md-codelist/component-t
       this.actions.update = actual => {
         assert.equal(actual, this.value, 'submitted value is passed to external action');
       };
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         {{input/md-codelist
             create=true
@@ -4498,9 +4555,10 @@ define("mdeditor/tests/integration/pods/components/input/md-codelist/component-t
             change=(action "update" value)}}
       */
       {
-        id: "nTirPUs4",
-        block: "{\"symbols\":[],\"statements\":[[1,[28,\"input/md-codelist\",null,[[\"create\",\"value\",\"mdCodeName\",\"change\"],[true,[24,[\"value\"]],\"foobar\",[28,\"action\",[[23,0,[]],\"update\",[24,[\"value\"]]],null]]]],false]],\"hasEval\":false}",
-        meta: {}
+        "id": "VRrjNwPt",
+        "block": "[[[1,[28,[35,0],null,[[\"create\",\"value\",\"mdCodeName\",\"change\"],[true,[33,1],\"foobar\",[28,[37,2],[[30,0],\"update\",[33,1]],null]]]]]],[],false,[\"input/md-codelist\",\"value\",\"action\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       await (0, _helpers.clickTrigger)();
       await (0, _helpers.typeInSearch)('biz');
@@ -4512,10 +4570,10 @@ define("mdeditor/tests/integration/pods/components/input/md-codelist/component-t
     });
   });
 });
-define("mdeditor/tests/integration/pods/components/input/md-date-range/component-test", ["@ember/test-helpers", "qunit", "ember-qunit"], function (_testHelpers, _qunit, _emberQunit) {
+define("mdeditor/tests/integration/pods/components/input/md-date-range/component-test", ["@ember/template-factory", "@ember/test-helpers", "qunit", "ember-qunit"], function (_templateFactory, _testHelpers, _qunit, _emberQunit) {
   "use strict";
 
-  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"htmlbars-inline-precompile"eaimeta@70e063a35619d71f
+  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"@ember/template-factory"eaimeta@70e063a35619d71f
   (0, _qunit.module)('Integration | Component | input/md date range', function (hooks) {
     (0, _emberQunit.setupRenderingTest)(hooks);
     (0, _qunit.test)('it renders', async function (assert) {
@@ -4524,40 +4582,42 @@ define("mdeditor/tests/integration/pods/components/input/md-date-range/component
       this.set('end', new Date('2017-01-01'));
       // Handle any actions with this.on('myAction', function(val) { ... });
 
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         {{input/md-date-range class="testme" startDateTime=start endDateTime=end profilePath="foobar"}}
       */
       {
-        id: "Rb8NRDgI",
-        block: "{\"symbols\":[],\"statements\":[[1,[28,\"input/md-date-range\",null,[[\"class\",\"startDateTime\",\"endDateTime\",\"profilePath\"],[\"testme\",[24,[\"start\"]],[24,[\"end\"]],\"foobar\"]]],false]],\"hasEval\":false}",
-        meta: {}
+        "id": "feiV0rkH",
+        "block": "[[[1,[28,[35,0],null,[[\"class\",\"startDateTime\",\"endDateTime\",\"profilePath\"],[\"testme\",[33,1],[33,2],\"foobar\"]]]]],[],false,[\"input/md-date-range\",\"start\",\"end\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
-      assert.equal((0, _testHelpers.find)('.testme').textContent.replace(/[ \n]+/g, '|').trim(), 'Dates|Start|Date|End|Date|Pick|Fiscal|Year|Pick|a|Fiscal|Year|');
+      assert.equal((0, _testHelpers.find)('.testme').textContent.replace(/[ \n]+/g, '|').trim(), 'Dates|Precision|Year|Start|Date|End|Date|Pick|Fiscal|Year|Pick|a|Fiscal|Year|');
       assert.equal(new Date((0, _testHelpers.findAll)('.date input')[0].value).toISOString(), this.start.toISOString(), 'set start');
       assert.equal(new Date((0, _testHelpers.findAll)('.date input')[1].value).toISOString(), this.end.toISOString(), 'set end');
       // Template block usage:
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         
-            {{#input/md-date-range class="testme" startDateTime=start endDateTime=end profilePath="foobar"}}
+            <Input::MdDateRange @class="testme" @startDateTime={{start}} @endDateTime={{end}} @profilePath="foobar">
               template block text
-            {{/input/md-date-range}}
+            </Input::MdDateRange>
           
       */
       {
-        id: "/FcTU/tB",
-        block: "{\"symbols\":[],\"statements\":[[0,\"\\n\"],[4,\"input/md-date-range\",null,[[\"class\",\"startDateTime\",\"endDateTime\",\"profilePath\"],[\"testme\",[24,[\"start\"]],[24,[\"end\"]],\"foobar\"]],{\"statements\":[[0,\"        template block text\\n\"]],\"parameters\":[]},null],[0,\"    \"]],\"hasEval\":false}",
-        meta: {}
+        "id": "cHtWWRT6",
+        "block": "[[[1,\"\\n      \"],[8,[39,0],null,[[\"@class\",\"@startDateTime\",\"@endDateTime\",\"@profilePath\"],[\"testme\",[99,1,[\"@startDateTime\"]],[99,2,[\"@endDateTime\"]],\"foobar\"]],[[\"default\"],[[[[1,\"\\n        template block text\\n      \"]],[]]]]],[1,\"\\n    \"]],[],false,[\"input/md-date-range\",\"start\",\"end\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
-      assert.equal((0, _testHelpers.find)('.testme').textContent.replace(/[ \n]+/g, '|').trim(), 'Dates|Start|Date|End|Date|Pick|Fiscal|Year|Pick|a|Fiscal|Year|template|block|text|', 'block');
+      assert.equal((0, _testHelpers.find)('.testme').textContent.replace(/[ \n]+/g, '|').trim(), 'Dates|Precision|Year|Start|Date|End|Date|Pick|Fiscal|Year|Pick|a|Fiscal|Year|template|block|text|', 'block');
     });
   });
 });
-define("mdeditor/tests/integration/pods/components/input/md-datetime/component-test", ["@ember/test-helpers", "qunit", "ember-qunit"], function (_testHelpers, _qunit, _emberQunit) {
+define("mdeditor/tests/integration/pods/components/input/md-datetime/component-test", ["@ember/template-factory", "@ember/test-helpers", "qunit", "ember-qunit"], function (_templateFactory, _testHelpers, _qunit, _emberQunit) {
   "use strict";
 
-  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"htmlbars-inline-precompile"eaimeta@70e063a35619d71f
+  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"@ember/template-factory"eaimeta@70e063a35619d71f
   (0, _qunit.module)('Integration | Component | input/md datetime', function (hooks) {
     (0, _emberQunit.setupRenderingTest)(hooks);
     (0, _qunit.test)('renders and binds', async function (assert) {
@@ -4565,7 +4625,7 @@ define("mdeditor/tests/integration/pods/components/input/md-datetime/component-t
       // Handle any actions with this.on('myAction', function(val) { ... });" + EOL + EOL +
 
       this.set('mydate', '1999-12-31T23:59:59.999+0900');
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         {{input/md-datetime
                             date=mydate
@@ -4573,32 +4633,34 @@ define("mdeditor/tests/integration/pods/components/input/md-datetime/component-t
                             placeholder="Enter date"}}
       */
       {
-        id: "Ab2s54pq",
-        block: "{\"symbols\":[],\"statements\":[[1,[28,\"input/md-datetime\",null,[[\"date\",\"format\",\"placeholder\"],[[24,[\"mydate\"]],\"YYYY-MM-DD\",\"Enter date\"]]],false]],\"hasEval\":false}",
-        meta: {}
+        "id": "eqCSamux",
+        "block": "[[[1,[28,[35,0],null,[[\"date\",\"format\",\"placeholder\"],[[33,1],\"YYYY-MM-DD\",\"Enter date\"]]]]],[],false,[\"input/md-datetime\",\"mydate\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       assert.equal((0, _testHelpers.find)('input').value, '1999-12-31', 'binding works');
     });
   });
 });
-define("mdeditor/tests/integration/pods/components/input/md-input-confirm/component-test", ["@ember/test-helpers", "qunit", "ember-qunit"], function (_testHelpers, _qunit, _emberQunit) {
+define("mdeditor/tests/integration/pods/components/input/md-input-confirm/component-test", ["@ember/template-factory", "@ember/test-helpers", "qunit", "ember-qunit"], function (_templateFactory, _testHelpers, _qunit, _emberQunit) {
   "use strict";
 
-  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"htmlbars-inline-precompile"eaimeta@70e063a35619d71f
+  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"@ember/template-factory"eaimeta@70e063a35619d71f
   (0, _qunit.module)('Integration | Component | input/md input confirm', function (hooks) {
     (0, _emberQunit.setupRenderingTest)(hooks);
     (0, _qunit.test)('it renders', async function (assert) {
       // Set any properties with this.set('myProperty', 'value');
       // Handle any actions with this.on('myAction', function(val) { ... });
 
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         {{input/md-input-confirm}}
       */
       {
-        id: "0E7ddOfR",
-        block: "{\"symbols\":[],\"statements\":[[1,[22,\"input/md-input-confirm\"],false]],\"hasEval\":false}",
-        meta: {}
+        "id": "AqeIuKIF",
+        "block": "[[[1,[34,0]]],[],false,[\"input/md-input-confirm\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       assert.equal((0, _testHelpers.find)('.md-input').textContent.trim(), 'Edit');
       assert.ok((0, _testHelpers.find)('.md-input input[disabled]'), 'input disabled');
@@ -4608,37 +4670,37 @@ define("mdeditor/tests/integration/pods/components/input/md-input-confirm/compon
       assert.ok((0, _testHelpers.find)('.md-input input:not([disabled])'), 'input enabled');
 
       // Template block usage:
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         
-            {{#input/md-input-confirm}}
+            <Input::MdInputConfirm>
               template block text
-            {{/input/md-input-confirm}}
+            </Input::MdInputConfirm>
           
       */
       {
-        id: "eL0jDQk3",
-        block: "{\"symbols\":[],\"statements\":[[0,\"\\n\"],[4,\"input/md-input-confirm\",null,null,{\"statements\":[[0,\"        template block text\\n\"]],\"parameters\":[]},null],[0,\"    \"]],\"hasEval\":false}",
-        meta: {}
+        "id": "7w47nCu0",
+        "block": "[[[1,\"\\n      \"],[8,[39,0],null,null,[[\"default\"],[[[[1,\"\\n        template block text\\n      \"]],[]]]]],[1,\"\\n    \"]],[],false,[\"input/md-input-confirm\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       assert.equal((0, _testHelpers.find)('.md-input').textContent.replace(/[ \n]+/g, '|').trim(), '|Edit|template|block|text|', 'block');
     });
   });
 });
-define("mdeditor/tests/integration/pods/components/input/md-input/component-test", ["@ember/test-helpers", "qunit", "ember-qunit"], function (_testHelpers, _qunit, _emberQunit) {
+define("mdeditor/tests/integration/pods/components/input/md-input/component-test", ["@ember/template-factory", "@ember/test-helpers", "qunit", "ember-qunit", "@ember/object"], function (_templateFactory, _testHelpers, _qunit, _emberQunit, _object) {
   "use strict";
 
-  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"htmlbars-inline-precompile"eaimeta@70e063a35619d71f
+  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"@ember/object",0,"@ember/template-factory"eaimeta@70e063a35619d71f
   (0, _qunit.module)('Integration | Component | input/md input', function (hooks) {
     (0, _emberQunit.setupRenderingTest)(hooks);
     (0, _qunit.test)('it renders md-input', async function (assert) {
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         
             {{input/md-input
               label="Foo"
               value="Bar"
-              showInfoTip="true"
               maxlength=100
               required="true"
               inputClass="test"
@@ -4646,9 +4708,10 @@ define("mdeditor/tests/integration/pods/components/input/md-input/component-test
           
       */
       {
-        id: "Kxd5OXsb",
-        block: "{\"symbols\":[],\"statements\":[[0,\"\\n      \"],[1,[28,\"input/md-input\",null,[[\"label\",\"value\",\"showInfoTip\",\"maxlength\",\"required\",\"inputClass\",\"placeholder\"],[\"Foo\",\"Bar\",\"true\",100,\"true\",\"test\",\"Enter FooBar\"]]],false],[0,\"\\n    \"]],\"hasEval\":false}",
-        meta: {}
+        "id": "DRssF96K",
+        "block": "[[[1,\"\\n      \"],[1,[28,[35,0],null,[[\"label\",\"value\",\"maxlength\",\"required\",\"inputClass\",\"placeholder\"],[\"Foo\",\"Bar\",100,\"true\",\"test\",\"Enter FooBar\"]]]],[1,\"\\n    \"]],[],false,[\"input/md-input\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       assert.equal((0, _testHelpers.find)('label').textContent.trim(), 'Foo', 'labeled OK');
       const input = this.$('input');
@@ -4656,7 +4719,7 @@ define("mdeditor/tests/integration/pods/components/input/md-input/component-test
       assert.deepEqual(props, [true, 100, 'Bar', 'Enter FooBar', true], 'properties set OK');
 
       // Template block usage:" + EOL +
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         
             {{#input/md-input}}
@@ -4665,108 +4728,154 @@ define("mdeditor/tests/integration/pods/components/input/md-input/component-test
           
       */
       {
-        id: "rBc/beup",
-        block: "{\"symbols\":[],\"statements\":[[0,\"\\n\"],[4,\"input/md-input\",null,null,{\"statements\":[[0,\"        \"],[7,\"p\",true],[10,\"class\",\"help-block\"],[8],[0,\"help text\"],[9],[0,\"\\n\"]],\"parameters\":[]},null],[0,\"    \"]],\"hasEval\":false}",
-        meta: {}
+        "id": "nvhgrtMD",
+        "block": "[[[1,\"\\n\"],[6,[39,0],null,null,[[\"default\"],[[[[1,\"        \"],[10,2],[14,0,\"help-block\"],[12],[1,\"help text\"],[13],[1,\"\\n\"]],[]]]]],[1,\"    \"]],[],false,[\"input/md-input\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       assert.equal((0, _testHelpers.find)('.help-block').textContent, 'help text', 'block renders');
     });
+    (0, _qunit.test)('it accepts required when bound to a model', async function (assert) {
+      this.set('model', _object.default.create({
+        title: 'Hello'
+      }));
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
+      /*
+        
+            {{input/md-input
+              model=this.model
+              valuePath="title"
+              label="Title"
+              required=true
+            }}
+          
+      */
+      {
+        "id": "951DW4PA",
+        "block": "[[[1,\"\\n      \"],[1,[28,[35,0],null,[[\"model\",\"valuePath\",\"label\",\"required\"],[[30,0,[\"model\"]],\"title\",\"Title\",true]]]],[1,\"\\n    \"]],[],false,[\"input/md-input\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
+      }));
+      assert.dom('input').hasAttribute('required');
+      assert.dom('.md-input').hasClass('required');
+    });
   });
 });
-define("mdeditor/tests/integration/pods/components/input/md-markdown-area/component-test", ["@ember/test-helpers", "qunit", "ember-qunit"], function (_testHelpers, _qunit, _emberQunit) {
+define("mdeditor/tests/integration/pods/components/input/md-markdown-area/component-test", ["@ember/template-factory", "@ember/test-helpers", "qunit", "ember-qunit"], function (_templateFactory, _testHelpers, _qunit, _emberQunit) {
   "use strict";
 
-  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"htmlbars-inline-precompile"eaimeta@70e063a35619d71f
+  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"@ember/template-factory"eaimeta@70e063a35619d71f
   (0, _qunit.module)('Integration | Component | input/md markdown area', function (hooks) {
     (0, _emberQunit.setupRenderingTest)(hooks);
     (0, _qunit.test)('it renders', async function (assert) {
       // Set any properties with this.set('myProperty', 'value');
       // Handle any actions with this.on('myAction', function(val) { ... });
 
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         {{input/md-markdown-area required=true}}
       */
       {
-        id: "NfbDl9S4",
-        block: "{\"symbols\":[],\"statements\":[[1,[28,\"input/md-markdown-area\",null,[[\"required\"],[true]]],false]],\"hasEval\":false}",
-        meta: {}
+        "id": "qALBMkWn",
+        "block": "[[[1,[28,[35,0],null,[[\"required\"],[true]]]]],[],false,[\"input/md-markdown-area\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       assert.equal((0, _testHelpers.find)('.md-markdown-editor').innerText.replace(/[ \n\s]+/g, '').trim(), '||||Entertext,Markdownissupported.​length:0100:0');
       assert.ok((0, _testHelpers.find)('.md-markdown-editor .length.md-error'), 'required ok');
       this.set('markdownValue', 'This is foobar.');
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         {{input/md-markdown-area value=markdownValue maxlength=10 required=false}}
       */
       {
-        id: "f+GzQOI9",
-        block: "{\"symbols\":[],\"statements\":[[1,[28,\"input/md-markdown-area\",null,[[\"value\",\"maxlength\",\"required\"],[[24,[\"markdownValue\"]],10,false]]],false]],\"hasEval\":false}",
-        meta: {}
+        "id": "EoxWQwIT",
+        "block": "[[[1,[28,[35,0],null,[[\"value\",\"maxlength\",\"required\"],[[33,1],10,false]]]]],[],false,[\"input/md-markdown-area\",\"markdownValue\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       assert.equal((0, _testHelpers.find)('.md-markdown-editor .length.md-error').textContent, 'length: 15', 'maxlength ok');
 
       // Template block usage:
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         
-            {{#input/md-markdown-area}}
+            <Input::MdMarkdownArea>
               template block text
-            {{/input/md-markdown-area}}
+            </Input::MdMarkdownArea>
           
       */
       {
-        id: "Ltu4oWFp",
-        block: "{\"symbols\":[],\"statements\":[[0,\"\\n\"],[4,\"input/md-markdown-area\",null,null,{\"statements\":[[0,\"        template block text\\n\"]],\"parameters\":[]},null],[0,\"    \"]],\"hasEval\":false}",
-        meta: {}
+        "id": "5rT55KxU",
+        "block": "[[[1,\"\\n      \"],[8,[39,0],null,null,[[\"default\"],[[[[1,\"\\n        template block text\\n      \"]],[]]]]],[1,\"\\n    \"]],[],false,[\"input/md-markdown-area\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       assert.equal((0, _testHelpers.find)('.md-markdown-editor').innerText.replace(/[ \n\s]+/g, '').trim(), '||||Entertext,Markdownissupported.​length:0100:0templateblocktext', 'block');
     });
+    (0, _qunit.test)('editing writes back through the two-way binding', async function (assert) {
+      this.set('description', {
+        abstract: ''
+      });
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
+      /*
+        {{input/md-markdown-area value=this.description.abstract}}
+      */
+      {
+        "id": "+LuuHe04",
+        "block": "[[[1,[28,[35,0],null,[[\"value\"],[[30,0,[\"description\",\"abstract\"]]]]]]],[],false,[\"input/md-markdown-area\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
+      }));
+      (0, _testHelpers.find)('.CodeMirror').CodeMirror.setValue('I am the abstract');
+      await (0, _testHelpers.settled)();
+      assert.equal(this.description.abstract, 'I am the abstract', 'edited value propagates to the bound property');
+    });
   });
 });
-define("mdeditor/tests/integration/pods/components/input/md-month/component-test", ["@ember/test-helpers", "qunit", "ember-qunit"], function (_testHelpers, _qunit, _emberQunit) {
+define("mdeditor/tests/integration/pods/components/input/md-month/component-test", ["@ember/template-factory", "@ember/test-helpers", "qunit", "ember-qunit"], function (_templateFactory, _testHelpers, _qunit, _emberQunit) {
   "use strict";
 
-  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"htmlbars-inline-precompile"eaimeta@70e063a35619d71f
+  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"@ember/template-factory"eaimeta@70e063a35619d71f
   (0, _qunit.module)('Integration | Component | input/md month', function (hooks) {
     (0, _emberQunit.setupRenderingTest)(hooks);
     (0, _qunit.test)('it renders', async function (assert) {
-      // Set any properties with this.set('myProperty', 'value');
-      // Handle any actions with this.on('myAction', function(val) { ... });
-
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      this.set('date', '10');
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
-        {{input/md-month date="10"}}
+        {{input/md-month date=this.date}}
       */
       {
-        id: "+yoBomZr",
-        block: "{\"symbols\":[],\"statements\":[[1,[28,\"input/md-month\",null,[[\"date\"],[\"10\"]]],false]],\"hasEval\":false}",
-        meta: {}
+        "id": "xJCudx+U",
+        "block": "[[[1,[28,[35,0],null,[[\"date\"],[[30,0,[\"date\"]]]]]]],[],false,[\"input/md-month\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       assert.equal((0, _testHelpers.find)('input').value, 'October');
 
       // Template block usage:
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         
-            {{#input/md-month class="testme" date="10"}}
+            <Input::MdMonth @class="testme" @date="10">
               template block text
-            {{/input/md-month}}
+            </Input::MdMonth>
           
       */
       {
-        id: "atqTYxDI",
-        block: "{\"symbols\":[],\"statements\":[[0,\"\\n\"],[4,\"input/md-month\",null,[[\"class\",\"date\"],[\"testme\",\"10\"]],{\"statements\":[[0,\"        template block text\\n\"]],\"parameters\":[]},null],[0,\"    \"]],\"hasEval\":false}",
-        meta: {}
+        "id": "uc9zLfto",
+        "block": "[[[1,\"\\n      \"],[8,[39,0],null,[[\"@class\",\"@date\"],[\"testme\",\"10\"]],[[\"default\"],[[[[1,\"\\n        template block text\\n      \"]],[]]]]],[1,\"\\n    \"]],[],false,[\"input/md-month\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       assert.equal((0, _testHelpers.find)('.testme').textContent.trim(), '', 'no block');
     });
   });
 });
-define("mdeditor/tests/integration/pods/components/input/md-select-contact/component-test", ["@ember/test-helpers", "qunit", "ember-qunit", "mdeditor/tests/helpers/create-contact"], function (_testHelpers, _qunit, _emberQunit, _createContact) {
+define("mdeditor/tests/integration/pods/components/input/md-select-contact/component-test", ["@ember/template-factory", "@ember/test-helpers", "qunit", "ember-qunit", "mdeditor/tests/helpers/create-contact"], function (_templateFactory, _testHelpers, _qunit, _emberQunit, _createContact) {
   "use strict";
 
-  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"htmlbars-inline-precompile",0,"mdeditor/tests/helpers/create-contact"eaimeta@70e063a35619d71f
+  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"mdeditor/tests/helpers/create-contact",0,"@ember/template-factory"eaimeta@70e063a35619d71f
   (0, _qunit.module)('Integration | Component | input/md select contact', function (hooks) {
     (0, _emberQunit.setupRenderingTest)(hooks);
     (0, _qunit.test)('it renders', async function (assert) {
@@ -4774,52 +4883,55 @@ define("mdeditor/tests/integration/pods/components/input/md-select-contact/compo
       var cs = this.owner.lookup('service:contacts');
       cs.set('contacts', contacts);
       this.set('contacts', contacts);
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         {{input/md-select-contact value=1}}
       */
       {
-        id: "wswGMPs0",
-        block: "{\"symbols\":[],\"statements\":[[1,[28,\"input/md-select-contact\",null,[[\"value\"],[1]]],false]],\"hasEval\":false}",
-        meta: {}
+        "id": "bIy9L0HJ",
+        "block": "[[[1,[28,[35,0],null,[[\"value\"],[1]]]]],[],false,[\"input/md-select-contact\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       assert.equal((0, _testHelpers.find)('.md-select-contact').textContent.replace(/[ \n]+/g, '|').trim(), '|Contact1|×|');
 
       // Template block usage:
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         
-            {{#input/md-select-contact}}
+            <Input::MdSelectContact>
               template block text
-            {{/input/md-select-contact}}
+            </Input::MdSelectContact>
           
       */
       {
-        id: "B/VACfLw",
-        block: "{\"symbols\":[],\"statements\":[[0,\"\\n\"],[4,\"input/md-select-contact\",null,null,{\"statements\":[[0,\"        template block text\\n\"]],\"parameters\":[]},null],[0,\"    \"]],\"hasEval\":false}",
-        meta: {}
+        "id": "vRLcvPgR",
+        "block": "[[[1,\"\\n      \"],[8,[39,0],null,null,[[\"default\"],[[[[1,\"\\n        template block text\\n      \"]],[]]]]],[1,\"\\n    \"]],[],false,[\"input/md-select-contact\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       assert.equal((0, _testHelpers.find)('.md-select-contact').textContent.trim(), 'Select one option');
     });
   });
 });
-define("mdeditor/tests/integration/pods/components/input/md-select-contacts/component-test", ["@ember/test-helpers", "qunit", "ember-qunit", "mdeditor/tests/helpers/create-contact", "ember-power-select/test-support"], function (_testHelpers, _qunit, _emberQunit, _createContact, _testSupport) {
+define("mdeditor/tests/integration/pods/components/input/md-select-contacts/component-test", ["@ember/template-factory", "@ember/test-helpers", "qunit", "ember-qunit", "mdeditor/tests/helpers/create-contact", "ember-power-select/test-support"], function (_templateFactory, _testHelpers, _qunit, _emberQunit, _createContact, _testSupport) {
   "use strict";
 
-  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"htmlbars-inline-precompile",0,"mdeditor/tests/helpers/create-contact",0,"ember-power-select/test-support"eaimeta@70e063a35619d71f
+  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"mdeditor/tests/helpers/create-contact",0,"ember-power-select/test-support",0,"@ember/template-factory"eaimeta@70e063a35619d71f
   (0, _qunit.module)('Integration | Component | input/md select contacts', function (hooks) {
     (0, _emberQunit.setupRenderingTest)(hooks);
     (0, _qunit.test)('it renders', async function (assert) {
       // Set any properties with this.set('myProperty', 'value');
       // Handle any actions with this.on('myAction', function(val) { ... });
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         {{input/md-select-contacts}}
       */
       {
-        id: "BszrmhJZ",
-        block: "{\"symbols\":[],\"statements\":[[1,[22,\"input/md-select-contacts\"],false]],\"hasEval\":false}",
-        meta: {}
+        "id": "vvFAhTN1",
+        "block": "[[[1,[34,0]]],[],false,[\"input/md-select-contacts\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       assert.ok((0, _testHelpers.find)('.md-select-contact'));
     });
@@ -4834,14 +4946,15 @@ define("mdeditor/tests/integration/pods/components/input/md-select-contacts/comp
       //store.createRecord('contact', contacts[0]);
       //store.createRecord('contact', contacts[1]);
 
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         {{input/md-select-contacts}}
       */
       {
-        id: "BszrmhJZ",
-        block: "{\"symbols\":[],\"statements\":[[1,[22,\"input/md-select-contacts\"],false]],\"hasEval\":false}",
-        meta: {}
+        "id": "vvFAhTN1",
+        "block": "[[[1,[34,0]]],[],false,[\"input/md-select-contacts\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       await (0, _testSupport.selectChoose)('.md-select-contact', 'Contact0');
       await (0, _testSupport.selectChoose)('.md-select-contact', 'Contact1');
@@ -4849,18 +4962,31 @@ define("mdeditor/tests/integration/pods/components/input/md-select-contacts/comp
     });
   });
 });
-define("mdeditor/tests/integration/pods/components/input/md-select-profile/component-test", ["@ember/test-helpers", "qunit", "ember-qunit", "ember-power-select/test-support/helpers", "mdeditor/config/environment"], function (_testHelpers, _qunit, _emberQunit, _helpers, _environment) {
+define("mdeditor/tests/integration/pods/components/input/md-select-profile/component-test", ["@ember/template-factory", "@ember/test-helpers", "@ember/service", "@ember/array", "qunit", "ember-qunit", "ember-power-select/test-support/helpers", "mdeditor/config/environment"], function (_templateFactory, _testHelpers, _service, _array, _qunit, _emberQunit, _helpers, _environment) {
   "use strict";
 
-  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"htmlbars-inline-precompile",0,"ember-power-select/test-support/helpers",0,"mdeditor/config/environment"eaimeta@70e063a35619d71f
+  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"@ember/service",0,"@ember/array",0,"qunit",0,"ember-qunit",0,"ember-power-select/test-support/helpers",0,"mdeditor/config/environment",0,"@ember/template-factory"eaimeta@70e063a35619d71f
+  const MockCustomProfile = _service.default.extend({
+    init() {
+      this._super(...arguments);
+      this.profiles = (0, _array.A)([{
+        id: _environment.default.APP.defaultProfileId,
+        title: 'Full',
+        description: 'Full profile description'
+      }]);
+    }
+  });
   (0, _qunit.module)('Integration | Component | input/md select profile', function (hooks) {
     (0, _emberQunit.setupRenderingTest)(hooks);
+    hooks.beforeEach(function () {
+      this.owner.register('service:custom-profile', MockCustomProfile);
+    });
     (0, _qunit.test)('it renders', async function (assert) {
       // Set any properties with this.set('myProperty', 'value');
       // test dummy for the external profile action
       this.set('updateProfile', () => {});
       this.set('profileId', _environment.default.APP.defaultProfileId);
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         {{input/md-select-profile
             value=profileId
@@ -4869,9 +4995,10 @@ define("mdeditor/tests/integration/pods/components/input/md-select-profile/compo
           }}
       */
       {
-        id: "N5QfEFEi",
-        block: "{\"symbols\":[],\"statements\":[[1,[28,\"input/md-select-profile\",null,[[\"value\",\"updateProfile\",\"class\"],[[24,[\"profileId\"]],[24,[\"updateProfile\"]],\"testme\"]]],false]],\"hasEval\":false}",
-        meta: {}
+        "id": "09x36xj+",
+        "block": "[[[1,[28,[35,0],null,[[\"value\",\"updateProfile\",\"class\"],[[33,1],[33,2],\"testme\"]]]]],[],false,[\"input/md-select-profile\",\"profileId\",\"updateProfile\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       assert.equal((0, _testHelpers.find)('.testme').textContent.replace(/[ \n]+/g, '|'), '|Profile|Full|?|');
     });
@@ -4883,14 +5010,15 @@ define("mdeditor/tests/integration/pods/components/input/md-select-profile/compo
       this.set('updateProfile', actual => {
         assert.equal(actual, _environment.default.APP.defaultProfileId, 'submitted value is passed to external action');
       });
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         {{input/md-select-profile value=null updateProfile=(action updateProfile)}}
       */
       {
-        id: "yLsB4s+B",
-        block: "{\"symbols\":[],\"statements\":[[1,[28,\"input/md-select-profile\",null,[[\"value\",\"updateProfile\"],[null,[28,\"action\",[[23,0,[]],[24,[\"updateProfile\"]]],null]]]],false]],\"hasEval\":false}",
-        meta: {}
+        "id": "NaSwD3aD",
+        "block": "[[[1,[28,[35,0],null,[[\"value\",\"updateProfile\"],[null,[28,[37,1],[[30,0],[33,2]],null]]]]]],[],false,[\"input/md-select-profile\",\"action\",\"updateProfile\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
 
       // select a value and force an onchange
@@ -4899,29 +5027,30 @@ define("mdeditor/tests/integration/pods/components/input/md-select-profile/compo
     });
   });
 });
-define("mdeditor/tests/integration/pods/components/input/md-select-thesaurus/component-test", ["@ember/test-helpers", "qunit", "ember-qunit", "ember-power-select/test-support/helpers"], function (_testHelpers, _qunit, _emberQunit, _helpers) {
+define("mdeditor/tests/integration/pods/components/input/md-select-thesaurus/component-test", ["@ember/template-factory", "@ember/test-helpers", "qunit", "ember-qunit", "ember-power-select/test-support/helpers"], function (_templateFactory, _testHelpers, _qunit, _emberQunit, _helpers) {
   "use strict";
 
-  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"htmlbars-inline-precompile",0,"ember-power-select/test-support/helpers"eaimeta@70e063a35619d71f
+  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"ember-power-select/test-support/helpers",0,"@ember/template-factory"eaimeta@70e063a35619d71f
   (0, _qunit.module)('Integration | Component | input/md select thesaurus', function (hooks) {
     (0, _emberQunit.setupRenderingTest)(hooks);
     (0, _qunit.test)('it renders', async function (assert) {
       // Set any properties with this.set('myProperty', 'value');
       // Handle any actions with this.on('myAction', function(val) { ... });
 
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         {{input/md-select-thesaurus}}
       */
       {
-        id: "d3VLD8rQ",
-        block: "{\"symbols\":[],\"statements\":[[1,[22,\"input/md-select-thesaurus\"],false]],\"hasEval\":false}",
-        meta: {}
+        "id": "ZRM0UKj8",
+        "block": "[[[1,[34,0]]],[],false,[\"input/md-select-thesaurus\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       assert.equal((0, _testHelpers.find)('.md-select').textContent.replace(/[ \n]+/g, '|'), '|Pick|a|thesaurus|');
 
       // Template block usage:
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         
             {{#input/md-select-thesaurus}}
@@ -4930,9 +5059,10 @@ define("mdeditor/tests/integration/pods/components/input/md-select-thesaurus/com
           
       */
       {
-        id: "ThFIe8O9",
-        block: "{\"symbols\":[],\"statements\":[[0,\"\\n\"],[4,\"input/md-select-thesaurus\",null,null,{\"statements\":[[0,\"        template block text\\n\"]],\"parameters\":[]},null],[0,\"    \"]],\"hasEval\":false}",
-        meta: {}
+        "id": "bqJ8txro",
+        "block": "[[[1,\"\\n\"],[6,[39,0],null,null,[[\"default\"],[[[[1,\"        template block text\\n\"]],[]]]]],[1,\"    \"]],[],false,[\"input/md-select-thesaurus\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       assert.equal((0, _testHelpers.find)('.md-select').textContent.replace(/[ \n]+/g, '|'), '|Pick|a|thesaurus|');
     });
@@ -4944,14 +5074,15 @@ define("mdeditor/tests/integration/pods/components/input/md-select-thesaurus/com
       this.set('selectThesaurus', id => {
         assert.equal(id.citation.identifier[0].identifier, 'ISO 19115 Topic Category', 'submitted value is passed to external action');
       });
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         {{input/md-select-thesaurus selectThesaurus=selectThesaurus}}
       */
       {
-        id: "KzCmCf4Z",
-        block: "{\"symbols\":[],\"statements\":[[1,[28,\"input/md-select-thesaurus\",null,[[\"selectThesaurus\"],[[24,[\"selectThesaurus\"]]]]],false]],\"hasEval\":false}",
-        meta: {}
+        "id": "t0AeZaEN",
+        "block": "[[[1,[28,[35,0],null,[[\"selectThesaurus\"],[[33,1]]]]]],[],false,[\"input/md-select-thesaurus\",\"selectThesaurus\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
 
       // select a value and force an onchange
@@ -4960,21 +5091,21 @@ define("mdeditor/tests/integration/pods/components/input/md-select-thesaurus/com
     });
   });
 });
-define("mdeditor/tests/integration/pods/components/input/md-select/component-test", ["@ember/test-helpers", "qunit", "ember-qunit", "ember-power-select/test-support/helpers"], function (_testHelpers, _qunit, _emberQunit, _helpers) {
+define("mdeditor/tests/integration/pods/components/input/md-select/component-test", ["@ember/template-factory", "@ember/test-helpers", "@ember/object", "qunit", "ember-qunit", "ember-power-select/test-support/helpers"], function (_templateFactory, _testHelpers, _object, _qunit, _emberQunit, _helpers) {
   "use strict";
 
-  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"@ember/object",0,"qunit",0,"ember-qunit",0,"htmlbars-inline-precompile",0,"ember-power-select/test-support/helpers"eaimeta@70e063a35619d71f
+  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"@ember/object",0,"qunit",0,"ember-qunit",0,"ember-power-select/test-support/helpers",0,"@ember/template-factory"eaimeta@70e063a35619d71f
   (0, _qunit.module)('Integration | Component | input/md select', function (hooks) {
     (0, _emberQunit.setupRenderingTest)(hooks);
     (0, _qunit.test)('it renders', async function (assert) {
       // Set any properties with this.set('myProperty', 'value');
       // Handle any actions with this.on('myAction', function(val) { ... });" + EOL + EOL +
-      this.set('objArray', [Ember.Object.create({
+      this.set('objArray', [_object.default.create({
         id: 1,
         name: 'foo',
         tip: 'bar'
       })]);
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         
             {{input/md-select
@@ -4987,9 +5118,10 @@ define("mdeditor/tests/integration/pods/components/input/md-select/component-tes
           
       */
       {
-        id: "YBlB4Kdz",
-        block: "{\"symbols\":[],\"statements\":[[0,\"\\n      \"],[1,[28,\"input/md-select\",null,[[\"value\",\"objectArray\",\"valuePath\",\"namePath\",\"tooltipPath\",\"placeholder\"],[1,[24,[\"objArray\"]],\"id\",\"name\",\"tip\",\"Select one\"]]],false],[0,\"\\n    \"]],\"hasEval\":false}",
-        meta: {}
+        "id": "LqXapWQh",
+        "block": "[[[1,\"\\n      \"],[1,[28,[35,0],null,[[\"value\",\"objectArray\",\"valuePath\",\"namePath\",\"tooltipPath\",\"placeholder\"],[1,[33,1],\"id\",\"name\",\"tip\",\"Select one\"]]]],[1,\"\\n    \"]],[],false,[\"input/md-select\",\"objArray\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       assert.equal((0, _testHelpers.find)('.md-select').textContent.replace(/[ \n]+/g, '|'), '|foo|', 'renders ok');
     });
@@ -4998,17 +5130,17 @@ define("mdeditor/tests/integration/pods/components/input/md-select/component-tes
 
       // Set any properties with this.set('myProperty', 'value');
       // Handle any actions with this.on('myAction', function(val) { ... });" + EOL + EOL +
-      this.set('objArray', [Ember.Object.create({
+      this.set('objArray', [_object.default.create({
         id: 1,
         name: 'foo',
         tip: 'bar'
-      }), Ember.Object.create({
+      }), _object.default.create({
         id: 2,
         name: 'baz',
         tip: 'biz'
       })]);
       this.set('value', 1);
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         
             {{input/md-select
@@ -5019,9 +5151,10 @@ define("mdeditor/tests/integration/pods/components/input/md-select/component-tes
           
       */
       {
-        id: "adgl6jS9",
-        block: "{\"symbols\":[],\"statements\":[[0,\"\\n      \"],[1,[28,\"input/md-select\",null,[[\"value\",\"objectArray\",\"valuePath\",\"namePath\"],[[24,[\"value\"]],[24,[\"objArray\"]],\"id\",\"name\"]]],false],[0,\"\\n    \"]],\"hasEval\":false}",
-        meta: {}
+        "id": "YxlQxi/m",
+        "block": "[[[1,\"\\n      \"],[1,[28,[35,0],null,[[\"value\",\"objectArray\",\"valuePath\",\"namePath\"],[[33,1],[33,2],\"id\",\"name\"]]]],[1,\"\\n    \"]],[],false,[\"input/md-select\",\"value\",\"objArray\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       assert.equal((0, _testHelpers.find)('.md-select').textContent.replace(/[ \n]+/g, '|'), '|foo|', 'value set');
       await (0, _helpers.clickTrigger)();
@@ -5034,17 +5167,17 @@ define("mdeditor/tests/integration/pods/components/input/md-select/component-tes
 
       // Set any properties with this.set('myProperty', 'value');
       // Handle any actions with this.on('myAction', function(val) { ... });" + EOL + EOL +
-      this.set('objArray', [Ember.Object.create({
+      this.set('objArray', [_object.default.create({
         id: 1,
         name: 'foo',
         tip: 'bar'
-      }), Ember.Object.create({
+      }), _object.default.create({
         id: 2,
         name: 'baz',
         tip: 'biz'
       })]);
       this.set('value', 1);
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         
             {{input/md-select
@@ -5056,9 +5189,10 @@ define("mdeditor/tests/integration/pods/components/input/md-select/component-tes
           
       */
       {
-        id: "rcKdh2K6",
-        block: "{\"symbols\":[],\"statements\":[[0,\"\\n      \"],[1,[28,\"input/md-select\",null,[[\"value\",\"create\",\"objectArray\",\"valuePath\",\"namePath\"],[[24,[\"value\"]],true,[24,[\"objArray\"]],\"id\",\"name\"]]],false],[0,\"\\n    \"]],\"hasEval\":false}",
-        meta: {}
+        "id": "na3ZdRLU",
+        "block": "[[[1,\"\\n      \"],[1,[28,[35,0],null,[[\"value\",\"create\",\"objectArray\",\"valuePath\",\"namePath\"],[[33,1],true,[33,2],\"id\",\"name\"]]]],[1,\"\\n    \"]],[],false,[\"input/md-select\",\"value\",\"objArray\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       assert.equal((0, _testHelpers.find)('.md-select').textContent.replace(/[ \n]+/g, '|'), '|foo|', 'value set');
       await (0, _helpers.clickTrigger)();
@@ -5069,17 +5203,17 @@ define("mdeditor/tests/integration/pods/components/input/md-select/component-tes
     });
   });
 });
-define("mdeditor/tests/integration/pods/components/input/md-textarea/component-test", ["@ember/test-helpers", "qunit", "ember-qunit"], function (_testHelpers, _qunit, _emberQunit) {
+define("mdeditor/tests/integration/pods/components/input/md-textarea/component-test", ["@ember/template-factory", "@ember/test-helpers", "qunit", "ember-qunit"], function (_templateFactory, _testHelpers, _qunit, _emberQunit) {
   "use strict";
 
-  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"htmlbars-inline-precompile"eaimeta@70e063a35619d71f
+  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"@ember/template-factory"eaimeta@70e063a35619d71f
   (0, _qunit.module)('Integration | Component | input/md textarea', function (hooks) {
     (0, _emberQunit.setupRenderingTest)(hooks);
     (0, _qunit.test)('it renders', async function (assert) {
       // Set any properties with this.set('myProperty', 'value');
       // Handle any actions with this.on('myAction', function(val) { ... });" + EOL + EOL +
 
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         
             {{input/md-textarea
@@ -5090,15 +5224,16 @@ define("mdeditor/tests/integration/pods/components/input/md-textarea/component-t
             
       */
       {
-        id: "MP9NEYBp",
-        block: "{\"symbols\":[],\"statements\":[[0,\"\\n      \"],[1,[28,\"input/md-textarea\",null,[[\"value\",\"label\",\"placeholder\",\"rows\"],[\"Foo bar baz\",\"FooBar\",\"placeholder\",10]]],false],[0,\"\\n      \"]],\"hasEval\":false}",
-        meta: {}
+        "id": "cImgQzjd",
+        "block": "[[[1,\"\\n      \"],[1,[28,[35,0],null,[[\"value\",\"label\",\"placeholder\",\"rows\"],[\"Foo bar baz\",\"FooBar\",\"placeholder\",10]]]],[1,\"\\n      \"]],[],false,[\"input/md-textarea\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       assert.equal((0, _testHelpers.find)('textarea').value, 'Foo bar baz');
       assert.equal((0, _testHelpers.find)('label').textContent, 'FooBar', 'label renders');
 
       // Template block usage:" + EOL +
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         
             {{#input/md-textarea class="testme"}}
@@ -5107,18 +5242,57 @@ define("mdeditor/tests/integration/pods/components/input/md-textarea/component-t
           
       */
       {
-        id: "OrJLXcDT",
-        block: "{\"symbols\":[],\"statements\":[[0,\"\\n\"],[4,\"input/md-textarea\",null,[[\"class\"],[\"testme\"]],{\"statements\":[[0,\"        template block text\\n\"]],\"parameters\":[]},null],[0,\"    \"]],\"hasEval\":false}",
-        meta: {}
+        "id": "mfRxTyJB",
+        "block": "[[[1,\"\\n\"],[6,[39,0],null,[[\"class\"],[\"testme\"]],[[\"default\"],[[[[1,\"        template block text\\n\"]],[]]]]],[1,\"    \"]],[],false,[\"input/md-textarea\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       assert.equal((0, _testHelpers.find)('.testme').textContent.trim(), 'template block text', 'block renders');
     });
+    (0, _qunit.test)('editing writes back through the two-way binding', async function (assert) {
+      this.set('extent', {
+        description: ''
+      });
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
+      /*
+        
+            {{input/md-textarea value=this.extent.description label="Description"}}
+          
+      */
+      {
+        "id": "QeGEW6G5",
+        "block": "[[[1,\"\\n      \"],[1,[28,[35,0],null,[[\"value\",\"label\"],[[30,0,[\"extent\",\"description\"]],\"Description\"]]]],[1,\"\\n    \"]],[],false,[\"input/md-textarea\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
+      }));
+      await (0, _testHelpers.fillIn)('textarea', 'qweqwe');
+      assert.equal(this.extent.description, 'qweqwe', 'typed value propagates to the bound property');
+    });
+    (0, _qunit.test)('a programmatic revert is reflected in the textarea', async function (assert) {
+      this.set('description', 'original');
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
+      /*
+        
+            {{input/md-textarea value=this.description label="Description"}}
+          
+      */
+      {
+        "id": "YWVHCld4",
+        "block": "[[[1,\"\\n      \"],[1,[28,[35,0],null,[[\"value\",\"label\"],[[30,0,[\"description\"]],\"Description\"]]]],[1,\"\\n    \"]],[],false,[\"input/md-textarea\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
+      }));
+      await (0, _testHelpers.fillIn)('textarea', 'qweqwe');
+      this.set('description', 'original');
+      await (0, _testHelpers.settled)();
+      assert.equal((0, _testHelpers.find)('textarea').value, 'original', 'reverting the bound property resets the displayed value');
+    });
   });
 });
-define("mdeditor/tests/integration/pods/components/input/md-toggle/component-test", ["@ember/test-helpers", "qunit", "ember-qunit"], function (_testHelpers, _qunit, _emberQunit) {
+define("mdeditor/tests/integration/pods/components/input/md-toggle/component-test", ["@ember/template-factory", "@ember/test-helpers", "qunit", "ember-qunit"], function (_templateFactory, _testHelpers, _qunit, _emberQunit) {
   "use strict";
 
-  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"htmlbars-inline-precompile"eaimeta@70e063a35619d71f
+  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"@ember/template-factory"eaimeta@70e063a35619d71f
   (0, _qunit.module)('Integration | Component | input/md toggle', function (hooks) {
     (0, _emberQunit.setupRenderingTest)(hooks);
     (0, _qunit.test)('it renders', async function (assert) {
@@ -5126,7 +5300,7 @@ define("mdeditor/tests/integration/pods/components/input/md-toggle/component-tes
       this.set('value', false);
       // Handle any actions with this.on('myAction', function(val) { ... });
 
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         {{input/md-toggle
             value=this.value
@@ -5137,49 +5311,52 @@ define("mdeditor/tests/integration/pods/components/input/md-toggle/component-tes
           }}
       */
       {
-        id: "fcKCbwmF",
-        block: "{\"symbols\":[],\"statements\":[[1,[28,\"input/md-toggle\",null,[[\"value\",\"showLabels\",\"onToggle\",\"offLabel\",\"onLabel\"],[[23,0,[\"value\"]],true,[28,\"action\",[[23,0,[]],[28,\"mut\",[[23,0,[\"value\"]]],null]],null],\"No\",\"Yes\"]]],false]],\"hasEval\":false}",
-        meta: {}
+        "id": "i2eCVYMg",
+        "block": "[[[1,[28,[35,0],null,[[\"value\",\"showLabels\",\"onToggle\",\"offLabel\",\"onLabel\"],[[30,0,[\"value\"]],true,[28,[37,1],[[30,0],[28,[37,2],[[30,0,[\"value\"]]],null]],null],\"No\",\"Yes\"]]]]],[],false,[\"input/md-toggle\",\"action\",\"mut\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       assert.equal((0, _testHelpers.find)('.x-toggle-component').textContent.replace(/[ \n]+/g, '|').trim(), '|No|Yes|');
       await (0, _testHelpers.click)('.x-toggle-btn');
       assert.ok((0, _testHelpers.find)('.toggle-on'), 'toggle on');
       // Template block usage:
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         
-            {{#input/md-toggle class="testme"}}
+            <Input::MdToggle @class="testme">
               template block text
-            {{/input/md-toggle}}
+            </Input::MdToggle>
           
       */
       {
-        id: "AxyKbbVw",
-        block: "{\"symbols\":[],\"statements\":[[0,\"\\n\"],[4,\"input/md-toggle\",null,[[\"class\"],[\"testme\"]],{\"statements\":[[0,\"        template block text\\n\"]],\"parameters\":[]},null],[0,\"    \"]],\"hasEval\":false}",
-        meta: {}
+        "id": "nv+nQ9Tg",
+        "block": "[[[1,\"\\n      \"],[8,[39,0],null,[[\"@class\"],[\"testme\"]],[[\"default\"],[[[[1,\"\\n        template block text\\n      \"]],[]]]]],[1,\"\\n    \"]],[],false,[\"input/md-toggle\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       assert.equal((0, _testHelpers.find)('.testme').textContent.trim(), 'template block text');
     });
   });
 });
-define("mdeditor/tests/integration/pods/components/layout/md-card/component-test", ["@ember/test-helpers", "qunit", "ember-qunit"], function (_testHelpers, _qunit, _emberQunit) {
+define("mdeditor/tests/integration/pods/components/layout/md-card/component-test", ["@ember/template-factory", "@ember/test-helpers", "qunit", "ember-qunit"], function (_templateFactory, _testHelpers, _qunit, _emberQunit) {
   "use strict";
 
-  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"htmlbars-inline-precompile"eaimeta@70e063a35619d71f
+  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"@ember/template-factory"eaimeta@70e063a35619d71f
   (0, _qunit.module)('Integration | Component | layout/md card', function (hooks) {
     (0, _emberQunit.setupRenderingTest)(hooks);
     (0, _qunit.test)('it renders', async function (assert) {
       // Set any properties with this.set('myProperty', 'value');
       // Handle any actions with this.on('myAction', function(val) { ... });
 
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         {{layout/md-card title="foo"}}
       */
       {
-        id: "lJn7MTX7",
-        block: "{\"symbols\":[],\"statements\":[[1,[28,\"layout/md-card\",null,[[\"title\"],[\"foo\"]]],false]],\"hasEval\":false}",
-        meta: {}
+        "id": "5nSg2rkr",
+        "block": "[[[1,[28,[35,0],null,[[\"title\"],[\"foo\"]]]]],[],false,[\"layout/md-card\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       assert.equal((0, _testHelpers.find)('.md-card').textContent.trim(), 'foo');
 
@@ -5188,42 +5365,44 @@ define("mdeditor/tests/integration/pods/components/layout/md-card/component-test
       // assert.equal(find('.md-card').textContent.trim(), 'foo');
 
       // Template block usage:
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         
-            {{#layout/md-card}}
+            <Layout::MdCard>
               template block text
-            {{/layout/md-card}}
+            </Layout::MdCard>
           
       */
       {
-        id: "M+5H0+hm",
-        block: "{\"symbols\":[],\"statements\":[[0,\"\\n\"],[4,\"layout/md-card\",null,null,{\"statements\":[[0,\"        template block text\\n\"]],\"parameters\":[]},null],[0,\"    \"]],\"hasEval\":false}",
-        meta: {}
+        "id": "nZEwWjr2",
+        "block": "[[[1,\"\\n      \"],[8,[39,0],null,null,[[\"default\"],[[[[1,\"\\n        template block text\\n      \"]],[]]]]],[1,\"\\n    \"]],[],false,[\"layout/md-card\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       assert.equal((0, _testHelpers.find)('.md-card').textContent.trim(), 'template block text', 'block');
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         
-            {{#layout/md-card title="foo" collapsed=true collapsible=true}}
+            <Layout::MdCard @title="foo" @collapsed={{true}} @collapsible={{true}}>
               template block text
-            {{/layout/md-card}}
+            </Layout::MdCard>
           
       */
       {
-        id: "pGMgp3ey",
-        block: "{\"symbols\":[],\"statements\":[[0,\"\\n\"],[4,\"layout/md-card\",null,[[\"title\",\"collapsed\",\"collapsible\"],[\"foo\",true,true]],{\"statements\":[[0,\"        template block text\\n\"]],\"parameters\":[]},null],[0,\"    \"]],\"hasEval\":false}",
-        meta: {}
+        "id": "5+U6kNbb",
+        "block": "[[[1,\"\\n      \"],[8,[39,0],null,[[\"@title\",\"@collapsed\",\"@collapsible\"],[\"foo\",true,true]],[[\"default\"],[[[[1,\"\\n        template block text\\n      \"]],[]]]]],[1,\"\\n    \"]],[],false,[\"layout/md-card\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       assert.equal((0, _testHelpers.find)('.md-card').innerText.trim(), 'foo', 'collapsed');
       assert.ok((0, _testHelpers.find)('.md-card .card-block:not(.in)'), 'class ok');
     });
   });
 });
-define("mdeditor/tests/integration/pods/components/layout/md-footer/component-test", ["@ember/test-helpers", "qunit", "ember-qunit"], function (_testHelpers, _qunit, _emberQunit) {
+define("mdeditor/tests/integration/pods/components/layout/md-footer/component-test", ["@ember/template-factory", "@ember/test-helpers", "qunit", "ember-qunit"], function (_templateFactory, _testHelpers, _qunit, _emberQunit) {
   "use strict";
 
-  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"htmlbars-inline-precompile"eaimeta@70e063a35619d71f
+  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"@ember/template-factory"eaimeta@70e063a35619d71f
   (0, _qunit.module)('Integration | Component | layout/md footer', function (hooks) {
     (0, _emberQunit.setupRenderingTest)(hooks);
     (0, _qunit.test)('it renders', async function (assert) {
@@ -5234,39 +5413,41 @@ define("mdeditor/tests/integration/pods/components/layout/md-footer/component-te
           autoSave: false
         }
       });
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         {{layout/md-footer settings=settings}}
       */
       {
-        id: "ANTpV+Sw",
-        block: "{\"symbols\":[],\"statements\":[[1,[28,\"layout/md-footer\",null,[[\"settings\"],[[24,[\"settings\"]]]]],false]],\"hasEval\":false}",
-        meta: {}
+        "id": "Jk7yx3wf",
+        "block": "[[[1,[28,[35,0],null,[[\"settings\"],[[33,1]]]]]],[],false,[\"layout/md-footer\",\"settings\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       assert.equal((0, _testHelpers.find)('.md-footer').textContent.replace(/[ \n]+/g, '|').trim(), '|Report|Issue|AutoSave:|Off|');
       this.set('settings.data.autoSave', true);
       // Template block usage:
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         
-            {{#layout/md-footer settings=settings}}
+            <Layout::MdFooter @settings={{settings}}>
               template block text
-            {{/layout/md-footer}}
+            </Layout::MdFooter>
           
       */
       {
-        id: "w7koDt8e",
-        block: "{\"symbols\":[],\"statements\":[[0,\"\\n\"],[4,\"layout/md-footer\",null,[[\"settings\"],[[24,[\"settings\"]]]],{\"statements\":[[0,\"        template block text\\n\"]],\"parameters\":[]},null],[0,\"    \"]],\"hasEval\":false}",
-        meta: {}
+        "id": "0ZuBgRoH",
+        "block": "[[[1,\"\\n      \"],[8,[39,0],null,[[\"@settings\"],[[99,1,[\"@settings\"]]]],[[\"default\"],[[[[1,\"\\n        template block text\\n      \"]],[]]]]],[1,\"\\n    \"]],[],false,[\"layout/md-footer\",\"settings\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       assert.equal((0, _testHelpers.find)('.md-footer').textContent.replace(/[ \n]+/g, '|').trim(), '|Report|Issue|AutoSave:|On|template|block|text|');
     });
   });
 });
-define("mdeditor/tests/integration/pods/components/layout/md-nav-main/component-test", ["@ember/test-helpers", "qunit", "ember-qunit"], function (_testHelpers, _qunit, _emberQunit) {
+define("mdeditor/tests/integration/pods/components/layout/md-nav-main/component-test", ["@ember/template-factory", "@ember/test-helpers", "qunit", "ember-qunit"], function (_templateFactory, _testHelpers, _qunit, _emberQunit) {
   "use strict";
 
-  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"htmlbars-inline-precompile"eaimeta@70e063a35619d71f
+  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"@ember/template-factory"eaimeta@70e063a35619d71f
   (0, _qunit.module)('Integration | Component | md nav main', function (hooks) {
     (0, _emberQunit.setupRenderingTest)(hooks);
     (0, _qunit.test)('it renders', async function (assert) {
@@ -5275,19 +5456,20 @@ define("mdeditor/tests/integration/pods/components/layout/md-nav-main/component-
       // Set any properties with this.set('myProperty', 'value');
       // Handle any actions with this.on('myAction', function(val) { ... });
 
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         {{layout/md-nav-main}}
       */
       {
-        id: "7HbRySVX",
-        block: "{\"symbols\":[],\"statements\":[[1,[22,\"layout/md-nav-main\"],false]],\"hasEval\":false}",
-        meta: {}
+        "id": "0ohV0eST",
+        "block": "[[[1,[34,0]]],[],false,[\"layout/md-nav-main\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
-      assert.equal((0, _testHelpers.find)('nav').innerText.replace(/[ \n]+/g, '|'), '|Dashboard|Export|Import|Publish|Settings');
+      assert.equal((0, _testHelpers.find)('nav').innerText.replace(/[ \n]+/g, '|'), '|Dashboard|Export|Import|Publish|Sync|Settings');
 
       // Template block usage:
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         
             {{#layout/md-nav-main}}
@@ -5296,18 +5478,19 @@ define("mdeditor/tests/integration/pods/components/layout/md-nav-main/component-
           
       */
       {
-        id: "vTbqEBbv",
-        block: "{\"symbols\":[],\"statements\":[[0,\"\\n\"],[4,\"layout/md-nav-main\",null,null,{\"statements\":[[0,\"        template block text\\n\"]],\"parameters\":[]},null],[0,\"    \"]],\"hasEval\":false}",
-        meta: {}
+        "id": "PdmrwEHI",
+        "block": "[[[1,\"\\n\"],[6,[39,0],null,null,[[\"default\"],[[[[1,\"        template block text\\n\"]],[]]]]],[1,\"    \"]],[],false,[\"layout/md-nav-main\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
-      assert.equal((0, _testHelpers.find)('nav').innerText.replace(/[ \n]+/g, '|'), '|Dashboard|Export|Import|Publish|template|block|text|Settings');
+      assert.equal((0, _testHelpers.find)('nav').innerText.replace(/[ \n]+/g, '|'), '|Dashboard|Export|Import|Publish|Sync|template|block|text|Settings');
     });
   });
 });
-define("mdeditor/tests/integration/pods/components/layout/md-nav-secondary/component-test", ["@ember/test-helpers", "qunit", "ember-qunit"], function (_testHelpers, _qunit, _emberQunit) {
+define("mdeditor/tests/integration/pods/components/layout/md-nav-secondary/component-test", ["@ember/template-factory", "@ember/test-helpers", "@ember/service", "qunit", "ember-qunit"], function (_templateFactory, _testHelpers, _service, _qunit, _emberQunit) {
   "use strict";
 
-  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"@ember/service",0,"qunit",0,"ember-qunit",0,"htmlbars-inline-precompile"eaimeta@70e063a35619d71f
+  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"@ember/service",0,"qunit",0,"ember-qunit",0,"@ember/template-factory"eaimeta@70e063a35619d71f
   //Stub profile service
   const profiles = [{
     identifier: "full",
@@ -5340,7 +5523,7 @@ define("mdeditor/tests/integration/pods/components/layout/md-nav-secondary/compo
       }]
     }
   }];
-  const profileStub = Ember.Service.extend({
+  const profileStub = _service.default.extend({
     coreProfiles: profiles
   });
   (0, _qunit.module)('Integration | Component | md nav secondary', function (hooks) {
@@ -5363,20 +5546,21 @@ define("mdeditor/tests/integration/pods/components/layout/md-nav-secondary/compo
       // Set any properties with this.set('myProperty', 'value');
       // Handle any actions with this.on('myAction', function(val) { ... });
 
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         {{layout/md-nav-secondary model=model}}
       */
       {
-        id: "vCS56Cuf",
-        block: "{\"symbols\":[],\"statements\":[[1,[28,\"layout/md-nav-secondary\",null,[[\"model\"],[[24,[\"model\"]]]]],false]],\"hasEval\":false}",
-        meta: {}
+        "id": "EXVqm2L1",
+        "block": "[[[1,[28,[35,0],null,[[\"model\"],[[33,1]]]]]],[],false,[\"layout/md-nav-secondary\",\"model\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       var more = (0, _testHelpers.findAll)('.overflow-nav').length ? '|More' : '';
       assert.equal((0, _testHelpers.find)('.nav').textContent.replace(/[ \n]+/g, '|'), more + '|Foo|Bar|');
 
       // Template block usage:
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         
             {{#layout/md-nav-secondary model=model}}
@@ -5385,9 +5569,10 @@ define("mdeditor/tests/integration/pods/components/layout/md-nav-secondary/compo
           
       */
       {
-        id: "7PVVRSYN",
-        block: "{\"symbols\":[],\"statements\":[[0,\"\\n\"],[4,\"layout/md-nav-secondary\",null,[[\"model\"],[[24,[\"model\"]]]],{\"statements\":[[0,\"        \"],[7,\"li\",true],[8],[0,\"template block text\"],[9],[0,\"\\n\"]],\"parameters\":[]},null],[0,\"    \"]],\"hasEval\":false}",
-        meta: {}
+        "id": "mJIRphxY",
+        "block": "[[[1,\"\\n\"],[6,[39,0],null,[[\"model\"],[[33,1]]],[[\"default\"],[[[[1,\"        \"],[10,\"li\"],[12],[1,\"template block text\"],[13],[1,\"\\n\"]],[]]]]],[1,\"    \"]],[],false,[\"layout/md-nav-secondary\",\"model\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       more = (0, _testHelpers.findAll)('.overflow-nav').length ? '|More' : '';
       assert.equal((0, _testHelpers.find)('.nav').textContent.replace(/[ \n]+/g, '|'), more + '|Foo|Bar|');
@@ -5399,63 +5584,66 @@ define("mdeditor/tests/integration/pods/components/layout/md-nav-secondary/compo
       // Handle any actions with this.on('myAction', function(val) { ... });
 
       this.set('customService.active', 'org.adiwg.profile.basic');
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         {{layout/md-nav-secondary model=model}}
       */
       {
-        id: "vCS56Cuf",
-        block: "{\"symbols\":[],\"statements\":[[1,[28,\"layout/md-nav-secondary\",null,[[\"model\"],[[24,[\"model\"]]]]],false]],\"hasEval\":false}",
-        meta: {}
+        "id": "EXVqm2L1",
+        "block": "[[[1,[28,[35,0],null,[[\"model\"],[[33,1]]]]]],[],false,[\"layout/md-nav-secondary\",\"model\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       var more = (0, _testHelpers.findAll)('.overflow-nav').length ? '|More' : '';
       assert.equal((0, _testHelpers.find)('.nav').textContent.replace(/[ \n]+/g, '|'), more + '|FooBar|BarFoo|FooBar1|BarFoo2|');
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         <div style="width:100px;">{{layout/md-nav-secondary model=model}}</div>
       */
       {
-        id: "fT9ZgaMr",
-        block: "{\"symbols\":[],\"statements\":[[7,\"div\",true],[10,\"style\",\"width:100px;\"],[8],[1,[28,\"layout/md-nav-secondary\",null,[[\"model\"],[[24,[\"model\"]]]]],false],[9]],\"hasEval\":false}",
-        meta: {}
+        "id": "DGR5OHcT",
+        "block": "[[[10,0],[14,5,\"width:100px;\"],[12],[1,[28,[35,0],null,[[\"model\"],[[33,1]]]]],[13]],[],false,[\"layout/md-nav-secondary\",\"model\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       assert.ok((0, _testHelpers.findAll)('.dropdown .dropdown-menu').length, 'render more dropdown');
     });
   });
 });
-define("mdeditor/tests/integration/pods/components/layout/md-nav-secondary/link/component-test", ["qunit", "ember-qunit", "@ember/test-helpers"], function (_qunit, _emberQunit, _testHelpers) {
+define("mdeditor/tests/integration/pods/components/layout/md-nav-secondary/link/component-test", ["@ember/template-factory", "qunit", "ember-qunit", "@ember/test-helpers", "@ember/object"], function (_templateFactory, _qunit, _emberQunit, _testHelpers, _object) {
   "use strict";
 
-  0; //eaimeta@70e063a35619d71f0,"qunit",0,"ember-qunit",0,"@ember/test-helpers",0,"htmlbars-inline-precompile",0,"@ember/object"eaimeta@70e063a35619d71f
+  0; //eaimeta@70e063a35619d71f0,"qunit",0,"ember-qunit",0,"@ember/test-helpers",0,"@ember/object",0,"@ember/template-factory"eaimeta@70e063a35619d71f
   (0, _qunit.module)('Integration | Component | layout/md-nav-secondary/link', function (hooks) {
     (0, _emberQunit.setupRenderingTest)(hooks);
     (0, _qunit.test)('it renders', async function (assert) {
       // Set any properties with this.set('myProperty', 'value');
       // Handle any actions with this.set('myAction', function(val) { ... });
-      this.links = [Ember.Object.create({
+      this.links = [_object.default.create({
         title: 'Foo',
         target: 'record.show.edit.index',
         tip: 'Foo not bar'
-      }), Ember.Object.create({
+      }), _object.default.create({
         title: 'Bar',
         target: 'record.show.edit.metadata'
       })];
       this.nav = {
         links: this.links
       };
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         {{layout/md-nav-secondary/link link=links.firstObject nav=nav}}
       */
       {
-        id: "SjqIZjc7",
-        block: "{\"symbols\":[],\"statements\":[[1,[28,\"layout/md-nav-secondary/link\",null,[[\"link\",\"nav\"],[[24,[\"links\",\"firstObject\"]],[24,[\"nav\"]]]]],false]],\"hasEval\":false}",
-        meta: {}
+        "id": "tc15JCbP",
+        "block": "[[[1,[28,[35,0],null,[[\"link\",\"nav\"],[[33,1,[\"firstObject\"]],[33,2]]]]]],[],false,[\"layout/md-nav-secondary/link\",\"links\",\"nav\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       assert.equal(this.element.textContent.trim(), 'Foo');
 
       // Template block usage:
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         
             {{#layout/md-nav-secondary/link link=links.lastObject nav=nav}}
@@ -5464,95 +5652,98 @@ define("mdeditor/tests/integration/pods/components/layout/md-nav-secondary/link/
           
       */
       {
-        id: "dTotO+8I",
-        block: "{\"symbols\":[],\"statements\":[[0,\"\\n\"],[4,\"layout/md-nav-secondary/link\",null,[[\"link\",\"nav\"],[[24,[\"links\",\"lastObject\"]],[24,[\"nav\"]]]],{\"statements\":[[0,\"        template block text\\n\"]],\"parameters\":[]},null],[0,\"    \"]],\"hasEval\":false}",
-        meta: {}
+        "id": "8Kgeil8j",
+        "block": "[[[1,\"\\n\"],[6,[39,0],null,[[\"link\",\"nav\"],[[33,1,[\"lastObject\"]],[33,2]]],[[\"default\"],[[[[1,\"        template block text\\n\"]],[]]]]],[1,\"    \"]],[],false,[\"layout/md-nav-secondary/link\",\"links\",\"nav\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       assert.equal(this.element.textContent.trim(), 'Bar');
     });
   });
 });
-define("mdeditor/tests/integration/pods/components/layout/md-nav-sidebar/component-test", ["@ember/test-helpers", "qunit", "ember-qunit", "mdeditor/tests/helpers/create-contact", "mdeditor/tests/helpers/create-record", "mdeditor/tests/helpers/create-dictionary"], function (_testHelpers, _qunit, _emberQunit, _createContact, _createRecord, _createDictionary) {
+define("mdeditor/tests/integration/pods/components/layout/md-nav-sidebar/component-test", ["@ember/template-factory", "@ember/test-helpers", "qunit", "ember-qunit", "mdeditor/tests/helpers/create-contact", "mdeditor/tests/helpers/create-record", "mdeditor/tests/helpers/create-dictionary"], function (_templateFactory, _testHelpers, _qunit, _emberQunit, _createContact, _createRecord, _createDictionary) {
   "use strict";
 
-  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"htmlbars-inline-precompile",0,"mdeditor/tests/helpers/create-contact",0,"mdeditor/tests/helpers/create-record",0,"mdeditor/tests/helpers/create-dictionary"eaimeta@70e063a35619d71f
+  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"mdeditor/tests/helpers/create-contact",0,"mdeditor/tests/helpers/create-record",0,"mdeditor/tests/helpers/create-dictionary",0,"@ember/template-factory"eaimeta@70e063a35619d71f
   (0, _qunit.module)('Integration | Component | md nav sidebar', function (hooks) {
     (0, _emberQunit.setupRenderingTest)(hooks);
     (0, _qunit.test)('it renders', async function (assert) {
       assert.expect(1);
       const contacts = (0, _createContact.default)(2);
+      contacts.forEach(c => c.set('isNew', true));
       contacts.meta = {
         type: 'contact',
         list: 'contacts',
         title: 'Contacts'
       };
       const records = (0, _createRecord.createRecord)(2);
+      records.forEach(r => r.set('isNew', true));
       records.meta = {
         type: 'record',
         list: 'records',
         title: 'Records'
       };
       const dicts = (0, _createDictionary.createDictionary)(2);
+      dicts.forEach(d => d.set('isNew', true));
       dicts.meta = {
         type: 'dictionary',
         list: 'dictionaries',
         title: 'Dictionaries'
       };
-
-      // Set any properties with this.set('myProperty', 'value');
-      // Handle any actions with this.on('myAction', function(val) { ... });
-
       this.set('model', [records, contacts, dicts]);
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         {{layout/md-nav-sidebar items=model version="test"}}
       */
       {
-        id: "oOzPshzD",
-        block: "{\"symbols\":[],\"statements\":[[1,[28,\"layout/md-nav-sidebar\",null,[[\"items\",\"version\"],[[24,[\"model\"]],\"test\"]]],false]],\"hasEval\":false}",
-        meta: {}
+        "id": "mg4Xasl3",
+        "block": "[[[1,[28,[35,0],null,[[\"items\",\"version\"],[[33,1],\"test\"]]]]],[],false,[\"layout/md-nav-sidebar\",\"model\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       assert.equal((0, _testHelpers.find)('.sidebar-nav').textContent.replace(/[ \n]+/g, '|'), '|mdditorvtest|Records|(2)|My|Record0|My|Record1|Contacts|(2)|Contact0|Contact1|Dictionaries|(2)|My|Dictionary0|My|Dictionary1|');
     });
     (0, _qunit.test)('toggle help action', async function (assert) {
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         {{layout/md-nav-sidebar}}
       */
       {
-        id: "/wtPdttb",
-        block: "{\"symbols\":[],\"statements\":[[1,[22,\"layout/md-nav-sidebar\"],false]],\"hasEval\":false}",
-        meta: {}
+        "id": "LsAkzxAP",
+        "block": "[[[1,[34,0]]],[],false,[\"layout/md-nav-sidebar\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       await (0, _testHelpers.click)('.md-btn-help');
       assert.ok((0, _testHelpers.find)('.md-sidebar-wrapper').classList.contains('help'));
     });
     (0, _qunit.test)('toggle sidebar action', async function (assert) {
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         <div id="md-wrapper">{{layout/md-nav-sidebar}}</div>
       */
       {
-        id: "YaaE/gVE",
-        block: "{\"symbols\":[],\"statements\":[[7,\"div\",true],[10,\"id\",\"md-wrapper\"],[8],[1,[22,\"layout/md-nav-sidebar\"],false],[9]],\"hasEval\":false}",
-        meta: {}
+        "id": "FQo3VzJw",
+        "block": "[[[10,0],[14,1,\"md-wrapper\"],[12],[1,[34,0]],[13]],[],false,[\"layout/md-nav-sidebar\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       await (0, _testHelpers.click)('.sidebar-brand-link');
       assert.ok((0, _testHelpers.find)('#md-wrapper').classList.contains('toggled'));
     });
   });
 });
-define("mdeditor/tests/integration/pods/components/layout/md-object-container/component-test", ["qunit", "ember-qunit", "@ember/test-helpers"], function (_qunit, _emberQunit, _testHelpers) {
+define("mdeditor/tests/integration/pods/components/layout/md-object-container/component-test", ["@ember/template-factory", "qunit", "ember-qunit", "@ember/test-helpers"], function (_templateFactory, _qunit, _emberQunit, _testHelpers) {
   "use strict";
 
-  0; //eaimeta@70e063a35619d71f0,"qunit",0,"ember-qunit",0,"@ember/test-helpers",0,"htmlbars-inline-precompile"eaimeta@70e063a35619d71f
+  0; //eaimeta@70e063a35619d71f0,"qunit",0,"ember-qunit",0,"@ember/test-helpers",0,"@ember/template-factory"eaimeta@70e063a35619d71f
   (0, _qunit.module)('Integration | Component | layout/md-object-container', function (hooks) {
     (0, _emberQunit.setupRenderingTest)(hooks);
     (0, _qunit.test)('it renders', async function (assert) {
       // Set any properties with this.set('myProperty', 'value');
       // Handle any actions with this.set('myAction', function(val) { ... });
 
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         {{layout/md-object-container
             title="Foo"
@@ -5561,9 +5752,10 @@ define("mdeditor/tests/integration/pods/components/layout/md-object-container/co
           }}
       */
       {
-        id: "Hm3ScjAT",
-        block: "{\"symbols\":[],\"statements\":[[1,[28,\"layout/md-object-container\",null,[[\"title\",\"isCollapsible\",\"index\"],[\"Foo\",true,\"1\"]]],false]],\"hasEval\":false}",
-        meta: {}
+        "id": "CQFtwZBW",
+        "block": "[[[1,[28,[35,0],null,[[\"title\",\"isCollapsible\",\"index\"],[\"Foo\",true,\"1\"]]]]],[],false,[\"layout/md-object-container\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       assert.equal(this.element.textContent.trim(), 'Foo #1');
       assert.dom('.md-object-container').hasClass('even');
@@ -5571,7 +5763,7 @@ define("mdeditor/tests/integration/pods/components/layout/md-object-container/co
       assert.dom('.md-object-container .btn-collapse').hasClass('collapsed');
 
       // Template block usage:
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         
             {{#layout/md-object-container}}
@@ -5580,42 +5772,44 @@ define("mdeditor/tests/integration/pods/components/layout/md-object-container/co
           
       */
       {
-        id: "oZCFfN2y",
-        block: "{\"symbols\":[],\"statements\":[[0,\"\\n\"],[4,\"layout/md-object-container\",null,null,{\"statements\":[[0,\"        template block text\\n\"]],\"parameters\":[]},null],[0,\"    \"]],\"hasEval\":false}",
-        meta: {}
+        "id": "DlmfCrt2",
+        "block": "[[[1,\"\\n\"],[6,[39,0],null,null,[[\"default\"],[[[[1,\"        template block text\\n\"]],[]]]]],[1,\"    \"]],[],false,[\"layout/md-object-container\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       assert.equal(this.element.textContent.trim(), 'template block text', 'block renders');
     });
   });
 });
-define("mdeditor/tests/integration/pods/components/layout/md-slider/component-test", ["@ember/test-helpers", "qunit", "ember-qunit"], function (_testHelpers, _qunit, _emberQunit) {
+define("mdeditor/tests/integration/pods/components/layout/md-slider/component-test", ["@ember/template-factory", "@ember/test-helpers", "qunit", "ember-qunit"], function (_templateFactory, _testHelpers, _qunit, _emberQunit) {
   "use strict";
 
-  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"htmlbars-inline-precompile"eaimeta@70e063a35619d71f
+  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"@ember/template-factory"eaimeta@70e063a35619d71f
   (0, _qunit.module)('Integration | Component | layout/md slider', function (hooks) {
     (0, _emberQunit.setupRenderingTest)(hooks);
     (0, _qunit.test)('it renders', async function (assert) {
       // Set any properties with this.set('myProperty', 'value');
       // Handle any actions with this.on('myAction', function(val) { ... });
 
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         {{layout/md-slider}}
       */
       {
-        id: "K8sOFqjB",
-        block: "{\"symbols\":[],\"statements\":[[1,[22,\"layout/md-slider\"],false]],\"hasEval\":false}",
-        meta: {}
+        "id": "cMD49a7h",
+        "block": "[[[1,[34,0]]],[],false,[\"layout/md-slider\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       assert.equal((0, _testHelpers.find)('.md-slider').textContent.trim(), 'Close');
 
       // Template block usage:
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         
-            {{#layout/md-slider fromName="slider"}}
+            <Layout::MdSlider @fromName="slider">
               template block text
-            {{/layout/md-slider}}
+            </Layout::MdSlider>
             {{to-elsewhere named="slider"
               send=(hash
                 title="biz"
@@ -5624,58 +5818,61 @@ define("mdeditor/tests/integration/pods/components/layout/md-slider/component-te
           
       */
       {
-        id: "FLb3THMW",
-        block: "{\"symbols\":[],\"statements\":[[0,\"\\n\"],[4,\"layout/md-slider\",null,[[\"fromName\"],[\"slider\"]],{\"statements\":[[0,\"        template block text\\n\"]],\"parameters\":[]},null],[0,\"      \"],[1,[28,\"to-elsewhere\",null,[[\"named\",\"send\"],[\"slider\",[28,\"hash\",null,[[\"title\",\"body\"],[\"biz\",[28,\"component\",[\"layout/md-card\"],[[\"title\"],[\"foobar\"]]]]]]]]],false],[0,\"\\n    \"]],\"hasEval\":false}",
-        meta: {}
+        "id": "RT8Wy4Hv",
+        "block": "[[[1,\"\\n      \"],[8,[39,0],null,[[\"@fromName\"],[\"slider\"]],[[\"default\"],[[[[1,\"\\n        template block text\\n      \"]],[]]]]],[1,\"\\n      \"],[1,[28,[35,1],null,[[\"named\",\"send\"],[\"slider\",[28,[37,2],null,[[\"title\",\"body\"],[\"biz\",[50,\"layout/md-card\",0,null,[[\"title\"],[\"foobar\"]]]]]]]]]],[1,\"\\n    \"]],[],false,[\"layout/md-slider\",\"to-elsewhere\",\"hash\",\"component\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       assert.equal((0, _testHelpers.find)('.md-slider').textContent.replace(/[ \n]+/g, '|').trim(), '|Close|biz|foobar|template|block|text|');
       assert.ok((0, _testHelpers.find)('.md-card'), 'rendered slider content');
     });
   });
 });
-define("mdeditor/tests/integration/pods/components/layout/md-wrap/component-test", ["@ember/test-helpers", "qunit", "ember-qunit"], function (_testHelpers, _qunit, _emberQunit) {
+define("mdeditor/tests/integration/pods/components/layout/md-wrap/component-test", ["@ember/template-factory", "@ember/test-helpers", "qunit", "ember-qunit"], function (_templateFactory, _testHelpers, _qunit, _emberQunit) {
   "use strict";
 
-  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"htmlbars-inline-precompile"eaimeta@70e063a35619d71f
+  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"@ember/template-factory"eaimeta@70e063a35619d71f
   (0, _qunit.module)('Integration | Component | layout/md wrap', function (hooks) {
     (0, _emberQunit.setupRenderingTest)(hooks);
     (0, _qunit.test)('it renders', async function (assert) {
       // Set any properties with this.set('myProperty', 'value');
       // Handle any actions with this.on('myAction', function(val) { ... });
 
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         {{layout/md-wrap class="testme"}}
       */
       {
-        id: "moXlat3Z",
-        block: "{\"symbols\":[],\"statements\":[[1,[28,\"layout/md-wrap\",null,[[\"class\"],[\"testme\"]]],false]],\"hasEval\":false}",
-        meta: {}
+        "id": "yGVZdjSn",
+        "block": "[[[1,[28,[35,0],null,[[\"class\"],[\"testme\"]]]]],[],false,[\"layout/md-wrap\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       assert.equal((0, _testHelpers.find)('.testme').textContent.trim(), '');
 
       // Template block usage:
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         
-            {{#layout/md-wrap class="testme"}}
+            <Layout::MdWrap @class="testme">
               template block text
-            {{/layout/md-wrap}}
+            </Layout::MdWrap>
           
       */
       {
-        id: "fJoC4aqA",
-        block: "{\"symbols\":[],\"statements\":[[0,\"\\n\"],[4,\"layout/md-wrap\",null,[[\"class\"],[\"testme\"]],{\"statements\":[[0,\"        template block text\\n\"]],\"parameters\":[]},null],[0,\"    \"]],\"hasEval\":false}",
-        meta: {}
+        "id": "kveO21+p",
+        "block": "[[[1,\"\\n      \"],[8,[39,0],null,[[\"@class\"],[\"testme\"]],[[\"default\"],[[[[1,\"\\n        template block text\\n      \"]],[]]]]],[1,\"\\n    \"]],[],false,[\"layout/md-wrap\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       assert.equal((0, _testHelpers.find)('.testme').textContent.trim(), 'template block text');
     });
   });
 });
-define("mdeditor/tests/integration/pods/components/layout/nav/dictionary/nav-main/component-test", ["qunit", "ember-qunit", "@ember/test-helpers"], function (_qunit, _emberQunit, _testHelpers) {
+define("mdeditor/tests/integration/pods/components/layout/nav/dictionary/nav-main/component-test", ["@ember/template-factory", "qunit", "ember-qunit", "@ember/test-helpers"], function (_templateFactory, _qunit, _emberQunit, _testHelpers) {
   "use strict";
 
-  0; //eaimeta@70e063a35619d71f0,"qunit",0,"ember-qunit",0,"@ember/test-helpers",0,"htmlbars-inline-precompile"eaimeta@70e063a35619d71f
+  0; //eaimeta@70e063a35619d71f0,"qunit",0,"ember-qunit",0,"@ember/test-helpers",0,"@ember/template-factory"eaimeta@70e063a35619d71f
   // import Service from '@ember/service';
 
   //Stub profile service
@@ -5734,21 +5931,22 @@ define("mdeditor/tests/integration/pods/components/layout/nav/dictionary/nav-mai
     (0, _qunit.test)('it renders', async function (assert) {
       // Set any properties with this.set('myProperty', 'value');
       // Handle any actions with this.set('myAction', function(val) { ... });
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         {{layout/nav/dictionary/nav-main model=model}}
             {{to-elsewhere named="dictionary-nav" send=(component "control/md-button" text="testme")}}
             
       */
       {
-        id: "kfjnpNao",
-        block: "{\"symbols\":[],\"statements\":[[1,[28,\"layout/nav/dictionary/nav-main\",null,[[\"model\"],[[24,[\"model\"]]]]],false],[0,\"\\n      \"],[1,[28,\"to-elsewhere\",null,[[\"named\",\"send\"],[\"dictionary-nav\",[28,\"component\",[\"control/md-button\"],[[\"text\"],[\"testme\"]]]]]],false],[0,\"\\n      \"]],\"hasEval\":false}",
-        meta: {}
+        "id": "DlIgCc5Y",
+        "block": "[[[1,[28,[35,0],null,[[\"model\"],[[33,1]]]]],[1,\"\\n      \"],[1,[28,[35,2],null,[[\"named\",\"send\"],[\"dictionary-nav\",[50,\"control/md-button\",0,null,[[\"text\"],[\"testme\"]]]]]]],[1,\"\\n      \"]],[],false,[\"layout/nav/dictionary/nav-main\",\"model\",\"to-elsewhere\",\"component\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       assert.equal(this.element.textContent.trim(), 'testme');
 
       // Template block usage:
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         
             {{#layout/nav/dictionary/nav-main model=model}}
@@ -5758,18 +5956,19 @@ define("mdeditor/tests/integration/pods/components/layout/nav/dictionary/nav-mai
           
       */
       {
-        id: "uRoBR1Kt",
-        block: "{\"symbols\":[],\"statements\":[[0,\"\\n\"],[4,\"layout/nav/dictionary/nav-main\",null,[[\"model\"],[[24,[\"model\"]]]],{\"statements\":[[0,\"        template block text\\n\"]],\"parameters\":[]},null],[0,\"      \"],[1,[28,\"to-elsewhere\",null,[[\"named\",\"send\"],[\"dictionary-nav\",[28,\"component\",[\"control/md-button\"],[[\"text\"],[\"testme\"]]]]]],false],[0,\"\\n    \"]],\"hasEval\":false}",
-        meta: {}
+        "id": "7Hh3LEn0",
+        "block": "[[[1,\"\\n\"],[6,[39,0],null,[[\"model\"],[[33,1]]],[[\"default\"],[[[[1,\"        template block text\\n\"]],[]]]]],[1,\"      \"],[1,[28,[35,2],null,[[\"named\",\"send\"],[\"dictionary-nav\",[50,\"control/md-button\",0,null,[[\"text\"],[\"testme\"]]]]]]],[1,\"\\n    \"]],[],false,[\"layout/nav/dictionary/nav-main\",\"model\",\"to-elsewhere\",\"component\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       assert.equal(this.element.textContent.trim(), 'testme');
     });
   });
 });
-define("mdeditor/tests/integration/pods/components/layout/nav/record/nav-main/component-test", ["qunit", "ember-qunit", "@ember/test-helpers", "mdeditor/config/environment"], function (_qunit, _emberQunit, _testHelpers, _environment) {
+define("mdeditor/tests/integration/pods/components/layout/nav/record/nav-main/component-test", ["@ember/template-factory", "qunit", "ember-qunit", "@ember/test-helpers", "mdeditor/config/environment", "@ember/service", "@ember/array"], function (_templateFactory, _qunit, _emberQunit, _testHelpers, _environment, _service, _array) {
   "use strict";
 
-  0; //eaimeta@70e063a35619d71f0,"qunit",0,"ember-qunit",0,"@ember/test-helpers",0,"htmlbars-inline-precompile",0,"mdeditor/config/environment"eaimeta@70e063a35619d71f
+  0; //eaimeta@70e063a35619d71f0,"qunit",0,"ember-qunit",0,"@ember/test-helpers",0,"mdeditor/config/environment",0,"@ember/service",0,"@ember/array",0,"@ember/template-factory"eaimeta@70e063a35619d71f
   (0, _qunit.module)('Integration | Component | layout/nav/record/nav-main', function (hooks) {
     (0, _emberQunit.setupRenderingTest)(hooks);
     (0, _qunit.test)('it renders', async function (assert) {
@@ -5777,21 +5976,35 @@ define("mdeditor/tests/integration/pods/components/layout/nav/record/nav-main/co
       // Handle any actions with this.set('myAction', function(val) { ... });
       this.foo = function () {};
       this.profileId = _environment.default.APP.defaultProfileId;
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+
+      // Provide the "Full" profile so the select shows the correct value
+      this.owner.register('service:custom-profile', _service.default.extend({
+        profiles: (0, _array.A)([{
+          id: _environment.default.APP.defaultProfileId,
+          title: 'Full',
+          description: 'The full metadata profile'
+        }]),
+        active: null,
+        getActiveProfile() {
+          return null;
+        }
+      }));
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         {{layout/nav/record/nav-main}}
           {{to-elsewhere named="record-nav" send=(component "input/md-select-profile" value=profileId updateProfile=this.foo)}}
           
       */
       {
-        id: "lAREQhMJ",
-        block: "{\"symbols\":[],\"statements\":[[1,[22,\"layout/nav/record/nav-main\"],false],[0,\"\\n    \"],[1,[28,\"to-elsewhere\",null,[[\"named\",\"send\"],[\"record-nav\",[28,\"component\",[\"input/md-select-profile\"],[[\"value\",\"updateProfile\"],[[24,[\"profileId\"]],[23,0,[\"foo\"]]]]]]]],false],[0,\"\\n    \"]],\"hasEval\":false}",
-        meta: {}
+        "id": "32q1Yg/q",
+        "block": "[[[1,[34,0]],[1,\"\\n    \"],[1,[28,[35,1],null,[[\"named\",\"send\"],[\"record-nav\",[50,\"input/md-select-profile\",0,null,[[\"value\",\"updateProfile\"],[[33,3],[30,0,[\"foo\"]]]]]]]]],[1,\"\\n    \"]],[],false,[\"layout/nav/record/nav-main\",\"to-elsewhere\",\"component\",\"profileId\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       assert.equal(this.element.textContent.replace(/[\s\n]+/g, '|').trim(), '|Translate|Profile|Full|?|');
 
       // Template block usage:
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         
             {{#layout/nav/record/nav-main}}
@@ -5800,18 +6013,19 @@ define("mdeditor/tests/integration/pods/components/layout/nav/record/nav-main/co
           
       */
       {
-        id: "1nFMK2zh",
-        block: "{\"symbols\":[],\"statements\":[[0,\"\\n\"],[4,\"layout/nav/record/nav-main\",null,null,{\"statements\":[[0,\"        template block text\\n\"]],\"parameters\":[]},null],[0,\"    \"]],\"hasEval\":false}",
-        meta: {}
+        "id": "QX0xYo1v",
+        "block": "[[[1,\"\\n\"],[6,[39,0],null,null,[[\"default\"],[[[[1,\"        template block text\\n\"]],[]]]]],[1,\"    \"]],[],false,[\"layout/nav/record/nav-main\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       assert.equal(this.element.textContent.trim(), 'Translate');
     });
   });
 });
-define("mdeditor/tests/integration/pods/components/md-help/component-test", ["@ember/test-helpers", "qunit", "ember-qunit"], function (_testHelpers, _qunit, _emberQunit) {
+define("mdeditor/tests/integration/pods/components/md-help/component-test", ["@ember/template-factory", "@ember/test-helpers", "qunit", "ember-qunit"], function (_templateFactory, _testHelpers, _qunit, _emberQunit) {
   "use strict";
 
-  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"htmlbars-inline-precompile"eaimeta@70e063a35619d71f
+  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"@ember/template-factory"eaimeta@70e063a35619d71f
   (0, _qunit.module)('Integration | Component | md help', function (hooks) {
     (0, _emberQunit.setupRenderingTest)(hooks);
     (0, _qunit.test)('it renders', async function (assert) {
@@ -5820,19 +6034,20 @@ define("mdeditor/tests/integration/pods/components/md-help/component-test", ["@e
       // Set any properties with this.set('myProperty', 'value');
       // Handle any actions with this.on('myAction', function(val) { ... });
 
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         {{md-help}}
       */
       {
-        id: "iLPoPgdy",
-        block: "{\"symbols\":[],\"statements\":[[1,[22,\"md-help\"],false]],\"hasEval\":false}",
-        meta: {}
+        "id": "gMYfY6qL",
+        "block": "[[[1,[34,0]]],[],false,[\"md-help\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
-      assert.equal(this.element.textContent.replace(/[\s\n]+/g, '|').trim(), '|Help|Main|Tour|The|mdEditor|is|a|web|application|that|allows|users|to|author|and|edit|metadata|for|projects|and|datasets.|The|primary|design|goal|is|to|develop|an|editor|that|will|allow|creation|and|management|of|archival|quality|metadata|without|requiring|extensive|knowledge|of|metadata|standards.|A|comprehensive|User|Manual|is|available.|The|manual|includes|a|tutorial,|reference,|and|best|practices.|View|User|Manual|If|you|would|like|to|receive|announcements|regarding|the|mdEditor,|join|our|email|list!|Join|Email|list|');
+      assert.equal(this.element.textContent.replace(/[\s\n]+/g, '|').trim(), '|Help|Main|Tour|The|mdEditor|is|a|web|application|that|allows|users|to|author|and|edit|metadata|for|projects|and|datasets.|The|primary|design|goal|is|to|develop|an|editor|that|will|allow|creation|and|management|of|archival|quality|metadata|without|requiring|extensive|knowledge|of|metadata|standards.|A|comprehensive|User|Manual|is|available.|The|manual|includes|a|tutorial,|reference,|and|best|practices.|View|User|Manual|');
 
       // Template block usage:
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         
             {{#md-help}}
@@ -5841,18 +6056,19 @@ define("mdeditor/tests/integration/pods/components/md-help/component-test", ["@e
           
       */
       {
-        id: "mDCBuwo3",
-        block: "{\"symbols\":[],\"statements\":[[0,\"\\n\"],[4,\"md-help\",null,null,{\"statements\":[[0,\"        template block text\\n\"]],\"parameters\":[]},null],[0,\"    \"]],\"hasEval\":false}",
-        meta: {}
+        "id": "CQ0r67dn",
+        "block": "[[[1,\"\\n\"],[6,[39,0],null,null,[[\"default\"],[[[[1,\"        template block text\\n\"]],[]]]]],[1,\"    \"]],[],false,[\"md-help\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       assert.ok(this.element.textContent.trim().indexOf('template block text') > 0);
     });
   });
 });
-define("mdeditor/tests/integration/pods/components/md-models-table/component-test", ["@ember/test-helpers", "qunit", "ember-qunit"], function (_testHelpers, _qunit, _emberQunit) {
+define("mdeditor/tests/integration/pods/components/md-models-table/component-test", ["@ember/template-factory", "@ember/test-helpers", "qunit", "ember-qunit"], function (_templateFactory, _testHelpers, _qunit, _emberQunit) {
   "use strict";
 
-  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"htmlbars-inline-precompile"eaimeta@70e063a35619d71f
+  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"@ember/template-factory"eaimeta@70e063a35619d71f
   (0, _qunit.module)('Integration | Component | md models table', function (hooks) {
     (0, _emberQunit.setupRenderingTest)(hooks);
     (0, _qunit.test)('it renders', async function (assert) {
@@ -5872,39 +6088,41 @@ define("mdeditor/tests/integration/pods/components/md-models-table/component-tes
         propertyName: 'type',
         title: 'Type'
       }]);
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         {{md-models-table data=data columns=columns}}
       */
       {
-        id: "SimpEWop",
-        block: "{\"symbols\":[],\"statements\":[[1,[28,\"md-models-table\",null,[[\"data\",\"columns\"],[[24,[\"data\"]],[24,[\"columns\"]]]]],false]],\"hasEval\":false}",
-        meta: {}
+        "id": "T+nLeEri",
+        "block": "[[[1,[28,[35,0],null,[[\"data\",\"columns\"],[[33,1],[33,2]]]]]],[],false,[\"md-models-table\",\"data\",\"columns\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
-      assert.equal(this.element.textContent.replace(/[\s\n]+/g, '|').trim(), '|Search:|Columns|Show|All|Hide|All|Restore|Defaults|Title|Type|Title|Type|Title|Type|foo|bar|biz|baz|Show|1|-|2|of|2|Clear|all|filters|Rows:|10|25|50|500|Page:|1|');
+      assert.equal(this.element.textContent.replace(/[\s\n]+/g, '|').trim(), '|Search:|Columns|Show|All|Hide|All|Restore|Defaults|Title|Type|Title|Type|Title|Type|foo|bar|biz|baz|Show|1|-|2|of|2|Clear|all|filters|Rows:|10|25|50|Page:|1|');
 
       // Template block usage:
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         
-            {{#md-models-table}}
+            <MdModelsTable>
               template block text
-            {{/md-models-table}}
+            </MdModelsTable>
           
       */
       {
-        id: "HFawtjvi",
-        block: "{\"symbols\":[],\"statements\":[[0,\"\\n\"],[4,\"md-models-table\",null,null,{\"statements\":[[0,\"        template block text\\n\"]],\"parameters\":[]},null],[0,\"    \"]],\"hasEval\":false}",
-        meta: {}
+        "id": "Oh/zqGiC",
+        "block": "[[[1,\"\\n      \"],[8,[39,0],null,null,[[\"default\"],[[[[1,\"\\n        template block text\\n      \"]],[]]]]],[1,\"\\n    \"]],[],false,[\"md-models-table\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       assert.equal(this.element.textContent.replace(/[\s\n]+/g, '|').trim(), '|template|block|text|');
     });
   });
 });
-define("mdeditor/tests/integration/pods/components/md-models-table/components/check-all/component-test", ["@ember/test-helpers", "qunit", "ember-qunit"], function (_testHelpers, _qunit, _emberQunit) {
+define("mdeditor/tests/integration/pods/components/md-models-table/components/check-all/component-test", ["@ember/template-factory", "@ember/test-helpers", "@ember/object", "qunit", "ember-qunit"], function (_templateFactory, _testHelpers, _object, _qunit, _emberQunit) {
   "use strict";
 
-  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"htmlbars-inline-precompile"eaimeta@70e063a35619d71f
+  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"@ember/object",0,"qunit",0,"ember-qunit",0,"@ember/template-factory"eaimeta@70e063a35619d71f
   (0, _qunit.module)('Integration | Component | md models table/components/check all', function (hooks) {
     (0, _emberQunit.setupRenderingTest)(hooks);
     (0, _qunit.test)('it renders', async function (assert) {
@@ -5913,101 +6131,105 @@ define("mdeditor/tests/integration/pods/components/md-models-table/components/ch
       // Handle any actions with this.on('myAction', function(val) { ... });
       this.data = {
         themeInstance: {
-          'select-all-rows': 'select',
-          'deselect-all-rows': 'deselect'
+          selectAllRowsIcon: 'select',
+          deselectAllRowsIcon: 'deselect'
         },
-        selectedItems: {
+        selectedItems: _object.default.create({
           length: 0
-        },
+        }),
         length: 1
       };
       this.toggleAllSelection = function () {
         assert.ok(true, 'toggleAll action');
         this.set('selectedItems.length', 1);
       };
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         {{md-models-table/components/check-all data=data selectedItems=data.selectedItems themeInstance=data.themeInstance toggleAllSelection=toggleAllSelection}}
       */
       {
-        id: "CQdEzpau",
-        block: "{\"symbols\":[],\"statements\":[[1,[28,\"md-models-table/components/check-all\",null,[[\"data\",\"selectedItems\",\"themeInstance\",\"toggleAllSelection\"],[[24,[\"data\"]],[24,[\"data\",\"selectedItems\"]],[24,[\"data\",\"themeInstance\"]],[24,[\"toggleAllSelection\"]]]]],false]],\"hasEval\":false}",
-        meta: {}
+        "id": "I3sNlHu+",
+        "block": "[[[1,[28,[35,0],null,[[\"data\",\"selectedItems\",\"themeInstance\",\"toggleAllSelection\"],[[33,1],[33,1,[\"selectedItems\"]],[33,1,[\"themeInstance\"]],[33,2]]]]]],[],false,[\"md-models-table/components/check-all\",\"data\",\"toggleAllSelection\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
-      assert.ok((0, _testHelpers.find)('span').classList.contains('deselect'), 'add class');
-      await (0, _testHelpers.click)('span');
+      assert.ok((0, _testHelpers.find)('i').classList.contains('deselect'), 'add class');
+      await (0, _testHelpers.click)('button');
 
       // await render(hbs`{{md-models-table/components/check-all data=data themeInstance=data.themeInstance toggleAllSelection=toggleAllSelection}}`);
 
-      assert.ok((0, _testHelpers.find)('span').classList.contains('select'), 'deselect');
+      assert.ok((0, _testHelpers.find)('i').classList.contains('select'), 'deselect');
 
       // Template block usage:
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         
-            {{#md-models-table/components/check-all}}
+            <MdModelsTable::Components::CheckAll>
               template block text
-            {{/md-models-table/components/check-all}}
+            </MdModelsTable::Components::CheckAll>
           
       */
       {
-        id: "xwLd9HXZ",
-        block: "{\"symbols\":[],\"statements\":[[0,\"\\n\"],[4,\"md-models-table/components/check-all\",null,null,{\"statements\":[[0,\"        template block text\\n\"]],\"parameters\":[]},null],[0,\"    \"]],\"hasEval\":false}",
-        meta: {}
+        "id": "GWE3QpjN",
+        "block": "[[[1,\"\\n      \"],[8,[39,0],null,null,[[\"default\"],[[[[1,\"\\n        template block text\\n      \"]],[]]]]],[1,\"\\n    \"]],[],false,[\"md-models-table/components/check-all\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       assert.equal(this.element.textContent.trim(), '');
     });
   });
 });
-define("mdeditor/tests/integration/pods/components/md-models-table/components/check/component-test", ["@ember/test-helpers", "qunit", "ember-qunit"], function (_testHelpers, _qunit, _emberQunit) {
+define("mdeditor/tests/integration/pods/components/md-models-table/components/check/component-test", ["@ember/template-factory", "@ember/test-helpers", "qunit", "ember-qunit"], function (_templateFactory, _testHelpers, _qunit, _emberQunit) {
   "use strict";
 
-  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"htmlbars-inline-precompile"eaimeta@70e063a35619d71f
+  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"@ember/template-factory"eaimeta@70e063a35619d71f
   (0, _qunit.module)('Integration | Component | md models table/components/check', function (hooks) {
     (0, _emberQunit.setupRenderingTest)(hooks);
     (0, _qunit.test)('it renders', async function (assert) {
       // Set any properties with this.set('myProperty', 'value');
       // Handle any actions with this.on('myAction', function(val) { ... });
       this.themeInstance = {
-        'select-row': 'select',
-        'deselect-row': 'deselect'
+        selectRowIcon: 'select',
+        deselectRowIcon: 'deselect'
       };
       this.set('isSelected', false);
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         {{md-models-table/components/check isSelected=isSelected themeInstance=themeInstance}}
       */
       {
-        id: "PMo3Xmev",
-        block: "{\"symbols\":[],\"statements\":[[1,[28,\"md-models-table/components/check\",null,[[\"isSelected\",\"themeInstance\"],[[24,[\"isSelected\"]],[24,[\"themeInstance\"]]]]],false]],\"hasEval\":false}",
-        meta: {}
+        "id": "rSFyzHU8",
+        "block": "[[[1,[28,[35,0],null,[[\"isSelected\",\"themeInstance\"],[[33,1],[33,2]]]]]],[],false,[\"md-models-table/components/check\",\"isSelected\",\"themeInstance\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
-      assert.ok((0, _testHelpers.find)('span').classList.contains('deselect'), 'add class');
+      assert.ok((0, _testHelpers.find)('i').classList.contains('deselect'), 'add class');
       this.set('isSelected', true);
-      assert.ok((0, _testHelpers.find)('span').classList.contains('select'), 'update class');
+      assert.ok((0, _testHelpers.find)('i').classList.contains('select'), 'update class');
 
       // Template block usage:
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         
-            {{#md-models-table/components/check}}
+            <MdModelsTable::Components::Check>
               template block text
-            {{/md-models-table/components/check}}
+            </MdModelsTable::Components::Check>
           
       */
       {
-        id: "vzjRZrkF",
-        block: "{\"symbols\":[],\"statements\":[[0,\"\\n\"],[4,\"md-models-table/components/check\",null,null,{\"statements\":[[0,\"        template block text\\n\"]],\"parameters\":[]},null],[0,\"    \"]],\"hasEval\":false}",
-        meta: {}
+        "id": "gIJ6LUD5",
+        "block": "[[[1,\"\\n      \"],[8,[39,0],null,null,[[\"default\"],[[[[1,\"\\n        template block text\\n      \"]],[]]]]],[1,\"\\n    \"]],[],false,[\"md-models-table/components/check\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       assert.equal(this.element.textContent.trim(), '');
     });
   });
 });
-define("mdeditor/tests/integration/pods/components/md-models-table/components/row-body/component-test", ["qunit", "ember-qunit", "@ember/test-helpers"], function (_qunit, _emberQunit, _testHelpers) {
+define("mdeditor/tests/integration/pods/components/md-models-table/components/row-body/component-test", ["@ember/template-factory", "qunit", "ember-qunit", "@ember/test-helpers"], function (_templateFactory, _qunit, _emberQunit, _testHelpers) {
   "use strict";
 
-  0; //eaimeta@70e063a35619d71f0,"qunit",0,"ember-qunit",0,"@ember/test-helpers",0,"htmlbars-inline-precompile"eaimeta@70e063a35619d71f
+  0; //eaimeta@70e063a35619d71f0,"qunit",0,"ember-qunit",0,"@ember/test-helpers",0,"@ember/template-factory"eaimeta@70e063a35619d71f
   (0, _qunit.module)('Integration | Component | md-models-table/components/row-body', function (hooks) {
     (0, _emberQunit.setupRenderingTest)(hooks);
     (0, _qunit.test)('it renders', async function (assert) {
@@ -6017,22 +6239,23 @@ define("mdeditor/tests/integration/pods/components/md-models-table/components/ro
       this.set('myAction', function () {
         assert.ok(true, 'call collapseRow');
       });
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         {{md-models-table/components/row-body collapseRow=myAction}}
       */
       {
-        id: "lcd48Rwn",
-        block: "{\"symbols\":[],\"statements\":[[1,[28,\"md-models-table/components/row-body\",null,[[\"collapseRow\"],[[24,[\"myAction\"]]]]],false]],\"hasEval\":false}",
-        meta: {}
+        "id": "ctpduY6+",
+        "block": "[[[1,[28,[35,0],null,[[\"collapseRow\"],[[33,1]]]]]],[],false,[\"md-models-table/components/row-body\",\"myAction\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
     });
   });
 });
-define("mdeditor/tests/integration/pods/components/md-models-table/components/row-buttons/component-test", ["qunit", "ember-qunit", "@ember/test-helpers"], function (_qunit, _emberQunit, _testHelpers) {
+define("mdeditor/tests/integration/pods/components/md-models-table/components/row-buttons/component-test", ["@ember/template-factory", "qunit", "ember-qunit", "@ember/test-helpers"], function (_templateFactory, _qunit, _emberQunit, _testHelpers) {
   "use strict";
 
-  0; //eaimeta@70e063a35619d71f0,"qunit",0,"ember-qunit",0,"@ember/test-helpers",0,"htmlbars-inline-precompile"eaimeta@70e063a35619d71f
+  0; //eaimeta@70e063a35619d71f0,"qunit",0,"ember-qunit",0,"@ember/test-helpers",0,"@ember/template-factory"eaimeta@70e063a35619d71f
   (0, _qunit.module)('Integration | Component | md-models-table/components/row-buttons', function (hooks) {
     (0, _emberQunit.setupRenderingTest)(hooks);
     (0, _qunit.test)('it renders', async function (assert) {
@@ -6043,14 +6266,15 @@ define("mdeditor/tests/integration/pods/components/md-models-table/components/ro
         assert.equal(record.title, 'foo', 'called passed action');
         this.expandRow(index, record);
       });
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         {{md-models-table/components/row-buttons}}
       */
       {
-        id: "L/GNUZXL",
-        block: "{\"symbols\":[],\"statements\":[[1,[22,\"md-models-table/components/row-buttons\"],false]],\"hasEval\":false}",
-        meta: {}
+        "id": "+6McqsG4",
+        "block": "[[[1,[34,0]]],[],false,[\"md-models-table/components/row-buttons\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       this.set('data', [{
         title: 'foo',
@@ -6084,14 +6308,15 @@ define("mdeditor/tests/integration/pods/components/md-models-table/components/ro
           action: this.myAction
         }]
       }]);
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         {{md-models-table data=data columns=columns expandedRowComponent=(component "md-models-table/components/row-body" spotlighted=true)}}
       */
       {
-        id: "MtwUtds9",
-        block: "{\"symbols\":[],\"statements\":[[1,[28,\"md-models-table\",null,[[\"data\",\"columns\",\"expandedRowComponent\"],[[24,[\"data\"]],[24,[\"columns\"]],[28,\"component\",[\"md-models-table/components/row-body\"],[[\"spotlighted\"],[true]]]]]],false]],\"hasEval\":false}",
-        meta: {}
+        "id": "rJgXWMJ7",
+        "block": "[[[1,[28,[35,0],null,[[\"data\",\"columns\",\"expandedRowComponent\"],[[33,1],[33,2],[50,\"md-models-table/components/row-body\",0,null,[[\"spotlighted\"],[true]]]]]]]],[],false,[\"md-models-table\",\"data\",\"columns\",\"component\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       assert.equal((0, _testHelpers.findAll)('.md-row-buttons .btn').length, 4);
       assert.equal((0, _testHelpers.findAll)('.md-row-buttons .btn-danger').length, 2);
@@ -6103,51 +6328,61 @@ define("mdeditor/tests/integration/pods/components/md-models-table/components/ro
     });
   });
 });
-define("mdeditor/tests/integration/pods/components/md-title/component-test", ["@ember/test-helpers", "qunit", "ember-qunit"], function (_testHelpers, _qunit, _emberQunit) {
+define("mdeditor/tests/integration/pods/components/md-title/component-test", ["@ember/template-factory", "@ember/test-helpers", "qunit", "ember-qunit"], function (_templateFactory, _testHelpers, _qunit, _emberQunit) {
   "use strict";
 
-  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"htmlbars-inline-precompile"eaimeta@70e063a35619d71f
+  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"@ember/template-factory"eaimeta@70e063a35619d71f
   (0, _qunit.module)('Integration | Component | md title', function (hooks) {
     (0, _emberQunit.setupRenderingTest)(hooks);
     (0, _qunit.test)('it renders', async function (assert) {
       // Set any properties with this.set('myProperty', 'value');
       // Handle any actions with this.on('myAction', function(val) { ... });
 
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         {{md-title}}
       */
       {
-        id: "8da3z/LK",
-        block: "{\"symbols\":[],\"statements\":[[1,[22,\"md-title\"],false]],\"hasEval\":false}",
-        meta: {}
+        "id": "rOdq0uvJ",
+        "block": "[[[1,[34,0]]],[],false,[\"md-title\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       assert.equal(this.element.textContent.trim(), '');
 
       // Template block usage:
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         
-            {{#md-title}}
+            <MdTitle>
               template block text
-            {{/md-title}}
+            </MdTitle>
           
       */
       {
-        id: "i7KE7rEm",
-        block: "{\"symbols\":[],\"statements\":[[0,\"\\n\"],[4,\"md-title\",null,null,{\"statements\":[[0,\"        template block text\\n\"]],\"parameters\":[]},null],[0,\"    \"]],\"hasEval\":false}",
-        meta: {}
+        "id": "1AEzxwdO",
+        "block": "[[[1,\"\\n      \"],[8,[39,0],null,null,[[\"default\"],[[[[1,\"\\n        template block text\\n      \"]],[]]]]],[1,\"\\n    \"]],[],false,[\"md-title\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       assert.equal(this.element.textContent.trim(), 'template block text');
     });
   });
 });
-define("mdeditor/tests/integration/pods/components/md-translate/component-test", ["@ember/test-helpers", "qunit", "ember-qunit", "mdeditor/tests/helpers/create-record"], function (_testHelpers, _qunit, _emberQunit, _createRecord) {
+define("mdeditor/tests/integration/pods/components/md-translate/component-test", ["@ember/template-factory", "@ember/test-helpers", "qunit", "ember-qunit", "mdeditor/tests/helpers/create-record", "@ember/service"], function (_templateFactory, _testHelpers, _qunit, _emberQunit, _createRecord, _service) {
   "use strict";
 
-  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"htmlbars-inline-precompile",0,"mdeditor/tests/helpers/create-record"eaimeta@70e063a35619d71f
+  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"mdeditor/tests/helpers/create-record",0,"@ember/service",0,"@ember/template-factory"eaimeta@70e063a35619d71f
+  const MockApiValidator = _service.default.extend({
+    isApiConfigured() {
+      return true;
+    }
+  });
   (0, _qunit.module)('Integration | Component | md translate', function (hooks) {
     (0, _emberQunit.setupRenderingTest)(hooks);
+    hooks.beforeEach(function () {
+      this.owner.register('service:api-validator', MockApiValidator);
+    });
     (0, _qunit.test)('it renders', async function (assert) {
       // Set any properties with this.set('myProperty', 'value');
       // Handle any actions with this.on('myAction', function(val) { ... });
@@ -6162,7 +6397,7 @@ define("mdeditor/tests/integration/pods/components/md-translate/component-test",
         assert.ok(title, 'save title');
         assert.equal(blob.constructor.name, 'Blob', 'save blob');
       };
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         {{md-translate
             model=model
@@ -6170,14 +6405,14 @@ define("mdeditor/tests/integration/pods/components/md-translate/component-test",
             messages=messages
             result=result
             errorLevel=2
-            isJson=true
             writeObj=writer
           }}
       */
       {
-        id: "hTkEAnbu",
-        block: "{\"symbols\":[],\"statements\":[[1,[28,\"md-translate\",null,[[\"model\",\"isLoading\",\"messages\",\"result\",\"errorLevel\",\"isJson\",\"writeObj\"],[[24,[\"model\"]],[24,[\"isLoading\"]],[24,[\"messages\"]],[24,[\"result\"]],2,true,[24,[\"writer\"]]]]],false]],\"hasEval\":false}",
-        meta: {}
+        "id": "Ud+X9zzJ",
+        "block": "[[[1,[28,[35,0],null,[[\"model\",\"isLoading\",\"messages\",\"result\",\"errorLevel\",\"writeObj\"],[[33,1],[33,2],[33,3],[33,4],2,[33,5]]]]]],[],false,[\"md-translate\",\"model\",\"isLoading\",\"messages\",\"result\",\"writer\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       assert.equal(this.element.textContent.replace(/[\s\n]+/g, '|').trim(), '|Options|Choose|Format|Select|one|option|Force|Valid|Ouput?|No|Yes|Show|Empty|Tags?|No|Yes|Translate|');
       this.set('isLoading', true);
@@ -6190,27 +6425,28 @@ define("mdeditor/tests/integration/pods/components/md-translate/component-test",
       (0, _testHelpers.click)('.md-translator-preview.warning .btn-success');
 
       // Template block usage:
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         
-            {{#md-translate}}
+            <MdTranslate>
               template block text
-            {{/md-translate}}
+            </MdTranslate>
           
       */
       {
-        id: "1qFgffnw",
-        block: "{\"symbols\":[],\"statements\":[[0,\"\\n\"],[4,\"md-translate\",null,null,{\"statements\":[[0,\"        template block text\\n\"]],\"parameters\":[]},null],[0,\"    \"]],\"hasEval\":false}",
-        meta: {}
+        "id": "N2DeMxKo",
+        "block": "[[[1,\"\\n      \"],[8,[39,0],null,null,[[\"default\"],[[[[1,\"\\n        template block text\\n      \"]],[]]]]],[1,\"\\n    \"]],[],false,[\"md-translate\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       assert.equal(this.element.textContent.replace(/[\s\n]+/g, '|').trim(), '|Options|Choose|Format|Select|one|option|Force|Valid|Ouput?|No|Yes|Show|Empty|Tags?|No|Yes|Translate|template|block|text|', 'block');
     });
   });
 });
-define("mdeditor/tests/integration/pods/components/models-table/cell-content-display/component-test", ["qunit", "ember-qunit", "@ember/test-helpers"], function (_qunit, _emberQunit, _testHelpers) {
+define("mdeditor/tests/integration/pods/components/models-table/cell-content-display/component-test", ["@ember/template-factory", "qunit", "ember-qunit", "@ember/test-helpers", "@ember/object"], function (_templateFactory, _qunit, _emberQunit, _testHelpers, _object) {
   "use strict";
 
-  0; //eaimeta@70e063a35619d71f0,"qunit",0,"ember-qunit",0,"@ember/test-helpers",0,"htmlbars-inline-precompile",0,"@ember/object"eaimeta@70e063a35619d71f
+  0; //eaimeta@70e063a35619d71f0,"qunit",0,"ember-qunit",0,"@ember/test-helpers",0,"@ember/object",0,"@ember/template-factory"eaimeta@70e063a35619d71f
   (0, _qunit.module)('Integration | Component | models-table/cell-content-display', function (hooks) {
     (0, _emberQunit.setupRenderingTest)(hooks);
     (0, _qunit.test)('it renders', async function (assert) {
@@ -6219,18 +6455,19 @@ define("mdeditor/tests/integration/pods/components/models-table/cell-content-dis
       this.set('column', {
         propertyName: 'title'
       });
-      this.set('data', Ember.Object.create({
+      this.set('data', _object.default.create({
         title: 'foo biz baz',
         uri: 'bar'
       }));
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         {{models-table/cell-content-display column=column record=data}}
       */
       {
-        id: "PQfhnCwq",
-        block: "{\"symbols\":[],\"statements\":[[1,[28,\"models-table/cell-content-display\",null,[[\"column\",\"record\"],[[24,[\"column\"]],[24,[\"data\"]]]]],false]],\"hasEval\":false}",
-        meta: {}
+        "id": "P5cx+e4J",
+        "block": "[[[1,[28,[35,0],null,[[\"column\",\"record\"],[[33,1],[33,2]]]]]],[],false,[\"models-table/cell-content-display\",\"column\",\"data\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       assert.equal(this.element.textContent.trim(), 'foo biz baz');
       this.set('column1', {
@@ -6238,101 +6475,106 @@ define("mdeditor/tests/integration/pods/components/models-table/cell-content-dis
         truncate: true,
         wordLimit: 2
       });
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         {{models-table/cell-content-display column=column1 record=data}}
       */
       {
-        id: "95UWO0PS",
-        block: "{\"symbols\":[],\"statements\":[[1,[28,\"models-table/cell-content-display\",null,[[\"column\",\"record\"],[[24,[\"column1\"]],[24,[\"data\"]]]]],false]],\"hasEval\":false}",
-        meta: {}
+        "id": "bdxbOH51",
+        "block": "[[[1,[28,[35,0],null,[[\"column\",\"record\"],[[33,1],[33,2]]]]]],[],false,[\"models-table/cell-content-display\",\"column1\",\"data\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       assert.equal(this.element.textContent.trim(), 'foo biz ...');
     });
   });
 });
-define("mdeditor/tests/integration/pods/components/models-table/row-expand/component-test", ["qunit", "ember-qunit", "@ember/test-helpers"], function (_qunit, _emberQunit, _testHelpers) {
+define("mdeditor/tests/integration/pods/components/models-table/row-expand/component-test", ["@ember/template-factory", "qunit", "ember-qunit", "@ember/test-helpers"], function (_templateFactory, _qunit, _emberQunit, _testHelpers) {
   "use strict";
 
-  0; //eaimeta@70e063a35619d71f0,"qunit",0,"ember-qunit",0,"@ember/test-helpers",0,"htmlbars-inline-precompile"eaimeta@70e063a35619d71f
+  0; //eaimeta@70e063a35619d71f0,"qunit",0,"ember-qunit",0,"@ember/test-helpers",0,"@ember/template-factory"eaimeta@70e063a35619d71f
   (0, _qunit.module)('Integration | Component | models-table/row-expand', function (hooks) {
     (0, _emberQunit.setupRenderingTest)(hooks);
     (0, _qunit.test)('it renders', async function (assert) {
       // Set any properties with this.set('myProperty', 'value');
       // Handle any actions with this.set('myAction', function(val) { ... });
 
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         {{models-table/row-expand}}
       */
       {
-        id: "HeHLdig+",
-        block: "{\"symbols\":[],\"statements\":[[1,[22,\"models-table/row-expand\"],false]],\"hasEval\":false}",
-        meta: {}
+        "id": "a0Pxa9B1",
+        "block": "[[[1,[34,0]]],[],false,[\"models-table/row-expand\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       assert.equal(this.element.textContent.trim(), '');
 
       // Template block usage:
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         
-            {{#models-table/row-expand}}
+            <ModelsTable::RowExpand>
               template block text
-            {{/models-table/row-expand}}
+            </ModelsTable::RowExpand>
           
       */
       {
-        id: "ksixTEU6",
-        block: "{\"symbols\":[],\"statements\":[[0,\"\\n\"],[4,\"models-table/row-expand\",null,null,{\"statements\":[[0,\"        template block text\\n\"]],\"parameters\":[]},null],[0,\"    \"]],\"hasEval\":false}",
-        meta: {}
+        "id": "EgMMa+6f",
+        "block": "[[[1,\"\\n      \"],[8,[39,0],null,null,[[\"default\"],[[[[1,\"\\n        template block text\\n      \"]],[]]]]],[1,\"\\n    \"]],[],false,[\"models-table/row-expand\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       assert.equal(this.element.textContent.trim(), 'template block text');
     });
   });
 });
-define("mdeditor/tests/integration/pods/components/models-table/table-body/component-test", ["qunit", "ember-qunit", "@ember/test-helpers"], function (_qunit, _emberQunit, _testHelpers) {
+define("mdeditor/tests/integration/pods/components/models-table/table-body/component-test", ["@ember/template-factory", "qunit", "ember-qunit", "@ember/test-helpers"], function (_templateFactory, _qunit, _emberQunit, _testHelpers) {
   "use strict";
 
-  0; //eaimeta@70e063a35619d71f0,"qunit",0,"ember-qunit",0,"@ember/test-helpers",0,"htmlbars-inline-precompile"eaimeta@70e063a35619d71f
+  0; //eaimeta@70e063a35619d71f0,"qunit",0,"ember-qunit",0,"@ember/test-helpers",0,"@ember/template-factory"eaimeta@70e063a35619d71f
   (0, _qunit.module)('Integration | Component | models-table/table-body', function (hooks) {
     (0, _emberQunit.setupRenderingTest)(hooks);
     (0, _qunit.test)('it renders', async function (assert) {
       // Set any properties with this.set('myProperty', 'value');
       // Handle any actions with this.set('myAction', function(val) { ... });
 
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         {{models-table/table-body}}
       */
       {
-        id: "mTRK7kno",
-        block: "{\"symbols\":[],\"statements\":[[1,[22,\"models-table/table-body\"],false]],\"hasEval\":false}",
-        meta: {}
+        "id": "NpLJWDUT",
+        "block": "[[[1,[34,0]]],[],false,[\"models-table/table-body\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       assert.equal(this.element.textContent.trim(), '');
 
       // Template block usage:
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         
-            {{#models-table/table-body}}
+            <ModelsTable::TableBody>
               template block text
-            {{/models-table/table-body}}
+            </ModelsTable::TableBody>
           
       */
       {
-        id: "amuBMJuB",
-        block: "{\"symbols\":[],\"statements\":[[0,\"\\n\"],[4,\"models-table/table-body\",null,null,{\"statements\":[[0,\"        template block text\\n\"]],\"parameters\":[]},null],[0,\"    \"]],\"hasEval\":false}",
-        meta: {}
+        "id": "V2p6RZqy",
+        "block": "[[[1,\"\\n      \"],[8,[39,0],null,null,[[\"default\"],[[[[1,\"\\n        template block text\\n      \"]],[]]]]],[1,\"\\n    \"]],[],false,[\"models-table/table-body\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       assert.equal(this.element.textContent.trim(), 'template block text');
     });
   });
 });
-define("mdeditor/tests/integration/pods/components/object/md-address/md-address-block/component-test", ["@ember/test-helpers", "qunit", "ember-qunit"], function (_testHelpers, _qunit, _emberQunit) {
+define("mdeditor/tests/integration/pods/components/object/md-address/md-address-block/component-test", ["@ember/template-factory", "@ember/test-helpers", "qunit", "ember-qunit"], function (_templateFactory, _testHelpers, _qunit, _emberQunit) {
   "use strict";
 
-  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"htmlbars-inline-precompile"eaimeta@70e063a35619d71f
+  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"@ember/template-factory"eaimeta@70e063a35619d71f
   (0, _qunit.module)('Integration | Component | object/md address/md address block', function (hooks) {
     (0, _emberQunit.setupRenderingTest)(hooks);
     (0, _qunit.test)('it renders', async function (assert) {
@@ -6346,39 +6588,41 @@ define("mdeditor/tests/integration/pods/components/object/md-address/md-address-
         "postalCode": "postalCode",
         "country": "country"
       });
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         {{object/md-address/md-address-block item=address}}
       */
       {
-        id: "3D38jJSW",
-        block: "{\"symbols\":[],\"statements\":[[1,[28,\"object/md-address/md-address-block\",null,[[\"item\"],[[24,[\"address\"]]]]],false]],\"hasEval\":false}",
-        meta: {}
+        "id": "vB02o6wJ",
+        "block": "[[[1,[28,[35,0],null,[[\"item\"],[[33,1]]]]]],[],false,[\"object/md-address/md-address-block\",\"address\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       assert.equal((0, _testHelpers.find)('address').textContent.replace(/[ \n]+/g, '|').trim(), '|deliveryPoint0|deliveryPoint1|city,|administrativeArea|postalCode|country|mailing,|physical|');
 
       // Template block usage:
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         
-            {{#object/md-address/md-address-block item=address}}
+            <Object::MdAddress::MdAddressBlock @item={{address}}>
               template block text
-            {{/object/md-address/md-address-block}}
+            </Object::MdAddress::MdAddressBlock>
           
       */
       {
-        id: "RNQ15DLO",
-        block: "{\"symbols\":[],\"statements\":[[0,\"\\n\"],[4,\"object/md-address/md-address-block\",null,[[\"item\"],[[24,[\"address\"]]]],{\"statements\":[[0,\"        template block text\\n\"]],\"parameters\":[]},null],[0,\"    \"]],\"hasEval\":false}",
-        meta: {}
+        "id": "1FzCqtd6",
+        "block": "[[[1,\"\\n      \"],[8,[39,0],null,[[\"@item\"],[[99,1,[\"@item\"]]]],[[\"default\"],[[[[1,\"\\n        template block text\\n      \"]],[]]]]],[1,\"\\n    \"]],[],false,[\"object/md-address/md-address-block\",\"address\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       assert.equal((0, _testHelpers.find)('address').textContent.replace(/[ \n]+/g, '|').trim(), '|deliveryPoint0|deliveryPoint1|city,|administrativeArea|postalCode|country|mailing,|physical|');
     });
   });
 });
-define("mdeditor/tests/integration/pods/components/object/md-allocation/component-test", ["@ember/test-helpers", "qunit", "ember-qunit"], function (_testHelpers, _qunit, _emberQunit) {
+define("mdeditor/tests/integration/pods/components/object/md-allocation/component-test", ["@ember/template-factory", "@ember/test-helpers", "qunit", "ember-qunit"], function (_templateFactory, _testHelpers, _qunit, _emberQunit) {
   "use strict";
 
-  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"htmlbars-inline-precompile"eaimeta@70e063a35619d71f
+  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"@ember/template-factory"eaimeta@70e063a35619d71f
   (0, _qunit.module)('Integration | Component | object/md allocation', function (hooks) {
     (0, _emberQunit.setupRenderingTest)(hooks);
     (0, _qunit.test)('it renders', async function (assert) {
@@ -6392,39 +6636,41 @@ define("mdeditor/tests/integration/pods/components/object/md-allocation/componen
         'comment': 'comment',
         sourceAllocationId: 'sourceAllocationId'
       });
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         {{object/md-allocation profilePath="test" model=allocation}}
       */
       {
-        id: "WxU7VCci",
-        block: "{\"symbols\":[],\"statements\":[[1,[28,\"object/md-allocation\",null,[[\"profilePath\",\"model\"],[\"test\",[24,[\"allocation\"]]]]],false]],\"hasEval\":false}",
-        meta: {}
+        "id": "fD11YamN",
+        "block": "[[[1,[28,[35,0],null,[[\"profilePath\",\"model\"],[\"test\",[33,1]]]]]],[],false,[\"object/md-allocation\",\"allocation\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
-      assert.equal((0, _testHelpers.find)('.md-card').textContent.replace(/[ \n]+/g, '|').trim(), '|Amount|Amount|Currency|Choose|unit|of|currency|Award|ID|Source|Pick|contact|that|supplied|funds|Recipient|Pick|contact|that|received|funds|No|Other|Contacts|found.|Add|Other|Contact|Matching|Matching|funds|or|in-kind|services|Comment|No|Online|Resource|found.|Add|Online|Resource|');
+      assert.equal((0, _testHelpers.find)('.md-card').textContent.replace(/[ \n]+/g, '|').trim(), '|Amount|Amount|Currency|Choose|unit|of|currency|Award|ID|Source|Pick|contact|that|supplied|funds|Recipient|Pick|contact|that|received|funds|No|Other|Contacts|found.|Add|Other|Contact|Matching|Matching|funds|or|in-kind|services|Comment|Comment|No|Online|Resource|found.|Add|Online|Resource|');
 
       // Template block usage:
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         
-            {{#object/md-allocation profilePath="test" model=allocation class="testme"}}
+            <Object::MdAllocation @profilePath="test" @model={{allocation}} @class="testme">
               template block text
-            {{/object/md-allocation}}
+            </Object::MdAllocation>
           
       */
       {
-        id: "mq87gFhb",
-        block: "{\"symbols\":[],\"statements\":[[0,\"\\n\"],[4,\"object/md-allocation\",null,[[\"profilePath\",\"model\",\"class\"],[\"test\",[24,[\"allocation\"]],\"testme\"]],{\"statements\":[[0,\"        template block text\\n\"]],\"parameters\":[]},null],[0,\"    \"]],\"hasEval\":false}",
-        meta: {}
+        "id": "6+mOLYsM",
+        "block": "[[[1,\"\\n      \"],[8,[39,0],null,[[\"@profilePath\",\"@model\",\"@class\"],[\"test\",[99,1,[\"@model\"]],\"testme\"]],[[\"default\"],[[[[1,\"\\n        template block text\\n      \"]],[]]]]],[1,\"\\n    \"]],[],false,[\"object/md-allocation\",\"allocation\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
-      assert.equal((0, _testHelpers.find)('.testme').textContent.replace(/[ \n]+/g, '|').trim(), '|Amount|Amount|Currency|Choose|unit|of|currency|Award|ID|Source|Pick|contact|that|supplied|funds|Recipient|Pick|contact|that|received|funds|No|Other|Contacts|found.|Add|Other|Contact|Matching|Matching|funds|or|in-kind|services|Comment|No|Online|Resource|found.|Add|Online|Resource|template|block|text|');
+      assert.equal((0, _testHelpers.find)('.testme').textContent.replace(/[ \n]+/g, '|').trim(), '|Amount|Amount|Currency|Choose|unit|of|currency|Award|ID|Source|Pick|contact|that|supplied|funds|Recipient|Pick|contact|that|received|funds|No|Other|Contacts|found.|Add|Other|Contact|Matching|Matching|funds|or|in-kind|services|Comment|Comment|No|Online|Resource|found.|Add|Online|Resource|template|block|text|');
     });
   });
 });
-define("mdeditor/tests/integration/pods/components/object/md-array-table/component-test", ["@ember/test-helpers", "qunit", "ember-qunit"], function (_testHelpers, _qunit, _emberQunit) {
+define("mdeditor/tests/integration/pods/components/object/md-array-table/component-test", ["@ember/template-factory", "@ember/test-helpers", "qunit", "ember-qunit"], function (_templateFactory, _testHelpers, _qunit, _emberQunit) {
   "use strict";
 
-  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"htmlbars-inline-precompile"eaimeta@70e063a35619d71f
+  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"@ember/template-factory"eaimeta@70e063a35619d71f
   (0, _qunit.module)('Integration | Component | object/md array table', function (hooks) {
     (0, _emberQunit.setupRenderingTest)(hooks);
     (0, _qunit.test)('it renders', async function (assert) {
@@ -6436,57 +6682,50 @@ define("mdeditor/tests/integration/pods/components/object/md-array-table/compone
         biz: 'biz2',
         baz: 'baz2'
       }]);
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         
-            {{#object/md-array-table
-              columns="biz,baz"
-              value=data
-              title="FooBar"
-              data-spy="FooBar" as |f|
-            }}
+            <Object::MdArrayTable @columns="biz,baz" @value={{data}} @title="FooBar" @data-spy="FooBar" as |f|>
               <td>
                 {{f.item.biz}}
               </td>
               <td>
                 {{f.item.baz}}
               </td>
-            {{/object/md-array-table}}
+            </Object::MdArrayTable>
             
       */
       {
-        id: "WbGu1T5E",
-        block: "{\"symbols\":[\"f\"],\"statements\":[[0,\"\\n\"],[4,\"object/md-array-table\",null,[[\"columns\",\"value\",\"title\",\"data-spy\"],[\"biz,baz\",[24,[\"data\"]],\"FooBar\",\"FooBar\"]],{\"statements\":[[0,\"        \"],[7,\"td\",true],[8],[0,\"\\n          \"],[1,[23,1,[\"item\",\"biz\"]],false],[0,\"\\n        \"],[9],[0,\"\\n        \"],[7,\"td\",true],[8],[0,\"\\n          \"],[1,[23,1,[\"item\",\"baz\"]],false],[0,\"\\n        \"],[9],[0,\"\\n\"]],\"parameters\":[1]},null],[0,\"      \"]],\"hasEval\":false}",
-        meta: {}
+        "id": "IHbnv09v",
+        "block": "[[[1,\"\\n      \"],[8,[39,0],null,[[\"@columns\",\"@value\",\"@title\",\"@data-spy\"],[\"biz,baz\",[99,1,[\"@value\"]],\"FooBar\",\"FooBar\"]],[[\"default\"],[[[[1,\"\\n        \"],[10,\"td\"],[12],[1,\"\\n          \"],[1,[30,1,[\"item\",\"biz\"]]],[1,\"\\n        \"],[13],[1,\"\\n        \"],[10,\"td\"],[12],[1,\"\\n          \"],[1,[30,1,[\"item\",\"baz\"]]],[1,\"\\n        \"],[13],[1,\"\\n      \"]],[1]]]]],[1,\"\\n      \"]],[\"f\"],false,[\"object/md-array-table\",\"data\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       assert.equal((0, _testHelpers.find)('.panel').textContent.replace(/[ \n]+/g, '|').trim(), '|FooBars|2|Add|#|Biz|Baz|0|biz1|baz1|Delete|1|biz2|baz2|Delete|');
 
       // Template block usage:
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         
-            {{#object/md-array-table
-              columns="biz,baz"
-              value=data
-              title="FooBar"
-            }}
+            <Object::MdArrayTable @columns="biz,baz" @value={{data}} @title="FooBar">
               template block text
-            {{/object/md-array-table}}
+            </Object::MdArrayTable>
           
       */
       {
-        id: "Dx2VY2vr",
-        block: "{\"symbols\":[],\"statements\":[[0,\"\\n\"],[4,\"object/md-array-table\",null,[[\"columns\",\"value\",\"title\"],[\"biz,baz\",[24,[\"data\"]],\"FooBar\"]],{\"statements\":[[0,\"        template block text\\n\"]],\"parameters\":[]},null],[0,\"    \"]],\"hasEval\":false}",
-        meta: {}
+        "id": "ZISBoP6G",
+        "block": "[[[1,\"\\n      \"],[8,[39,0],null,[[\"@columns\",\"@value\",\"@title\"],[\"biz,baz\",[99,1,[\"@value\"]],\"FooBar\"]],[[\"default\"],[[[[1,\"\\n        template block text\\n      \"]],[]]]]],[1,\"\\n    \"]],[],false,[\"object/md-array-table\",\"data\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       assert.equal((0, _testHelpers.find)('.panel').textContent.replace(/[ \n]+/g, '|').trim(), '|FooBars|2|Add|#|Biz|Baz|0|template|block|text|Delete|1|template|block|text|Delete|', 'block');
     });
   });
 });
-define("mdeditor/tests/integration/pods/components/object/md-associated/component-test", ["@ember/test-helpers", "qunit", "ember-qunit"], function (_testHelpers, _qunit, _emberQunit) {
+define("mdeditor/tests/integration/pods/components/object/md-associated/component-test", ["@ember/template-factory", "@ember/test-helpers", "qunit", "ember-qunit"], function (_templateFactory, _testHelpers, _qunit, _emberQunit) {
   "use strict";
 
-  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"htmlbars-inline-precompile"eaimeta@70e063a35619d71f
+  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"@ember/template-factory"eaimeta@70e063a35619d71f
   (0, _qunit.module)('Integration | Component | object/md associated', function (hooks) {
     (0, _emberQunit.setupRenderingTest)(hooks);
     (0, _qunit.test)('it renders', async function (assert) {
@@ -6532,39 +6771,41 @@ define("mdeditor/tests/integration/pods/components/object/md-associated/componen
           "type": "product"
         }]
       });
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         {{object/md-associated profilePath="foobar" model=model}}
       */
       {
-        id: "GjEkhvWk",
-        block: "{\"symbols\":[],\"statements\":[[1,[28,\"object/md-associated\",null,[[\"profilePath\",\"model\"],[\"foobar\",[24,[\"model\"]]]]],false]],\"hasEval\":false}",
-        meta: {}
+        "id": "3yKWmws4",
+        "block": "[[[1,[28,[35,0],null,[[\"profilePath\",\"model\"],[\"foobar\",[33,1]]]]]],[],false,[\"object/md-associated\",\"model\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
-      assert.equal((0, _testHelpers.find)('form').textContent.replace(/[ \n]+/g, '|').trim(), '|Association|Type|product|?|×|Initiative|Type|Choose|Type|of|Initiative|Resource|Types|2|Add|#|Type|Name|0|website|?|×|Delete|1|product|?|×|Delete|Basic|Information|Title|No|Alternate|Title|found.|Add|Alternate|Title|Dates|1|Add|Date|#|Date|Date|Type|Description|0|publication|?|×|Delete|Edition|Presentation|Form|No|Responsible|Party|found.|Add|Responsible|Party|No|Online|Resource|found.|Add|Online|Resource|Identifier|1|Add|OK|#|Identifier|Namespace|Description|0|5a70c2dee4b0a9a2e9dafbe7|gov.sciencebase.catalog|Identifier|imported|from|ScienceBase|during|publication|More...|Delete|Identifier|1|Add|OK|#|Identifier|Namespace|0|5a70c2dee4b0a9a2e9dafbe7|gov.sciencebase.catalog|Edit|Delete|Identifier|1|Add|OK|#|Identifier|Namespace|0|5a70c2dee4b0a9a2e9dafbe7|gov.sciencebase.catalog|Edit|Delete|Series|Name|Issue|Page|No|Other|Details|found.|Add|Other|Detail|No|Graphic|found.|Add|Graphic|Metadata|Citation|Basic|Information|Title|No|Alternate|Title|found.|Add|Alternate|Title|No|Date|found.|Add|Date|Responsible|Parties|1|Add|#|Role|Contacts|0|author|?|×|Delete|No|Online|Resource|found.|Add|Online|Resource|Identifier|1|Add|OK|#|Identifier|Namespace|Description|0|f4abb4e0-a3d6-450f-adca-6d07eac19b0b|urn:uuid|Not|Defined|More...|Delete|Identifier|1|Add|OK|#|Identifier|Namespace|0|f4abb4e0-a3d6-450f-adca-6d07eac19b0b|urn:uuid|Edit|Delete|Identifier|1|Add|OK|#|Identifier|Namespace|0|f4abb4e0-a3d6-450f-adca-6d07eac19b0b|urn:uuid|Edit|Delete|');
+      assert.equal((0, _testHelpers.find)('form').textContent.replace(/[ \n]+/g, '|').trim(), '|Association|Type|product|?|×|Initiative|Type|Choose|Type|of|Initiative|Resource|Types|2|Add|#|Type|Name|0|website|?|×|Delete|1|product|?|×|Delete|Basic|Information|Title|No|Alternate|Title|found.|Add|Alternate|Title|Dates|1|Add|Date|#|Precision|Date|Date|Type|Description|0|Day|publication|?|×|Delete|Edition|Presentation|Form|No|Responsible|Party|found.|Add|Responsible|Party|No|Online|Resource|found.|Add|Online|Resource|Identifier|1|Add|OK|#|Identifier|Namespace|Description|0|5a70c2dee4b0a9a2e9dafbe7|gov.sciencebase.catalog|Identifier|imported|from|ScienceBase|during|publication|More...|Delete|Identifier|1|Add|OK|#|Identifier|Namespace|Description|0|5a70c2dee4b0a9a2e9dafbe7|gov.sciencebase.catalog|Identifier|imported|from|ScienceBase|during|publication|Edit|Delete|Identifier|1|Add|OK|#|Identifier|Namespace|Description|0|5a70c2dee4b0a9a2e9dafbe7|gov.sciencebase.catalog|Identifier|imported|from|ScienceBase|during|publication|Edit|Delete|Series|Name|Issue|Page|No|Other|Details|found.|Add|Other|Detail|No|Graphic|found.|Add|Graphic|Metadata|Citation|Basic|Information|Title|No|Alternate|Title|found.|Add|Alternate|Title|No|Date|found.|Add|Date|Responsible|Parties|1|Add|#|Role|Contacts|0|author|?|×|Delete|No|Online|Resource|found.|Add|Online|Resource|Identifier|1|Add|OK|#|Identifier|Namespace|Description|0|f4abb4e0-a3d6-450f-adca-6d07eac19b0b|urn:uuid|Not|Defined|More...|Delete|Identifier|1|Add|OK|#|Identifier|Namespace|Description|0|f4abb4e0-a3d6-450f-adca-6d07eac19b0b|urn:uuid|Not|Defined|Edit|Delete|Identifier|1|Add|OK|#|Identifier|Namespace|Description|0|f4abb4e0-a3d6-450f-adca-6d07eac19b0b|urn:uuid|Not|Defined|Edit|Delete|');
 
       // Template block usage:
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         
-            {{#object/md-associated profilePath="foobar" model=model}}
+            <Object::MdAssociated @profilePath="foobar" @model={{model}}>
               template block text
-            {{/object/md-associated}}
+            </Object::MdAssociated>
           
       */
       {
-        id: "kv9BOMnh",
-        block: "{\"symbols\":[],\"statements\":[[0,\"\\n\"],[4,\"object/md-associated\",null,[[\"profilePath\",\"model\"],[\"foobar\",[24,[\"model\"]]]],{\"statements\":[[0,\"        template block text\\n\"]],\"parameters\":[]},null],[0,\"    \"]],\"hasEval\":false}",
-        meta: {}
+        "id": "A5tOILOx",
+        "block": "[[[1,\"\\n      \"],[8,[39,0],null,[[\"@profilePath\",\"@model\"],[\"foobar\",[99,1,[\"@model\"]]]],[[\"default\"],[[[[1,\"\\n        template block text\\n      \"]],[]]]]],[1,\"\\n    \"]],[],false,[\"object/md-associated\",\"model\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
-      assert.equal((0, _testHelpers.find)('form').textContent.replace(/[ \n]+/g, '|').trim(), '|Association|Type|product|?|×|Initiative|Type|Choose|Type|of|Initiative|Resource|Types|2|Add|#|Type|Name|0|website|?|×|Delete|1|product|?|×|Delete|Basic|Information|Title|No|Alternate|Title|found.|Add|Alternate|Title|Dates|1|Add|Date|#|Date|Date|Type|Description|0|publication|?|×|Delete|Edition|Presentation|Form|No|Responsible|Party|found.|Add|Responsible|Party|No|Online|Resource|found.|Add|Online|Resource|Identifier|1|Add|OK|#|Identifier|Namespace|Description|0|5a70c2dee4b0a9a2e9dafbe7|gov.sciencebase.catalog|Identifier|imported|from|ScienceBase|during|publication|More...|Delete|Identifier|1|Add|OK|#|Identifier|Namespace|0|5a70c2dee4b0a9a2e9dafbe7|gov.sciencebase.catalog|Edit|Delete|Identifier|1|Add|OK|#|Identifier|Namespace|0|5a70c2dee4b0a9a2e9dafbe7|gov.sciencebase.catalog|Edit|Delete|Series|Name|Issue|Page|No|Other|Details|found.|Add|Other|Detail|No|Graphic|found.|Add|Graphic|Metadata|Citation|Basic|Information|Title|No|Alternate|Title|found.|Add|Alternate|Title|No|Date|found.|Add|Date|Responsible|Parties|1|Add|#|Role|Contacts|0|author|?|×|Delete|No|Online|Resource|found.|Add|Online|Resource|Identifier|1|Add|OK|#|Identifier|Namespace|Description|0|f4abb4e0-a3d6-450f-adca-6d07eac19b0b|urn:uuid|Not|Defined|More...|Delete|Identifier|1|Add|OK|#|Identifier|Namespace|0|f4abb4e0-a3d6-450f-adca-6d07eac19b0b|urn:uuid|Edit|Delete|Identifier|1|Add|OK|#|Identifier|Namespace|0|f4abb4e0-a3d6-450f-adca-6d07eac19b0b|urn:uuid|Edit|Delete|template|block|text|', 'block');
+      assert.equal((0, _testHelpers.find)('form').textContent.replace(/[ \n]+/g, '|').trim(), '|Association|Type|product|?|×|Initiative|Type|Choose|Type|of|Initiative|Resource|Types|2|Add|#|Type|Name|0|website|?|×|Delete|1|product|?|×|Delete|Basic|Information|Title|No|Alternate|Title|found.|Add|Alternate|Title|Dates|1|Add|Date|#|Precision|Date|Date|Type|Description|0|Day|publication|?|×|Delete|Edition|Presentation|Form|No|Responsible|Party|found.|Add|Responsible|Party|No|Online|Resource|found.|Add|Online|Resource|Identifier|1|Add|OK|#|Identifier|Namespace|Description|0|5a70c2dee4b0a9a2e9dafbe7|gov.sciencebase.catalog|Identifier|imported|from|ScienceBase|during|publication|More...|Delete|Identifier|1|Add|OK|#|Identifier|Namespace|Description|0|5a70c2dee4b0a9a2e9dafbe7|gov.sciencebase.catalog|Identifier|imported|from|ScienceBase|during|publication|Edit|Delete|Identifier|1|Add|OK|#|Identifier|Namespace|Description|0|5a70c2dee4b0a9a2e9dafbe7|gov.sciencebase.catalog|Identifier|imported|from|ScienceBase|during|publication|Edit|Delete|Series|Name|Issue|Page|No|Other|Details|found.|Add|Other|Detail|No|Graphic|found.|Add|Graphic|Metadata|Citation|Basic|Information|Title|No|Alternate|Title|found.|Add|Alternate|Title|No|Date|found.|Add|Date|Responsible|Parties|1|Add|#|Role|Contacts|0|author|?|×|Delete|No|Online|Resource|found.|Add|Online|Resource|Identifier|1|Add|OK|#|Identifier|Namespace|Description|0|f4abb4e0-a3d6-450f-adca-6d07eac19b0b|urn:uuid|Not|Defined|More...|Delete|Identifier|1|Add|OK|#|Identifier|Namespace|Description|0|f4abb4e0-a3d6-450f-adca-6d07eac19b0b|urn:uuid|Not|Defined|Edit|Delete|Identifier|1|Add|OK|#|Identifier|Namespace|Description|0|f4abb4e0-a3d6-450f-adca-6d07eac19b0b|urn:uuid|Not|Defined|Edit|Delete|template|block|text|', 'block');
     });
   });
 });
-define("mdeditor/tests/integration/pods/components/object/md-associated/preview/component-test", ["@ember/test-helpers", "qunit", "ember-qunit"], function (_testHelpers, _qunit, _emberQunit) {
+define("mdeditor/tests/integration/pods/components/object/md-associated/preview/component-test", ["@ember/template-factory", "@ember/test-helpers", "qunit", "ember-qunit"], function (_templateFactory, _testHelpers, _qunit, _emberQunit) {
   "use strict";
 
-  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"htmlbars-inline-precompile"eaimeta@70e063a35619d71f
+  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"@ember/template-factory"eaimeta@70e063a35619d71f
   (0, _qunit.module)('Integration | Component | object/md associated/preview', function (hooks) {
     (0, _emberQunit.setupRenderingTest)(hooks);
     (0, _qunit.test)('it renders', async function (assert) {
@@ -6610,57 +6851,60 @@ define("mdeditor/tests/integration/pods/components/object/md-associated/preview/
           "type": "product"
         }]
       });
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         {{object/md-associated/preview item=model class="testme"}}
       */
       {
-        id: "3JJNArXu",
-        block: "{\"symbols\":[],\"statements\":[[1,[28,\"object/md-associated/preview\",null,[[\"item\",\"class\"],[[24,[\"model\"]],\"testme\"]]],false]],\"hasEval\":false}",
-        meta: {}
+        "id": "smUOuUk3",
+        "block": "[[[1,[28,[35,0],null,[[\"item\",\"class\"],[[33,1],\"testme\"]]]]],[],false,[\"object/md-associated/preview\",\"model\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
-      assert.equal((0, _testHelpers.find)('.testme').textContent.replace(/[ \n]+/g, '|').trim(), '|Resource|#|Association|Type|product|Initiative|Type|Not|Defined|Title|Pacific|Connectivity|Website|Alternate|Titles|No|alternate|titles|assigned.|Dates|September|30th|2015|(publication)|Identifier|5a70c2dee4b0a9a2e9dafbe7|(gov.sciencebase.catalog)|Responsible|Party|No|responsibility|assigned.|Metadata|Identifier|f4abb4e0-a3d6-450f-adca-6d07eac19b0b|(urn:uuid)|');
+      assert.equal((0, _testHelpers.find)('.testme').textContent.replace(/[ \n]+/g, '|').trim(), '|Resource|#|Association|Type|product|Initiative|Type|Not|Defined|Title|Pacific|Connectivity|Website|Alternate|Titles|No|alternate|titles|assigned.|Dates|2015-09-30|(publication)|Identifier|5a70c2dee4b0a9a2e9dafbe7|(gov.sciencebase.catalog)|Responsible|Party|No|responsibility|assigned.|Metadata|Identifier|f4abb4e0-a3d6-450f-adca-6d07eac19b0b|(urn:uuid)|');
 
       // Template block usage:
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         
-            {{#object/md-associated/preview item=model class="testme"}}
+            <Object::MdAssociated::Preview @item={{model}} @class="testme">
               template block text
-            {{/object/md-associated/preview}}
+            </Object::MdAssociated::Preview>
           
       */
       {
-        id: "ZTN9BnAs",
-        block: "{\"symbols\":[],\"statements\":[[0,\"\\n\"],[4,\"object/md-associated/preview\",null,[[\"item\",\"class\"],[[24,[\"model\"]],\"testme\"]],{\"statements\":[[0,\"        template block text\\n\"]],\"parameters\":[]},null],[0,\"    \"]],\"hasEval\":false}",
-        meta: {}
+        "id": "yRnoPhLh",
+        "block": "[[[1,\"\\n      \"],[8,[39,0],null,[[\"@item\",\"@class\"],[[99,1,[\"@item\"]],\"testme\"]],[[\"default\"],[[[[1,\"\\n        template block text\\n      \"]],[]]]]],[1,\"\\n    \"]],[],false,[\"object/md-associated/preview\",\"model\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
-      assert.equal((0, _testHelpers.find)('.testme').textContent.replace(/[ \n]+/g, '|').trim(), '|Resource|#|Association|Type|product|Initiative|Type|Not|Defined|Title|Pacific|Connectivity|Website|Alternate|Titles|No|alternate|titles|assigned.|Dates|September|30th|2015|(publication)|Identifier|5a70c2dee4b0a9a2e9dafbe7|(gov.sciencebase.catalog)|Responsible|Party|No|responsibility|assigned.|Metadata|Identifier|f4abb4e0-a3d6-450f-adca-6d07eac19b0b|(urn:uuid)|');
+      assert.equal((0, _testHelpers.find)('.testme').textContent.replace(/[ \n]+/g, '|').trim(), '|Resource|#|Association|Type|product|Initiative|Type|Not|Defined|Title|Pacific|Connectivity|Website|Alternate|Titles|No|alternate|titles|assigned.|Dates|2015-09-30|(publication)|Identifier|5a70c2dee4b0a9a2e9dafbe7|(gov.sciencebase.catalog)|Responsible|Party|No|responsibility|assigned.|Metadata|Identifier|f4abb4e0-a3d6-450f-adca-6d07eac19b0b|(urn:uuid)|');
     });
   });
 });
-define("mdeditor/tests/integration/pods/components/object/md-attribute/component-test", ["@ember/test-helpers", "qunit", "ember-qunit", "mdeditor/tests/helpers/create-dictionary"], function (_testHelpers, _qunit, _emberQunit, _createDictionary) {
+define("mdeditor/tests/integration/pods/components/object/md-attribute/component-test", ["@ember/template-factory", "@ember/test-helpers", "qunit", "ember-qunit", "mdeditor/tests/helpers/create-dictionary"], function (_templateFactory, _testHelpers, _qunit, _emberQunit, _createDictionary) {
   "use strict";
 
-  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"htmlbars-inline-precompile",0,"mdeditor/tests/helpers/create-dictionary"eaimeta@70e063a35619d71f
+  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"mdeditor/tests/helpers/create-dictionary",0,"@ember/template-factory"eaimeta@70e063a35619d71f
   (0, _qunit.module)('Integration | Component | object/md attribute', function (hooks) {
     (0, _emberQunit.setupRenderingTest)(hooks);
     (0, _qunit.test)('it renders', async function (assert) {
       // Set any properties with this.set('myProperty', 'value');
       this.set('model', (0, _createDictionary.createAttribute)(1)[0]);
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         {{object/md-attribute model=model profilePath="foobar"}}
       */
       {
-        id: "NlKKzA/m",
-        block: "{\"symbols\":[],\"statements\":[[1,[28,\"object/md-attribute\",null,[[\"model\",\"profilePath\"],[[24,[\"model\"]],\"foobar\"]]],false]],\"hasEval\":false}",
-        meta: {}
+        "id": "/k6Wib4X",
+        "block": "[[[1,[28,[35,0],null,[[\"model\",\"profilePath\"],[[33,1],\"foobar\"]]]]],[],false,[\"object/md-attribute\",\"model\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
-      assert.equal((0, _testHelpers.find)('.md-card').textContent.replace(/[ \n]+/g, '|').trim(), '|Attribute|Information|Code|Name|Definition|Data|Type|dataType0|×|Allow|Null?|Allow|null|values|Common|Name|Domain|Select|or|enter|the|domain|for|this|attribute.|Aliases|1|Add|Alias|0|Delete|Units|Units|Resolution|Case|Sensitive?|Is|the|attribute|content|case|sensitive?|Field|Width|Missing|Value|Minimum|Value|Maximum|Value|');
+      assert.equal((0, _testHelpers.find)('.md-card').textContent.replace(/[ \n]+/g, '|').trim(), '|Attribute|Information|Code|Name|Definition|Definition|Data|Type|dataType0|×|Allow|Null?|Allow|null|values|Common|Name|Domain|Select|or|enter|the|domain|for|this|attribute.|Aliases|1|Add|Alias|0|Delete|Units|Units|Resolution|Case|Sensitive?|Is|the|attribute|content|case|sensitive?|Field|Width|Missing|Value|Minimum|Value|Maximum|Value|');
 
       // Template block usage:
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         
             {{#object/md-attribute model=model profilePath="foobar"}}
@@ -6669,31 +6913,33 @@ define("mdeditor/tests/integration/pods/components/object/md-attribute/component
           
       */
       {
-        id: "3jDPPN+X",
-        block: "{\"symbols\":[],\"statements\":[[0,\"\\n\"],[4,\"object/md-attribute\",null,[[\"model\",\"profilePath\"],[[24,[\"model\"]],\"foobar\"]],{\"statements\":[[0,\"        template block text\\n\"]],\"parameters\":[]},null],[0,\"    \"]],\"hasEval\":false}",
-        meta: {}
+        "id": "XR9t5uLO",
+        "block": "[[[1,\"\\n\"],[6,[39,0],null,[[\"model\",\"profilePath\"],[[33,1],\"foobar\"]],[[\"default\"],[[[[1,\"        template block text\\n\"]],[]]]]],[1,\"    \"]],[],false,[\"object/md-attribute\",\"model\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
-      assert.equal((0, _testHelpers.find)('.md-card').textContent.replace(/[ \n]+/g, '|').trim(), '|Attribute|Information|Code|Name|Definition|Data|Type|dataType0|×|Allow|Null?|Allow|null|values|Common|Name|Domain|Select|or|enter|the|domain|for|this|attribute.|Aliases|1|Add|Alias|0|Delete|Units|Units|Resolution|Case|Sensitive?|Is|the|attribute|content|case|sensitive?|Field|Width|Missing|Value|Minimum|Value|Maximum|Value|', 'block');
+      assert.equal((0, _testHelpers.find)('.md-card').textContent.replace(/[ \n]+/g, '|').trim(), '|Attribute|Information|Code|Name|Definition|Definition|Data|Type|dataType0|×|Allow|Null?|Allow|null|values|Common|Name|Domain|Select|or|enter|the|domain|for|this|attribute.|Aliases|1|Add|Alias|0|Delete|Units|Units|Resolution|Case|Sensitive?|Is|the|attribute|content|case|sensitive?|Field|Width|Missing|Value|Minimum|Value|Maximum|Value|', 'block');
     });
   });
 });
-define("mdeditor/tests/integration/pods/components/object/md-attribute/preview/component-test", ["@ember/test-helpers", "qunit", "ember-qunit", "mdeditor/tests/helpers/create-dictionary"], function (_testHelpers, _qunit, _emberQunit, _createDictionary) {
+define("mdeditor/tests/integration/pods/components/object/md-attribute/preview/component-test", ["@ember/template-factory", "@ember/test-helpers", "qunit", "ember-qunit", "mdeditor/tests/helpers/create-dictionary"], function (_templateFactory, _testHelpers, _qunit, _emberQunit, _createDictionary) {
   "use strict";
 
-  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"htmlbars-inline-precompile",0,"mdeditor/tests/helpers/create-dictionary"eaimeta@70e063a35619d71f
+  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"mdeditor/tests/helpers/create-dictionary",0,"@ember/template-factory"eaimeta@70e063a35619d71f
   (0, _qunit.module)('Integration | Component | object/md attribute/preview', function (hooks) {
     (0, _emberQunit.setupRenderingTest)(hooks);
     (0, _qunit.test)('it renders', async function (assert) {
       // Set any properties with this.set('myProperty', 'value');
       this.set('model', (0, _createDictionary.createAttribute)(1)[0]);
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         <div class="testme">{{object/md-attribute/preview model=model profilePath="foobar"}}</div>
       */
       {
-        id: "BgEXHkYj",
-        block: "{\"symbols\":[],\"statements\":[[7,\"div\",true],[10,\"class\",\"testme\"],[8],[1,[28,\"object/md-attribute/preview\",null,[[\"model\",\"profilePath\"],[[24,[\"model\"]],\"foobar\"]]],false],[9]],\"hasEval\":false}",
-        meta: {}
+        "id": "V3sFuPja",
+        "block": "[[[10,0],[14,0,\"testme\"],[12],[1,[28,[35,0],null,[[\"model\",\"profilePath\"],[[33,1],\"foobar\"]]]],[13]],[],false,[\"object/md-attribute/preview\",\"model\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       assert.equal((0, _testHelpers.find)('.testme').textContent.replace(/[ \n]+/g, '|').trim(), '|dataType0|×|');
       assert.equal((0, _testHelpers.findAll)('.testme input').length, 3, 'render inputs');
@@ -6701,10 +6947,10 @@ define("mdeditor/tests/integration/pods/components/object/md-attribute/preview/c
     });
   });
 });
-define("mdeditor/tests/integration/pods/components/object/md-bbox/component-test", ["@ember/test-helpers", "qunit", "ember-qunit"], function (_testHelpers, _qunit, _emberQunit) {
+define("mdeditor/tests/integration/pods/components/object/md-bbox/component-test", ["@ember/template-factory", "@ember/test-helpers", "qunit", "ember-qunit"], function (_templateFactory, _testHelpers, _qunit, _emberQunit) {
   "use strict";
 
-  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"htmlbars-inline-precompile"eaimeta@70e063a35619d71f
+  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"@ember/template-factory"eaimeta@70e063a35619d71f
   (0, _qunit.module)('Integration | Component | object/md bbox', function (hooks) {
     (0, _emberQunit.setupRenderingTest)(hooks);
     (0, _qunit.test)('it renders', async function (assert) {
@@ -6715,16 +6961,17 @@ define("mdeditor/tests/integration/pods/components/object/md-bbox/component-test
         "southLatitude": 29.640690610830635,
         "northLatitude": 30.42485959910817
       });
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         {{object/md-bbox profilePath="foobar" model=model}}
       */
       {
-        id: "W4HvGjO9",
-        block: "{\"symbols\":[],\"statements\":[[1,[28,\"object/md-bbox\",null,[[\"profilePath\",\"model\"],[\"foobar\",[24,[\"model\"]]]]],false]],\"hasEval\":false}",
-        meta: {}
+        "id": "1eCS0RTZ",
+        "block": "[[[1,[28,[35,0],null,[[\"profilePath\",\"model\"],[\"foobar\",[33,1]]]]]],[],false,[\"object/md-bbox\",\"model\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
-      assert.equal((0, _testHelpers.find)('.form').textContent.replace(/[ \n]+/g, '|').trim(), '|North|East|South|West|');
+      assert.equal((0, _testHelpers.find)('.form').textContent.replace(/[ \n]+/g, '|').trim(), '|North|East|South|West|Minimum|Altitude|Maximum|Altitude|Units|of|Altitude|');
       var inputs = (0, _testHelpers.findAll)('input');
       assert.equal(inputs[0].value, this.model.northLatitude, 'north');
       assert.equal(inputs[1].value, this.model.eastLongitude, 'east');
@@ -6732,151 +6979,161 @@ define("mdeditor/tests/integration/pods/components/object/md-bbox/component-test
       assert.equal(inputs[3].value, this.model.westLongitude, 'west');
 
       // Template block usage:
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         
-            {{#object/md-bbox profilePath="foobar" model=model}}
+            <Object::MdBbox @profilePath="foobar" @model={{model}}>
               template block text
-            {{/object/md-bbox}}
+            </Object::MdBbox>
           
       */
       {
-        id: "S4FHfW5A",
-        block: "{\"symbols\":[],\"statements\":[[0,\"\\n\"],[4,\"object/md-bbox\",null,[[\"profilePath\",\"model\"],[\"foobar\",[24,[\"model\"]]]],{\"statements\":[[0,\"        template block text\\n\"]],\"parameters\":[]},null],[0,\"    \"]],\"hasEval\":false}",
-        meta: {}
+        "id": "ZnnYO9W8",
+        "block": "[[[1,\"\\n      \"],[8,[39,0],null,[[\"@profilePath\",\"@model\"],[\"foobar\",[99,1,[\"@model\"]]]],[[\"default\"],[[[[1,\"\\n        template block text\\n      \"]],[]]]]],[1,\"\\n    \"]],[],false,[\"object/md-bbox\",\"model\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
-      assert.equal((0, _testHelpers.find)('.form').textContent.replace(/[ \n]+/g, '|').trim(), '|North|East|South|West|template|block|text|', 'block');
+      assert.equal((0, _testHelpers.find)('.form').textContent.replace(/[ \n]+/g, '|').trim(), '|North|East|South|West|Minimum|Altitude|Maximum|Altitude|Units|of|Altitude|template|block|text|', 'block');
     });
   });
 });
-define("mdeditor/tests/integration/pods/components/object/md-citation-array/component-test", ["@ember/test-helpers", "qunit", "ember-qunit", "mdeditor/tests/helpers/create-citation"], function (_testHelpers, _qunit, _emberQunit, _createCitation) {
+define("mdeditor/tests/integration/pods/components/object/md-citation-array/component-test", ["@ember/template-factory", "@ember/test-helpers", "qunit", "ember-qunit", "mdeditor/tests/helpers/create-citation"], function (_templateFactory, _testHelpers, _qunit, _emberQunit, _createCitation) {
   "use strict";
 
-  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"htmlbars-inline-precompile",0,"mdeditor/tests/helpers/create-citation"eaimeta@70e063a35619d71f
+  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"mdeditor/tests/helpers/create-citation",0,"@ember/template-factory"eaimeta@70e063a35619d71f
   (0, _qunit.module)('Integration | Component | object/md citation array', function (hooks) {
     (0, _emberQunit.setupRenderingTest)(hooks);
     (0, _qunit.test)('it renders', async function (assert) {
       // Set any properties with this.set('myProperty', 'value');
       this.set('citation', (0, _createCitation.default)(3));
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         {{object/md-citation-array}}
       */
       {
-        id: "MBehbRDh",
-        block: "{\"symbols\":[],\"statements\":[[1,[22,\"object/md-citation-array\"],false]],\"hasEval\":false}",
-        meta: {}
+        "id": "7+IoKked",
+        "block": "[[[1,[34,0]]],[],false,[\"object/md-citation-array\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       assert.equal((0, _testHelpers.find)('.md-object-table').textContent.replace(/[ \n]+/g, '|').trim(), '|No|Citation|found.|Add|Citation|');
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         {{object/md-citation-array model=citation}}
       */
       {
-        id: "/uXqSVc7",
-        block: "{\"symbols\":[],\"statements\":[[1,[28,\"object/md-citation-array\",null,[[\"model\"],[[24,[\"citation\"]]]]],false]],\"hasEval\":false}",
-        meta: {}
+        "id": "ugwFb5U/",
+        "block": "[[[1,[28,[35,0],null,[[\"model\"],[[33,1]]]]]],[],false,[\"object/md-citation-array\",\"citation\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       assert.equal((0, _testHelpers.find)('.md-object-table').textContent.replace(/[ \n]+/g, '|').trim(), '|Citation|3|Add|OK|#|Title|0|title0|More...|Delete|1|title1|More...|Delete|2|title2|More...|Delete|', 'renders rows');
 
       // Template block usage:
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         
-            {{#object/md-citation-array}}
+            <Object::MdCitationArray>
               template block text
-            {{/object/md-citation-array}}
+            </Object::MdCitationArray>
           
       */
       {
-        id: "8LMMQcD1",
-        block: "{\"symbols\":[],\"statements\":[[0,\"\\n\"],[4,\"object/md-citation-array\",null,null,{\"statements\":[[0,\"        template block text\\n\"]],\"parameters\":[]},null],[0,\"    \"]],\"hasEval\":false}",
-        meta: {}
+        "id": "duefRdpe",
+        "block": "[[[1,\"\\n      \"],[8,[39,0],null,null,[[\"default\"],[[[[1,\"\\n        template block text\\n      \"]],[]]]]],[1,\"\\n    \"]],[],false,[\"object/md-citation-array\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       assert.equal((0, _testHelpers.find)('.md-object-table').textContent.replace(/[ \n]+/g, '|').trim(), '|No|Citation|found.|Add|Citation|');
     });
   });
 });
-define("mdeditor/tests/integration/pods/components/object/md-citation/component-test", ["@ember/test-helpers", "qunit", "ember-qunit", "mdeditor/tests/helpers/create-citation"], function (_testHelpers, _qunit, _emberQunit, _createCitation) {
+define("mdeditor/tests/integration/pods/components/object/md-citation/component-test", ["@ember/template-factory", "@ember/test-helpers", "qunit", "ember-qunit", "mdeditor/tests/helpers/create-citation"], function (_templateFactory, _testHelpers, _qunit, _emberQunit, _createCitation) {
   "use strict";
 
-  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"htmlbars-inline-precompile",0,"mdeditor/tests/helpers/create-citation"eaimeta@70e063a35619d71f
+  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"mdeditor/tests/helpers/create-citation",0,"@ember/template-factory"eaimeta@70e063a35619d71f
   (0, _qunit.module)('Integration | Component | object/md citation', function (hooks) {
     (0, _emberQunit.setupRenderingTest)(hooks);
     (0, _qunit.test)('it renders', async function (assert) {
       // Set any properties with this.set('myProperty', 'value');
       this.set('citation', (0, _createCitation.default)(1)[0]);
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         {{object/md-citation profilePath="foobar" model=citation}}
       */
       {
-        id: "RtW37Mdh",
-        block: "{\"symbols\":[],\"statements\":[[1,[28,\"object/md-citation\",null,[[\"profilePath\",\"model\"],[\"foobar\",[24,[\"citation\"]]]]],false]],\"hasEval\":false}",
-        meta: {}
+        "id": "ZcsRRMVr",
+        "block": "[[[1,[28,[35,0],null,[[\"profilePath\",\"model\"],[\"foobar\",[33,1]]]]]],[],false,[\"object/md-citation\",\"citation\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
-      assert.equal((0, _testHelpers.find)('form').textContent.replace(/[ \n]+/g, '|').trim(), '|Basic|Information|Title|Alternate|Titles|2|Add|Alternate|Title|0|Delete|1|Delete|Dates|2|Add|Date|#|Date|Date|Type|Description|0|dateType|×|Delete|1|dateType|×|Delete|Edition|Presentation|Form|×|presentationForm0|×|presentationForm1|Responsible|Parties|2|Add|#|Role|Contacts|0|role|×|Delete|1|role|×|Delete|Online|Resource|2|Add|OK|#|Name|Uri|0|Not|Defined|http://adiwg.org|Edit|Delete|1|Not|Defined|http://mdeditor.org|Edit|Delete|Identifier|2|Add|OK|#|Identifier|Namespace|Description|0|identifier0|Not|Defined|Not|Defined|More...|Delete|1|identifier-0|Not|Defined|Not|Defined|More...|Delete|Identifier|2|Add|OK|#|Identifier|Namespace|0|identifier0|Not|Defined|Edit|Delete|1|identifier-0|Not|Defined|Edit|Delete|Identifier|2|Add|OK|#|Identifier|Namespace|0|identifier0|Not|Defined|Edit|Delete|1|identifier-0|Not|Defined|Edit|Delete|Series|Name|Issue|Page|Other|Details|2|Add|0|Delete|1|Delete|Graphic|2|Add|OK|0|fileName:|Edit|Delete|1|fileName:|Edit|Delete|');
+      await (0, _testHelpers.fillIn)('input[id$="-input"]', 'Updated Alternate Title');
+      assert.strictEqual(this.citation.title, 'Updated Alternate Title', 'title updates the source citation model');
+      assert.equal((0, _testHelpers.find)('form').textContent.replace(/[ \n]+/g, '|').trim(), '|Basic|Information|Title|Alternate|Titles|2|Add|Alternate|Title|0|Delete|1|Delete|Dates|2|Add|Date|#|Precision|Date|Date|Type|Description|0|Day|dateType|×|Delete|1|Day|dateType|×|Delete|Edition|Presentation|Form|×|presentationForm0|×|presentationForm1|Responsible|Parties|2|Add|#|Role|Contacts|0|role|×|Delete|1|role|×|Delete|Online|Resource|2|Add|OK|#|Name|Uri|0|Not|Defined|http://adiwg.org|Edit|Delete|1|Not|Defined|http://mdeditor.org|Edit|Delete|Identifier|2|Add|OK|#|Identifier|Namespace|Description|0|identifier0|Not|Defined|Not|Defined|More...|Delete|1|identifier-0|Not|Defined|Not|Defined|More...|Delete|Identifier|2|Add|OK|#|Identifier|Namespace|Description|0|identifier0|Not|Defined|Not|Defined|Edit|Delete|1|identifier-0|Not|Defined|Not|Defined|Edit|Delete|Identifier|2|Add|OK|#|Identifier|Namespace|Description|0|identifier0|Not|Defined|Not|Defined|Edit|Delete|1|identifier-0|Not|Defined|Not|Defined|Edit|Delete|Series|Name|Issue|Page|Other|Details|2|Add|0|Delete|1|Delete|Graphic|2|Add|OK|0|fileName:|Edit|Delete|1|fileName:|Edit|Delete|');
 
       // Template block usage:
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         
-            {{#object/md-citation profilePath="foobar"}}
+            <Object::MdCitation @profilePath="foobar">
               template block text
-            {{/object/md-citation}}
+            </Object::MdCitation>
           
       */
       {
-        id: "eOi54CPK",
-        block: "{\"symbols\":[],\"statements\":[[0,\"\\n\"],[4,\"object/md-citation\",null,[[\"profilePath\"],[\"foobar\"]],{\"statements\":[[0,\"        template block text\\n\"]],\"parameters\":[]},null],[0,\"    \"]],\"hasEval\":false}",
-        meta: {}
+        "id": "5CaTOxHS",
+        "block": "[[[1,\"\\n      \"],[8,[39,0],null,[[\"@profilePath\"],[\"foobar\"]],[[\"default\"],[[[[1,\"\\n        template block text\\n      \"]],[]]]]],[1,\"\\n    \"]],[],false,[\"object/md-citation\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
-      assert.equal((0, _testHelpers.find)('form').textContent.replace(/[ \n]+/g, '|').trim(), '|Basic|Information|Title|No|Alternate|Title|found.|Add|Alternate|Title|No|Date|found.|Add|Date|Edition|Presentation|Form|No|Responsible|Party|found.|Add|Responsible|Party|No|Online|Resource|found.|Add|Online|Resource|No|Identifier|found.|Add|Identifier|No|Identifier|found.|Add|Identifier|No|Identifier|found.|Add|Identifier|Series|Name|Issue|Page|No|Other|Details|found.|Add|Other|Detail|No|Graphic|found.|Add|Graphic|template|block|text|', 'block');
+      assert.equal((0, _testHelpers.find)('form').textContent.replace(/[ \n]+/g, '|').trim(), '|Basic|Information|Title|No|Alternate|Title|found.|Add|Alternate|Title|Dates|Add|Date|#|Precision|Date|Date|Type|Description|Add|Date|Edition|Presentation|Form|Responsible|Parties|Add|#|Role|Contacts|Add|Responsible|Party|No|Online|Resource|found.|Add|Online|Resource|No|Identifier|found.|Add|Identifier|No|Identifier|found.|Add|Identifier|No|Identifier|found.|Add|Identifier|Series|Name|Issue|Page|No|Other|Details|found.|Add|Other|Detail|No|Graphic|found.|Add|Graphic|template|block|text|', 'block');
     });
   });
 });
-define("mdeditor/tests/integration/pods/components/object/md-citation/preview/body/component-test", ["@ember/test-helpers", "qunit", "ember-qunit", "mdeditor/tests/helpers/create-citation"], function (_testHelpers, _qunit, _emberQunit, _createCitation) {
+define("mdeditor/tests/integration/pods/components/object/md-citation/preview/body/component-test", ["@ember/template-factory", "@ember/test-helpers", "qunit", "ember-qunit", "mdeditor/tests/helpers/create-citation"], function (_templateFactory, _testHelpers, _qunit, _emberQunit, _createCitation) {
   "use strict";
 
-  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"htmlbars-inline-precompile",0,"mdeditor/tests/helpers/create-citation"eaimeta@70e063a35619d71f
+  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"mdeditor/tests/helpers/create-citation",0,"@ember/template-factory"eaimeta@70e063a35619d71f
   (0, _qunit.module)('Integration | Component | object/md citation/preview/body', function (hooks) {
     (0, _emberQunit.setupRenderingTest)(hooks);
     (0, _qunit.test)('it renders', async function (assert) {
       // Set any properties with this.set('myProperty', 'value');
       this.set('citation', (0, _createCitation.default)(1)[0]);
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         {{object/md-citation/preview/body citation=citation}}
       */
       {
-        id: "YuudbIQI",
-        block: "{\"symbols\":[],\"statements\":[[1,[28,\"object/md-citation/preview/body\",null,[[\"citation\"],[[24,[\"citation\"]]]]],false]],\"hasEval\":false}",
-        meta: {}
+        "id": "Cm5w5tAD",
+        "block": "[[[1,[28,[35,0],null,[[\"citation\"],[[33,1]]]]]],[],false,[\"object/md-citation/preview/body\",\"citation\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
-      assert.equal((0, _testHelpers.find)('.row').textContent.replace(/[ \n]+/g, '|').trim(), '|Title|title0|Alternate|Titles|alternateTitle0|alternateTitle1|Dates|October|13th|2016|(dateType)|October|22nd|2016|(dateType)|Identifier|identifier0|identifier-0|Responsible|Party|role|(|)|role|(|)|');
+      assert.equal((0, _testHelpers.find)('.row').textContent.replace(/[ \n]+/g, '|').trim(), '|Title|title0|Alternate|Titles|alternateTitle0|alternateTitle1|Dates|2016-10-13|(dateType)|2016-10-22|(dateType)|Identifier|identifier0|identifier-0|Responsible|Party|role|(|individualId0|)|role|(|individualId0|)|');
 
       // Template block usage:
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         
-            {{#object/md-citation/preview/body}}
+            <Object::MdCitation::Preview::Body>
               template block text
-            {{/object/md-citation/preview/body}}
+            </Object::MdCitation::Preview::Body>
           
       */
       {
-        id: "sUcR8ZyH",
-        block: "{\"symbols\":[],\"statements\":[[0,\"\\n\"],[4,\"object/md-citation/preview/body\",null,null,{\"statements\":[[0,\"        template block text\\n\"]],\"parameters\":[]},null],[0,\"    \"]],\"hasEval\":false}",
-        meta: {}
+        "id": "JdKavM8O",
+        "block": "[[[1,\"\\n      \"],[8,[39,0],null,null,[[\"default\"],[[[[1,\"\\n        template block text\\n      \"]],[]]]]],[1,\"\\n    \"]],[],false,[\"object/md-citation/preview/body\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       assert.equal((0, _testHelpers.find)('.row').textContent.replace(/[ \n]+/g, '|').trim(), '|Title|Not|Defined|Alternate|Titles|No|alternate|titles|assigned.|Dates|No|dates|assigned.|Identifier|No|identifiers|assigned.|Responsible|Party|No|responsibility|assigned.|template|block|text|', 'block');
     });
   });
 });
-define("mdeditor/tests/integration/pods/components/object/md-citation/preview/component-test", ["@ember/test-helpers", "qunit", "ember-qunit", "mdeditor/tests/helpers/create-citation"], function (_testHelpers, _qunit, _emberQunit, _createCitation) {
+define("mdeditor/tests/integration/pods/components/object/md-citation/preview/component-test", ["@ember/template-factory", "@ember/test-helpers", "qunit", "ember-qunit", "mdeditor/tests/helpers/create-citation"], function (_templateFactory, _testHelpers, _qunit, _emberQunit, _createCitation) {
   "use strict";
 
-  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"htmlbars-inline-precompile",0,"mdeditor/tests/helpers/create-citation"eaimeta@70e063a35619d71f
+  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"mdeditor/tests/helpers/create-citation",0,"@ember/template-factory"eaimeta@70e063a35619d71f
   (0, _qunit.module)('Integration | Component | object/md citation/preview', function (hooks) {
     (0, _emberQunit.setupRenderingTest)(hooks);
     (0, _qunit.test)('it renders', async function (assert) {
@@ -6887,167 +7144,225 @@ define("mdeditor/tests/integration/pods/components/object/md-citation/preview/co
       this.set('editCitation', function (v) {
         assert.ok(v, 'Called external action');
       });
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         {{object/md-citation/preview editCitation=editCitation citation=citation}}
       */
       {
-        id: "w1mHv6wI",
-        block: "{\"symbols\":[],\"statements\":[[1,[28,\"object/md-citation/preview\",null,[[\"editCitation\",\"citation\"],[[24,[\"editCitation\"]],[24,[\"citation\"]]]]],false]],\"hasEval\":false}",
-        meta: {}
+        "id": "OzpCKHzN",
+        "block": "[[[1,[28,[35,0],null,[[\"editCitation\",\"citation\"],[[33,1],[33,2]]]]]],[],false,[\"object/md-citation/preview\",\"editCitation\",\"citation\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
-      assert.equal((0, _testHelpers.find)('.md-card').textContent.replace(/[ \n]+/g, '|').trim(), '|Citation|Edit|Title|title0|Alternate|Titles|alternateTitle0|alternateTitle1|Dates|October|13th|2016|(dateType)|October|22nd|2016|(dateType)|Identifier|identifier0|identifier-0|Responsible|Party|role|(|)|role|(|)|Edit|Citation|');
+      assert.equal((0, _testHelpers.find)('.md-card').textContent.replace(/[ \n]+/g, '|').trim(), '|Citation|Edit|Title|title0|Alternate|Titles|alternateTitle0|alternateTitle1|Dates|2016-10-13|(dateType)|2016-10-22|(dateType)|Identifier|identifier0|identifier-0|Responsible|Party|role|(|individualId0|)|role|(|individualId0|)|Edit|Citation|');
       await (0, _testHelpers.click)('.btn-success');
 
       // Template block usage:
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         
-            {{#object/md-citation/preview editCitation=editCitation}}
+            <Object::MdCitation::Preview @editCitation={{editCitation}}>
               template block text
-            {{/object/md-citation/preview}}
+            </Object::MdCitation::Preview>
           
       */
       {
-        id: "imkcj7Dl",
-        block: "{\"symbols\":[],\"statements\":[[0,\"\\n\"],[4,\"object/md-citation/preview\",null,[[\"editCitation\"],[[24,[\"editCitation\"]]]],{\"statements\":[[0,\"        template block text\\n\"]],\"parameters\":[]},null],[0,\"    \"]],\"hasEval\":false}",
-        meta: {}
+        "id": "3f85by12",
+        "block": "[[[1,\"\\n      \"],[8,[39,0],null,[[\"@editCitation\"],[[99,1,[\"@editCitation\"]]]],[[\"default\"],[[[[1,\"\\n        template block text\\n      \"]],[]]]]],[1,\"\\n    \"]],[],false,[\"object/md-citation/preview\",\"editCitation\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       assert.equal((0, _testHelpers.find)('.md-card').textContent.replace(/[ \n]+/g, '|').trim(), '|Citation|Edit|Title|Not|Defined|Alternate|Titles|No|alternate|titles|assigned.|Dates|No|dates|assigned.|Identifier|No|identifiers|assigned.|Responsible|Party|No|responsibility|assigned.|template|block|text|Edit|Citation|', 'block');
     });
   });
 });
-define("mdeditor/tests/integration/pods/components/object/md-constraint/component-test", ["@ember/test-helpers", "qunit", "ember-qunit"], function (_testHelpers, _qunit, _emberQunit) {
+define("mdeditor/tests/integration/pods/components/object/md-constraint/component-test", ["@ember/template-factory", "@ember/test-helpers", "qunit", "ember-qunit"], function (_templateFactory, _testHelpers, _qunit, _emberQunit) {
   "use strict";
 
-  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"htmlbars-inline-precompile"eaimeta@70e063a35619d71f
+  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"@ember/template-factory"eaimeta@70e063a35619d71f
   (0, _qunit.module)('Integration | Component | object/md constraint', function (hooks) {
     (0, _emberQunit.setupRenderingTest)(hooks);
     (0, _qunit.test)('it renders', async function (assert) {
       // Set any properties with this.set('myProperty', 'value');
       this.set('model', {});
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         {{object/md-constraint profilePath="foobar" model=model}}
       */
       {
-        id: "RZXh4ND8",
-        block: "{\"symbols\":[],\"statements\":[[1,[28,\"object/md-constraint\",null,[[\"profilePath\",\"model\"],[\"foobar\",[24,[\"model\"]]]]],false]],\"hasEval\":false}",
-        meta: {}
+        "id": "pnPGhCkb",
+        "block": "[[[1,[28,[35,0],null,[[\"profilePath\",\"model\"],[\"foobar\",[33,1]]]]]],[],false,[\"object/md-constraint\",\"model\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
-      assert.equal((0, _testHelpers.find)('form').textContent.replace(/[ \n]+/g, '|').trim(), '|Constraint|Type|The|type|of|constraint.|No|Use|Limitations|found.|Add|Use|Limitation|Legal|Access|Constraints|Use|Constraints|No|Other|Constraint|found.|Add|Other|Constraint|Security|Classification|Name|of|the|handling|restrictions|on|the|resource|or|metadata.|Classification|System|Name|Note|Handling|Description|No|Responsible|Party|found.|Add|Responsible|Party|No|Graphic|or|Logo|found.|Add|Graphic|or|Logo|');
+      assert.equal((0, _testHelpers.find)('form').textContent.replace(/[ \n]+/g, '|').trim(), '|Constraint|Type|The|type|of|constraint.|No|Use|Limitations|found.|Add|Use|Limitation|Legal|Access|Constraints|Use|Constraints|No|Other|Constraint|found.|Add|Other|Constraint|Security|Classification|Name|of|the|handling|restrictions|on|the|resource|or|metadata.|Classification|System|Name|Note|Note|Handling|Description|Handling|Description|Releasability|Addressees|Add|#|Role|Contacts|Add|Addressee|Statement|No|Dissemintation|Constraint|found.|Add|Dissemintation|Constraint|Responsible|Parties|Add|#|Role|Contacts|Add|Responsible|Party|No|Graphic|or|Logo|found.|Add|Graphic|or|Logo|No|References|found.|Add|Reference|');
 
       // Template block usage:
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         
-            {{#object/md-constraint profilePath="foobar" model=model}}
+            <Object::MdConstraint @profilePath="foobar" @model={{model}}>
               template block text
-            {{/object/md-constraint}}
+            </Object::MdConstraint>
           
       */
       {
-        id: "QB8DUCsX",
-        block: "{\"symbols\":[],\"statements\":[[0,\"\\n\"],[4,\"object/md-constraint\",null,[[\"profilePath\",\"model\"],[\"foobar\",[24,[\"model\"]]]],{\"statements\":[[0,\"        template block text\\n\"]],\"parameters\":[]},null],[0,\"    \"]],\"hasEval\":false}",
-        meta: {}
+        "id": "tKylLT+w",
+        "block": "[[[1,\"\\n      \"],[8,[39,0],null,[[\"@profilePath\",\"@model\"],[\"foobar\",[99,1,[\"@model\"]]]],[[\"default\"],[[[[1,\"\\n        template block text\\n      \"]],[]]]]],[1,\"\\n    \"]],[],false,[\"object/md-constraint\",\"model\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
-      assert.equal((0, _testHelpers.find)('form').textContent.replace(/[ \n]+/g, '|').trim(), '|Constraint|Type|The|type|of|constraint.|No|Use|Limitations|found.|Add|Use|Limitation|Legal|Access|Constraints|Use|Constraints|No|Other|Constraint|found.|Add|Other|Constraint|Security|Classification|Name|of|the|handling|restrictions|on|the|resource|or|metadata.|Classification|System|Name|Note|Handling|Description|No|Responsible|Party|found.|Add|Responsible|Party|No|Graphic|or|Logo|found.|Add|Graphic|or|Logo|template|block|text|', 'block');
+      assert.equal((0, _testHelpers.find)('form').textContent.replace(/[ \n]+/g, '|').trim(), '|Constraint|Type|The|type|of|constraint.|No|Use|Limitations|found.|Add|Use|Limitation|Legal|Access|Constraints|Use|Constraints|No|Other|Constraint|found.|Add|Other|Constraint|Security|Classification|Name|of|the|handling|restrictions|on|the|resource|or|metadata.|Classification|System|Name|Note|Note|Handling|Description|Handling|Description|Releasability|No|Addressee|found.|Add|Addressee|Statement|No|Dissemintation|Constraint|found.|Add|Dissemintation|Constraint|No|Responsible|Party|found.|Add|Responsible|Party|No|Graphic|or|Logo|found.|Add|Graphic|or|Logo|No|References|found.|Add|Reference|template|block|text|', 'block');
     });
   });
 });
-define("mdeditor/tests/integration/pods/components/object/md-date-array/component-test", ["@ember/test-helpers", "qunit", "ember-qunit"], function (_testHelpers, _qunit, _emberQunit) {
+define("mdeditor/tests/integration/pods/components/object/md-dataquality/preview/component-test", ["@ember/template-factory", "@ember/test-helpers", "qunit", "ember-qunit"], function (_templateFactory, _testHelpers, _qunit, _emberQunit) {
   "use strict";
 
-  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"htmlbars-inline-precompile"eaimeta@70e063a35619d71f
+  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"@ember/template-factory"eaimeta@70e063a35619d71f
+  (0, _qunit.module)('Integration | Component | object/md dataquality/preview', function (hooks) {
+    (0, _emberQunit.setupRenderingTest)(hooks);
+    (0, _qunit.test)('it renders', async function (assert) {
+      // Set any properties with this.set('myProperty', 'value');
+      this.set('dq', {
+        'scope': {
+          'scopeCode': 'dataset'
+        },
+        'systemIdentifier': {
+          'label': 'My Quality System'
+        }
+      });
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
+      /*
+        <section>{{object/md-dataquality/preview item=dq index=0}}</section>
+      */
+      {
+        "id": "nak4t7Xd",
+        "block": "[[[10,\"section\"],[12],[1,[28,[35,0],null,[[\"item\",\"index\"],[[33,1],0]]]],[13]],[],false,[\"object/md-dataquality/preview\",\"dq\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
+      }));
+      assert.ok((0, _testHelpers.find)('section'), 'component renders');
+      assert.dom('section .text-info').hasText('Data Quality #0', 'renders index heading');
+      assert.ok((0, _testHelpers.find)('section').textContent.indexOf('dataset') > -1, 'renders scope code');
+      assert.ok((0, _testHelpers.find)('section').textContent.indexOf('My Quality System') > -1, 'renders system identifier label');
+
+      // Template block usage:
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
+      /*
+        <section>
+            <Object::MdDataquality::Preview @item={{hash}} @index={{1}}>
+              template block text
+            </Object::MdDataquality::Preview></section>
+          
+      */
+      {
+        "id": "JV8eA78Y",
+        "block": "[[[10,\"section\"],[12],[1,\"\\n      \"],[8,[39,0],null,[[\"@item\",\"@index\"],[[99,1,[\"@item\"]],1]],[[\"default\"],[[[[1,\"\\n        template block text\\n      \"]],[]]]]],[13],[1,\"\\n    \"]],[],false,[\"object/md-dataquality/preview\",\"hash\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
+      }));
+      assert.dom('section .text-info').hasText('Data Quality #1', 'block form renders heading');
+    });
+  });
+});
+define("mdeditor/tests/integration/pods/components/object/md-date-array/component-test", ["@ember/template-factory", "@ember/test-helpers", "qunit", "ember-qunit"], function (_templateFactory, _testHelpers, _qunit, _emberQunit) {
+  "use strict";
+
+  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"@ember/template-factory"eaimeta@70e063a35619d71f
   (0, _qunit.module)('Integration | Component | object/md date array', function (hooks) {
     (0, _emberQunit.setupRenderingTest)(hooks);
     (0, _qunit.test)('it renders', async function (assert) {
       // Set any properties with this.set('myProperty', 'value');
       // Handle any actions with this.on('myAction', function(val) { ... });
 
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         {{object/md-date-array value=model profilePath="foobar"}}
       */
       {
-        id: "Ce/zxQyN",
-        block: "{\"symbols\":[],\"statements\":[[1,[28,\"object/md-date-array\",null,[[\"value\",\"profilePath\"],[[24,[\"model\"]],\"foobar\"]]],false]],\"hasEval\":false}",
-        meta: {}
+        "id": "CqFnUlIp",
+        "block": "[[[1,[28,[35,0],null,[[\"value\",\"profilePath\"],[[33,1],\"foobar\"]]]]],[],false,[\"object/md-date-array\",\"model\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
-      assert.equal(this.element.textContent.replace(/[ \n]+/g, '|').trim(), '|No|Date|found.|Add|Date|');
+      assert.equal(this.element.textContent.replace(/[ \n]+/g, '|').trim(), '|Dates|Add|#|Precision|Date|Date|Type|Description|Add|Date|');
       this.set('model', [{
         "date": "2016-10-12",
         "dateType": "dateType",
         description: 'description'
       }]);
-      assert.equal((0, _testHelpers.find)('.panel').textContent.replace(/[ \n]+/g, '|').trim(), '|Dates|1|Add|#|Date|Date|Type|Description|0|dateType|×|Delete|', 'item');
+      assert.equal((0, _testHelpers.find)('.panel').textContent.replace(/[ \n]+/g, '|').trim(), '|Dates|1|Add|#|Precision|Date|Date|Type|Description|0|Day|dateType|×|Delete|', 'item');
 
       // Template block usage:
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         
-            {{#object/md-date-array value=model profilePath="foobar"}}
+            <Object::MdDateArray @value={{model}} @profilePath="foobar">
               template block text
-            {{/object/md-date-array}}
+            </Object::MdDateArray>
           
       */
       {
-        id: "ZTcAMYtC",
-        block: "{\"symbols\":[],\"statements\":[[0,\"\\n\"],[4,\"object/md-date-array\",null,[[\"value\",\"profilePath\"],[[24,[\"model\"]],\"foobar\"]],{\"statements\":[[0,\"        template block text\\n\"]],\"parameters\":[]},null],[0,\"    \"]],\"hasEval\":false}",
-        meta: {}
+        "id": "0K0p192A",
+        "block": "[[[1,\"\\n      \"],[8,[39,0],null,[[\"@value\",\"@profilePath\"],[[99,1,[\"@value\"]],\"foobar\"]],[[\"default\"],[[[[1,\"\\n        template block text\\n      \"]],[]]]]],[1,\"\\n    \"]],[],false,[\"object/md-date-array\",\"model\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
-      assert.equal((0, _testHelpers.find)('.panel').textContent.replace(/[ \n]+/g, '|').trim(), '|Dates|1|Add|#|Date|Date|Type|Description|0|dateType|×|template|block|text|Delete|', 'block');
+      assert.equal((0, _testHelpers.find)('.panel').textContent.replace(/[ \n]+/g, '|').trim(), '|Dates|1|Add|#|Precision|Date|Date|Type|Description|0|Day|dateType|×|template|block|text|Delete|', 'block');
     });
   });
 });
-define("mdeditor/tests/integration/pods/components/object/md-date/component-test", ["@ember/test-helpers", "qunit", "ember-qunit"], function (_testHelpers, _qunit, _emberQunit) {
+define("mdeditor/tests/integration/pods/components/object/md-date/component-test", ["@ember/template-factory", "@ember/test-helpers", "qunit", "ember-qunit"], function (_templateFactory, _testHelpers, _qunit, _emberQunit) {
   "use strict";
 
-  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"htmlbars-inline-precompile"eaimeta@70e063a35619d71f
+  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"@ember/template-factory"eaimeta@70e063a35619d71f
   (0, _qunit.module)('Integration | Component | object/md date', function (hooks) {
     (0, _emberQunit.setupRenderingTest)(hooks);
     (0, _qunit.test)('it renders', async function (assert) {
       // Set any properties with this.set('myProperty', 'value');
 
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         <table><tr>{{object/md-date model=model profilePath="foobar"}}</tr></table>
       */
       {
-        id: "dIggkcq3",
-        block: "{\"symbols\":[],\"statements\":[[7,\"table\",true],[8],[7,\"tr\",true],[8],[1,[28,\"object/md-date\",null,[[\"model\",\"profilePath\"],[[24,[\"model\"]],\"foobar\"]]],false],[9],[9]],\"hasEval\":false}",
-        meta: {}
+        "id": "UPCYu/ZX",
+        "block": "[[[10,\"table\"],[12],[10,\"tr\"],[12],[1,[28,[35,0],null,[[\"model\",\"profilePath\"],[[33,1],\"foobar\"]]]],[13],[13]],[],false,[\"object/md-date\",\"model\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
-      assert.equal((0, _testHelpers.find)('table').textContent.replace(/[ \n]+/g, '|').trim(), "|Choose|date|type|");
+      assert.equal((0, _testHelpers.find)('table').textContent.replace(/[ \n]+/g, '|').trim(), "|Year|Choose|date|type|");
       this.set('model', {
         "date": "2016-10-12",
         "dateType": "dateType",
         description: 'description'
       });
-      assert.equal((0, _testHelpers.find)('table').textContent.replace(/[ \n]+/g, '|').trim(), "|dateType|×|");
+      assert.equal((0, _testHelpers.find)('table').textContent.replace(/[ \n]+/g, '|').trim(), "|Year|dateType|×|");
 
       // Template block usage:
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         <table><tr>
-            {{#object/md-date profilePath="foobar"}}
+            <Object::MdDate @profilePath="foobar">
               template block text
-            {{/object/md-date}}
+            </Object::MdDate>
           </tr></table>
       */
       {
-        id: "BmkCkQcZ",
-        block: "{\"symbols\":[],\"statements\":[[7,\"table\",true],[8],[7,\"tr\",true],[8],[0,\"\\n\"],[4,\"object/md-date\",null,[[\"profilePath\"],[\"foobar\"]],{\"statements\":[[0,\"        template block text\\n\"]],\"parameters\":[]},null],[0,\"    \"],[9],[9]],\"hasEval\":false}",
-        meta: {}
+        "id": "Sc5HKqwQ",
+        "block": "[[[10,\"table\"],[12],[10,\"tr\"],[12],[1,\"\\n      \"],[8,[39,0],null,[[\"@profilePath\"],[\"foobar\"]],[[\"default\"],[[[[1,\"\\n        template block text\\n      \"]],[]]]]],[1,\"\\n    \"],[13],[13]],[],false,[\"object/md-date\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
-      assert.equal((0, _testHelpers.find)('table').textContent.replace(/[ \n]+/g, '|').trim(), "|Choose|date|type|template|block|text|");
+      assert.equal((0, _testHelpers.find)('table').textContent.replace(/[ \n]+/g, '|').trim(), "|Year|Choose|date|type|template|block|text|");
     });
   });
 });
-define("mdeditor/tests/integration/pods/components/object/md-distribution/component-test", ["@ember/test-helpers", "qunit", "ember-qunit"], function (_testHelpers, _qunit, _emberQunit) {
+define("mdeditor/tests/integration/pods/components/object/md-distribution/component-test", ["@ember/template-factory", "@ember/test-helpers", "qunit", "ember-qunit"], function (_templateFactory, _testHelpers, _qunit, _emberQunit) {
   "use strict";
 
-  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"htmlbars-inline-precompile"eaimeta@70e063a35619d71f
+  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"@ember/template-factory"eaimeta@70e063a35619d71f
   (0, _qunit.module)('Integration | Component | object/md distribution', function (hooks) {
     (0, _emberQunit.setupRenderingTest)(hooks);
     (0, _qunit.test)('it renders', async function (assert) {
@@ -7078,19 +7393,20 @@ define("mdeditor/tests/integration/pods/components/object/md-distribution/compon
           }
         }]
       });
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         {{object/md-distribution model=model profilePath="foobar"}}
       */
       {
-        id: "IjVuDFEm",
-        block: "{\"symbols\":[],\"statements\":[[1,[28,\"object/md-distribution\",null,[[\"model\",\"profilePath\"],[[24,[\"model\"]],\"foobar\"]]],false]],\"hasEval\":false}",
-        meta: {}
+        "id": "tyOo36Db",
+        "block": "[[[1,[28,[35,0],null,[[\"model\",\"profilePath\"],[[33,1],\"foobar\"]]]]],[],false,[\"object/md-distribution\",\"model\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
-      assert.equal((0, _testHelpers.find)('section').textContent.replace(/[\s\n]+/g, '|').trim(), '|Distribution|#|Delete|Description|Liability|Statement|Distributors|2|Add|OK|#|Contacts|0|role|(|)|More...|Delete|1|role|(|)|More...|Delete|');
+      assert.equal((0, _testHelpers.find)('section').textContent.replace(/[\s\n]+/g, '|').trim(), '|Distribution|#|Description|Description|Liability|Statement|Liability|Statement|Distributors|2|Add|OK|#|Contacts|0|role|(|individualId0|)|More...|Delete|1|role|(|individualId0|)|More...|Delete|');
 
       // Template block usage:
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         
             {{#object/md-distribution model=model profilePath="foobar"}}
@@ -7099,21 +7415,22 @@ define("mdeditor/tests/integration/pods/components/object/md-distribution/compon
           
       */
       {
-        id: "Z9yg2Qxf",
-        block: "{\"symbols\":[],\"statements\":[[0,\"\\n\"],[4,\"object/md-distribution\",null,[[\"model\",\"profilePath\"],[[24,[\"model\"]],\"foobar\"]],{\"statements\":[[0,\"        template block text\\n\"]],\"parameters\":[]},null],[0,\"    \"]],\"hasEval\":false}",
-        meta: {}
+        "id": "DFfruxby",
+        "block": "[[[1,\"\\n\"],[6,[39,0],null,[[\"model\",\"profilePath\"],[[33,1],\"foobar\"]],[[\"default\"],[[[[1,\"        template block text\\n\"]],[]]]]],[1,\"    \"]],[],false,[\"object/md-distribution\",\"model\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
-      assert.equal((0, _testHelpers.find)('section').textContent.replace(/[\s\n]+/g, '|').trim(), '|Distribution|#|Delete|Description|Liability|Statement|Distributors|2|Add|OK|#|Contacts|0|role|(|)|More...|Delete|1|role|(|)|More...|Delete|', 'block and list');
+      assert.equal((0, _testHelpers.find)('section').textContent.replace(/[\s\n]+/g, '|').trim(), '|Distribution|#|Description|Description|Liability|Statement|Liability|Statement|Distributors|2|Add|OK|#|Contacts|0|role|(|individualId0|)|More...|Delete|1|role|(|individualId0|)|More...|Delete|', 'block and list');
     });
     (0, _qunit.skip)('call actions', async function (assert) {
       assert.expect(1);
     });
   });
 });
-define("mdeditor/tests/integration/pods/components/object/md-distributor/component-test", ["@ember/test-helpers", "qunit", "ember-qunit"], function (_testHelpers, _qunit, _emberQunit) {
+define("mdeditor/tests/integration/pods/components/object/md-distributor/component-test", ["@ember/template-factory", "@ember/test-helpers", "qunit", "ember-qunit"], function (_templateFactory, _testHelpers, _qunit, _emberQunit) {
   "use strict";
 
-  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"htmlbars-inline-precompile"eaimeta@70e063a35619d71f
+  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"@ember/template-factory"eaimeta@70e063a35619d71f
   (0, _qunit.module)('Integration | Component | object/md distributor', function (hooks) {
     (0, _emberQunit.setupRenderingTest)(hooks);
     (0, _qunit.test)('it renders', async function (assert) {
@@ -7143,19 +7460,20 @@ define("mdeditor/tests/integration/pods/components/object/md-distributor/compone
           "transferSize": 10.9
         }]
       });
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         {{object/md-distributor model=distributor profilePath="foobar"}}
       */
       {
-        id: "kde4eDLI",
-        block: "{\"symbols\":[],\"statements\":[[1,[28,\"object/md-distributor\",null,[[\"model\",\"profilePath\"],[[24,[\"distributor\"]],\"foobar\"]]],false]],\"hasEval\":false}",
-        meta: {}
+        "id": "0vUtz+Ou",
+        "block": "[[[1,[28,[35,0],null,[[\"model\",\"profilePath\"],[[33,1],\"foobar\"]]]]],[],false,[\"object/md-distributor\",\"distributor\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
-      assert.equal((0, _testHelpers.find)('form').textContent.replace(/[\s\n]+/g, '|').trim(), '|Contacts|Role|role|×|Transfer|Options|2|Add|OK|#|Size(mb)|Online?|Offline?|Format?|0|9.9|no|no|no|More...|Delete|1|10.9|no|no|no|More...|Delete|Order|Process|Fees|Planned|Availability|Ordering|Instructions|Turnaround|');
+      assert.equal((0, _testHelpers.find)('form').textContent.replace(/[\s\n]+/g, '|').trim(), '|Contacts|Role|role|×|Transfer|Options|2|Add|OK|#|Size(mb)|Online?|Offline?|Format?|0|9.9|no|no|no|More...|Delete|1|10.9|no|no|no|More...|Delete|Order|Process|Fees|Fees|Planned|Availability|Ordering|Instructions|Ordering|Instructions|Turnaround|Turnaround|');
 
       // Template block usage:
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         
             {{#object/md-distributor model=distributor profilePath="foobar"}}
@@ -7164,18 +7482,19 @@ define("mdeditor/tests/integration/pods/components/object/md-distributor/compone
           
       */
       {
-        id: "4L4t1mtP",
-        block: "{\"symbols\":[],\"statements\":[[0,\"\\n\"],[4,\"object/md-distributor\",null,[[\"model\",\"profilePath\"],[[24,[\"distributor\"]],\"foobar\"]],{\"statements\":[[0,\"        template block text\\n\"]],\"parameters\":[]},null],[0,\"    \"]],\"hasEval\":false}",
-        meta: {}
+        "id": "Q6IF1lBq",
+        "block": "[[[1,\"\\n\"],[6,[39,0],null,[[\"model\",\"profilePath\"],[[33,1],\"foobar\"]],[[\"default\"],[[[[1,\"        template block text\\n\"]],[]]]]],[1,\"    \"]],[],false,[\"object/md-distributor\",\"distributor\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
-      assert.equal((0, _testHelpers.find)('form').textContent.replace(/[\s\n]+/g, '|').trim(), '|Contacts|Role|role|×|Transfer|Options|2|Add|OK|#|Size(mb)|Online?|Offline?|Format?|0|9.9|no|no|no|More...|Delete|1|10.9|no|no|no|More...|Delete|Order|Process|Fees|Planned|Availability|Ordering|Instructions|Turnaround|template|block|text|', 'block');
+      assert.equal((0, _testHelpers.find)('form').textContent.replace(/[\s\n]+/g, '|').trim(), '|Contacts|Role|role|×|Transfer|Options|2|Add|OK|#|Size(mb)|Online?|Offline?|Format?|0|9.9|no|no|no|More...|Delete|1|10.9|no|no|no|More...|Delete|Order|Process|Fees|Fees|Planned|Availability|Ordering|Instructions|Ordering|Instructions|Turnaround|Turnaround|template|block|text|', 'block');
     });
   });
 });
-define("mdeditor/tests/integration/pods/components/object/md-distributor/preview/component-test", ["@ember/test-helpers", "qunit", "ember-qunit", "mdeditor/tests/helpers/create-contact"], function (_testHelpers, _qunit, _emberQunit, _createContact) {
+define("mdeditor/tests/integration/pods/components/object/md-distributor/preview/component-test", ["@ember/template-factory", "@ember/test-helpers", "qunit", "ember-qunit", "mdeditor/tests/helpers/create-contact"], function (_templateFactory, _testHelpers, _qunit, _emberQunit, _createContact) {
   "use strict";
 
-  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"htmlbars-inline-precompile",0,"mdeditor/tests/helpers/create-contact"eaimeta@70e063a35619d71f
+  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"mdeditor/tests/helpers/create-contact",0,"@ember/template-factory"eaimeta@70e063a35619d71f
   (0, _qunit.module)('Integration | Component | object/md distributor/preview', function (hooks) {
     (0, _emberQunit.setupRenderingTest)(hooks);
     (0, _qunit.test)('it renders', async function (assert) {
@@ -7209,19 +7528,20 @@ define("mdeditor/tests/integration/pods/components/object/md-distributor/preview
           "transferSize": 10.9
         }]
       });
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         {{object/md-distributor/preview item=distributor}}
       */
       {
-        id: "KKG8Y9pR",
-        block: "{\"symbols\":[],\"statements\":[[1,[28,\"object/md-distributor/preview\",null,[[\"item\"],[[24,[\"distributor\"]]]]],false]],\"hasEval\":false}",
-        meta: {}
+        "id": "OIGU3wOH",
+        "block": "[[[1,[28,[35,0],null,[[\"item\"],[[33,1]]]]]],[],false,[\"object/md-distributor/preview\",\"distributor\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       assert.equal(this.element.textContent.replace(/[\s\n]+/g, '|').trim(), '|role|(|Contact0|)|');
 
       // Template block usage:
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         
             {{#object/md-distributor/preview class="testme" item=distributor}}
@@ -7230,18 +7550,19 @@ define("mdeditor/tests/integration/pods/components/object/md-distributor/preview
           
       */
       {
-        id: "Hv2mqg4O",
-        block: "{\"symbols\":[],\"statements\":[[0,\"\\n\"],[4,\"object/md-distributor/preview\",null,[[\"class\",\"item\"],[\"testme\",[24,[\"distributor\"]]]],{\"statements\":[[0,\"        template block text\\n\"]],\"parameters\":[]},null],[0,\"    \"]],\"hasEval\":false}",
-        meta: {}
+        "id": "U8BApLHR",
+        "block": "[[[1,\"\\n\"],[6,[39,0],null,[[\"class\",\"item\"],[\"testme\",[33,1]]],[[\"default\"],[[[[1,\"        template block text\\n\"]],[]]]]],[1,\"    \"]],[],false,[\"object/md-distributor/preview\",\"distributor\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       assert.equal((0, _testHelpers.find)('.testme').textContent.replace(/[\s\n]+/g, '|').trim(), '|role|(|Contact0|)|template|block|text|');
     });
   });
 });
-define("mdeditor/tests/integration/pods/components/object/md-documentation/component-test", ["@ember/test-helpers", "qunit", "ember-qunit", "mdeditor/tests/helpers/create-citation"], function (_testHelpers, _qunit, _emberQunit, _createCitation) {
+define("mdeditor/tests/integration/pods/components/object/md-documentation/component-test", ["@ember/template-factory", "@ember/test-helpers", "qunit", "ember-qunit", "mdeditor/tests/helpers/create-citation"], function (_templateFactory, _testHelpers, _qunit, _emberQunit, _createCitation) {
   "use strict";
 
-  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"htmlbars-inline-precompile",0,"mdeditor/tests/helpers/create-citation"eaimeta@70e063a35619d71f
+  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"mdeditor/tests/helpers/create-citation",0,"@ember/template-factory"eaimeta@70e063a35619d71f
   (0, _qunit.module)('Integration | Component | object/md documentation', function (hooks) {
     (0, _emberQunit.setupRenderingTest)(hooks);
     (0, _qunit.test)('it renders', async function (assert) {
@@ -7253,39 +7574,41 @@ define("mdeditor/tests/integration/pods/components/object/md-documentation/compo
         }],
         citation: (0, _createCitation.default)(2)
       });
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         {{object/md-documentation profilePath="foobar" model=doc}}
       */
       {
-        id: "lK+RHGL3",
-        block: "{\"symbols\":[],\"statements\":[[1,[28,\"object/md-documentation\",null,[[\"profilePath\",\"model\"],[\"foobar\",[24,[\"doc\"]]]]],false]],\"hasEval\":false}",
-        meta: {}
+        "id": "V8kmLhIm",
+        "block": "[[[1,[28,[35,0],null,[[\"profilePath\",\"model\"],[\"foobar\",[33,1]]]]]],[],false,[\"object/md-documentation\",\"doc\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
-      assert.equal((0, _testHelpers.find)('form').textContent.replace(/[\s\n]+/g, '|').trim(), '|Resource|Types|1|Add|#|Type|Name|0|foo|×|Delete|Basic|Information|Title|Alternate|Titles|2|Add|Alternate|Title|0|Delete|1|Delete|Dates|2|Add|Date|#|Date|Date|Type|Description|0|dateType|×|Delete|1|dateType|×|Delete|Edition|Presentation|Form|×|presentationForm0|×|presentationForm1|Responsible|Parties|2|Add|#|Role|Contacts|0|role|×|Delete|1|role|×|Delete|Online|Resource|2|Add|OK|#|Name|Uri|0|Not|Defined|http://adiwg.org|Edit|Delete|1|Not|Defined|http://mdeditor.org|Edit|Delete|Identifier|2|Add|OK|#|Identifier|Namespace|Description|0|identifier0|Not|Defined|Not|Defined|More...|Delete|1|identifier-0|Not|Defined|Not|Defined|More...|Delete|Identifier|2|Add|OK|#|Identifier|Namespace|0|identifier0|Not|Defined|Edit|Delete|1|identifier-0|Not|Defined|Edit|Delete|Identifier|2|Add|OK|#|Identifier|Namespace|0|identifier0|Not|Defined|Edit|Delete|1|identifier-0|Not|Defined|Edit|Delete|Series|Name|Issue|Page|Other|Details|2|Add|0|Delete|1|Delete|Graphic|2|Add|OK|0|fileName:|Edit|Delete|1|fileName:|Edit|Delete|');
+      assert.equal((0, _testHelpers.find)('form').textContent.replace(/[\s\n]+/g, '|').trim(), '|Resource|Types|1|Add|#|Type|Name|0|foo|×|Delete|Basic|Information|Title|Alternate|Titles|2|Add|Alternate|Title|0|Delete|1|Delete|Dates|2|Add|Date|#|Precision|Date|Date|Type|Description|0|Day|dateType|×|Delete|1|Day|dateType|×|Delete|Edition|Presentation|Form|×|presentationForm0|×|presentationForm1|Responsible|Parties|2|Add|#|Role|Contacts|0|role|×|Delete|1|role|×|Delete|Online|Resource|2|Add|OK|#|Name|Uri|0|Not|Defined|http://adiwg.org|Edit|Delete|1|Not|Defined|http://mdeditor.org|Edit|Delete|Identifier|2|Add|OK|#|Identifier|Namespace|Description|0|identifier0|Not|Defined|Not|Defined|More...|Delete|1|identifier-0|Not|Defined|Not|Defined|More...|Delete|Identifier|2|Add|OK|#|Identifier|Namespace|Description|0|identifier0|Not|Defined|Not|Defined|Edit|Delete|1|identifier-0|Not|Defined|Not|Defined|Edit|Delete|Identifier|2|Add|OK|#|Identifier|Namespace|Description|0|identifier0|Not|Defined|Not|Defined|Edit|Delete|1|identifier-0|Not|Defined|Not|Defined|Edit|Delete|Series|Name|Issue|Page|Other|Details|2|Add|0|Delete|1|Delete|Graphic|2|Add|OK|0|fileName:|Edit|Delete|1|fileName:|Edit|Delete|');
 
       // Template block usage:
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         
-            {{#object/md-documentation profilePath="foobar" model=doc}}
+            <Object::MdDocumentation @profilePath="foobar" @model={{doc}}>
               template block text
-            {{/object/md-documentation}}
+            </Object::MdDocumentation>
           
       */
       {
-        id: "B4gRASXT",
-        block: "{\"symbols\":[],\"statements\":[[0,\"\\n\"],[4,\"object/md-documentation\",null,[[\"profilePath\",\"model\"],[\"foobar\",[24,[\"doc\"]]]],{\"statements\":[[0,\"        template block text\\n\"]],\"parameters\":[]},null],[0,\"    \"]],\"hasEval\":false}",
-        meta: {}
+        "id": "n6dyVZCf",
+        "block": "[[[1,\"\\n      \"],[8,[39,0],null,[[\"@profilePath\",\"@model\"],[\"foobar\",[99,1,[\"@model\"]]]],[[\"default\"],[[[[1,\"\\n        template block text\\n      \"]],[]]]]],[1,\"\\n    \"]],[],false,[\"object/md-documentation\",\"doc\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
-      assert.equal((0, _testHelpers.find)('form').textContent.replace(/[\s\n]+/g, '|').trim(), '|Resource|Types|1|Add|#|Type|Name|0|foo|×|Delete|Basic|Information|Title|Alternate|Titles|2|Add|Alternate|Title|0|Delete|1|Delete|Dates|2|Add|Date|#|Date|Date|Type|Description|0|dateType|×|Delete|1|dateType|×|Delete|Edition|Presentation|Form|×|presentationForm0|×|presentationForm1|Responsible|Parties|2|Add|#|Role|Contacts|0|role|×|Delete|1|role|×|Delete|Online|Resource|2|Add|OK|#|Name|Uri|0|Not|Defined|http://adiwg.org|Edit|Delete|1|Not|Defined|http://mdeditor.org|Edit|Delete|Identifier|2|Add|OK|#|Identifier|Namespace|Description|0|identifier0|Not|Defined|Not|Defined|More...|Delete|1|identifier-0|Not|Defined|Not|Defined|More...|Delete|Identifier|2|Add|OK|#|Identifier|Namespace|0|identifier0|Not|Defined|Edit|Delete|1|identifier-0|Not|Defined|Edit|Delete|Identifier|2|Add|OK|#|Identifier|Namespace|0|identifier0|Not|Defined|Edit|Delete|1|identifier-0|Not|Defined|Edit|Delete|Series|Name|Issue|Page|Other|Details|2|Add|0|Delete|1|Delete|Graphic|2|Add|OK|0|fileName:|Edit|Delete|1|fileName:|Edit|Delete|template|block|text|', 'block');
+      assert.equal((0, _testHelpers.find)('form').textContent.replace(/[\s\n]+/g, '|').trim(), '|Resource|Types|1|Add|#|Type|Name|0|foo|×|Delete|Basic|Information|Title|Alternate|Titles|2|Add|Alternate|Title|0|Delete|1|Delete|Dates|2|Add|Date|#|Precision|Date|Date|Type|Description|0|Day|dateType|×|Delete|1|Day|dateType|×|Delete|Edition|Presentation|Form|×|presentationForm0|×|presentationForm1|Responsible|Parties|2|Add|#|Role|Contacts|0|role|×|Delete|1|role|×|Delete|Online|Resource|2|Add|OK|#|Name|Uri|0|Not|Defined|http://adiwg.org|Edit|Delete|1|Not|Defined|http://mdeditor.org|Edit|Delete|Identifier|2|Add|OK|#|Identifier|Namespace|Description|0|identifier0|Not|Defined|Not|Defined|More...|Delete|1|identifier-0|Not|Defined|Not|Defined|More...|Delete|Identifier|2|Add|OK|#|Identifier|Namespace|Description|0|identifier0|Not|Defined|Not|Defined|Edit|Delete|1|identifier-0|Not|Defined|Not|Defined|Edit|Delete|Identifier|2|Add|OK|#|Identifier|Namespace|Description|0|identifier0|Not|Defined|Not|Defined|Edit|Delete|1|identifier-0|Not|Defined|Not|Defined|Edit|Delete|Series|Name|Issue|Page|Other|Details|2|Add|0|Delete|1|Delete|Graphic|2|Add|OK|0|fileName:|Edit|Delete|1|fileName:|Edit|Delete|template|block|text|', 'block');
     });
   });
 });
-define("mdeditor/tests/integration/pods/components/object/md-documentation/preview/component-test", ["@ember/test-helpers", "qunit", "ember-qunit", "mdeditor/tests/helpers/create-citation"], function (_testHelpers, _qunit, _emberQunit, _createCitation) {
+define("mdeditor/tests/integration/pods/components/object/md-documentation/preview/component-test", ["@ember/template-factory", "@ember/test-helpers", "qunit", "ember-qunit", "mdeditor/tests/helpers/create-citation"], function (_templateFactory, _testHelpers, _qunit, _emberQunit, _createCitation) {
   "use strict";
 
-  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"htmlbars-inline-precompile",0,"mdeditor/tests/helpers/create-citation"eaimeta@70e063a35619d71f
+  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"mdeditor/tests/helpers/create-citation",0,"@ember/template-factory"eaimeta@70e063a35619d71f
   (0, _qunit.module)('Integration | Component | object/md documentation/preview', function (hooks) {
     (0, _emberQunit.setupRenderingTest)(hooks);
     (0, _qunit.test)('it renders', async function (assert) {
@@ -7297,77 +7620,81 @@ define("mdeditor/tests/integration/pods/components/object/md-documentation/previ
         }],
         citation: (0, _createCitation.default)(2)
       });
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         {{object/md-documentation/preview item=doc}}
       */
       {
-        id: "d1q6QYMQ",
-        block: "{\"symbols\":[],\"statements\":[[1,[28,\"object/md-documentation/preview\",null,[[\"item\"],[[24,[\"doc\"]]]]],false]],\"hasEval\":false}",
-        meta: {}
+        "id": "Vx0BE+3C",
+        "block": "[[[1,[28,[35,0],null,[[\"item\"],[[33,1]]]]]],[],false,[\"object/md-documentation/preview\",\"doc\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
-      assert.equal((0, _testHelpers.find)('.text-muted').textContent.replace(/[\s\n]+/g, '|').trim(), '|Document|#|Resource|Type(s)|foo:|bar|Title|title0|Alternate|Titles|alternateTitle0|alternateTitle1|Dates|October|13th|2016|(dateType)|October|22nd|2016|(dateType)|Identifier|identifier0|identifier-0|Responsible|Party|role|(|)|role|(|)|');
+      assert.equal((0, _testHelpers.find)('.text-muted').textContent.replace(/[\s\n]+/g, '|').trim(), '|Document|#|Resource|Type(s)|foo:|bar|Title|title0|Alternate|Titles|alternateTitle0|alternateTitle1|Dates|2016-10-13|(dateType)|2016-10-22|(dateType)|Identifier|identifier0|identifier-0|Responsible|Party|role|(|individualId0|)|role|(|individualId0|)|');
 
       // Template block usage:
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         
-            {{#object/md-documentation/preview class="testme" item=doc}}
+            <Object::MdDocumentation::Preview @class="testme" @item={{doc}}>
               template block text
-            {{/object/md-documentation/preview}}
+            </Object::MdDocumentation::Preview>
           
       */
       {
-        id: "9RRr8EXK",
-        block: "{\"symbols\":[],\"statements\":[[0,\"\\n\"],[4,\"object/md-documentation/preview\",null,[[\"class\",\"item\"],[\"testme\",[24,[\"doc\"]]]],{\"statements\":[[0,\"        template block text\\n\"]],\"parameters\":[]},null],[0,\"    \"]],\"hasEval\":false}",
-        meta: {}
+        "id": "DXIIyeT5",
+        "block": "[[[1,\"\\n      \"],[8,[39,0],null,[[\"@class\",\"@item\"],[\"testme\",[99,1,[\"@item\"]]]],[[\"default\"],[[[[1,\"\\n        template block text\\n      \"]],[]]]]],[1,\"\\n    \"]],[],false,[\"object/md-documentation/preview\",\"doc\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
-      assert.equal((0, _testHelpers.find)('.testme').textContent.replace(/[\s\n]+/g, '|').trim(), '|Document|#|Resource|Type(s)|foo:|bar|Title|title0|Alternate|Titles|alternateTitle0|alternateTitle1|Dates|October|13th|2016|(dateType)|October|22nd|2016|(dateType)|Identifier|identifier0|identifier-0|Responsible|Party|role|(|)|role|(|)|', 'block');
+      assert.equal((0, _testHelpers.find)('.testme').textContent.replace(/[\s\n]+/g, '|').trim(), '|Document|#|Resource|Type(s)|foo:|bar|Title|title0|Alternate|Titles|alternateTitle0|alternateTitle1|Dates|2016-10-13|(dateType)|2016-10-22|(dateType)|Identifier|identifier0|identifier-0|Responsible|Party|role|(|individualId0|)|role|(|individualId0|)|', 'block');
     });
   });
 });
-define("mdeditor/tests/integration/pods/components/object/md-domain/component-test", ["@ember/test-helpers", "qunit", "ember-qunit", "mdeditor/tests/helpers/create-dictionary"], function (_testHelpers, _qunit, _emberQunit, _createDictionary) {
+define("mdeditor/tests/integration/pods/components/object/md-domain/component-test", ["@ember/template-factory", "@ember/test-helpers", "qunit", "ember-qunit", "mdeditor/tests/helpers/create-dictionary"], function (_templateFactory, _testHelpers, _qunit, _emberQunit, _createDictionary) {
   "use strict";
 
-  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"htmlbars-inline-precompile",0,"mdeditor/tests/helpers/create-dictionary"eaimeta@70e063a35619d71f
+  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"mdeditor/tests/helpers/create-dictionary",0,"@ember/template-factory"eaimeta@70e063a35619d71f
   (0, _qunit.module)('Integration | Component | object/md domain', function (hooks) {
     (0, _emberQunit.setupRenderingTest)(hooks);
     (0, _qunit.test)('it renders', async function (assert) {
       // Set any properties with this.set('myProperty', 'value');
       this.set('domain', (0, _createDictionary.createDomain)(1)[0]);
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         {{object/md-domain profilePath="foobar" model=domain}}
       */
       {
-        id: "iBmZeHij",
-        block: "{\"symbols\":[],\"statements\":[[1,[28,\"object/md-domain\",null,[[\"profilePath\",\"model\"],[\"foobar\",[24,[\"domain\"]]]]],false]],\"hasEval\":false}",
-        meta: {}
+        "id": "9QBcgNHc",
+        "block": "[[[1,[28,[35,0],null,[[\"profilePath\",\"model\"],[\"foobar\",[33,1]]]]]],[],false,[\"object/md-domain\",\"domain\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
-      assert.equal((0, _testHelpers.find)('form').textContent.replace(/[\s\n]+/g, '|').trim(), '|Domain|Information|Domain|Identifier|Code|Name|Common|Name|Description|Domain|Items|1|Add|OK|#|Domain|Item|Name|Value|Definition|0|More...|Delete|Domain|Reference|Edit|Title|Not|Defined|Alternate|Titles|No|alternate|titles|assigned.|Dates|No|dates|assigned.|Identifier|No|identifiers|assigned.|Responsible|Party|No|responsibility|assigned.|Edit|Citation|');
+      assert.equal((0, _testHelpers.find)('form').textContent.replace(/[\s\n]+/g, '|').trim(), '|Domain|Information|Domain|Identifier|Code|Name|Common|Name|Description|Description|Domain|Items|1|Add|OK|#|Domain|Item|Name|Value|Definition|0|More...|Delete|Domain|Reference|Edit|Title|Not|Defined|Alternate|Titles|No|alternate|titles|assigned.|Dates|No|dates|assigned.|Identifier|No|identifiers|assigned.|Responsible|Party|No|responsibility|assigned.|Edit|Citation|');
 
       // Template block usage:
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         
-            {{#object/md-domain profilePath="foobar" model=domain}}
+            <Object::MdDomain @profilePath="foobar" @model={{domain}}>
               template block text
-            {{/object/md-domain}}
+            </Object::MdDomain>
           
       */
       {
-        id: "HY2/r6Qe",
-        block: "{\"symbols\":[],\"statements\":[[0,\"\\n\"],[4,\"object/md-domain\",null,[[\"profilePath\",\"model\"],[\"foobar\",[24,[\"domain\"]]]],{\"statements\":[[0,\"        template block text\\n\"]],\"parameters\":[]},null],[0,\"    \"]],\"hasEval\":false}",
-        meta: {}
+        "id": "JWWbNXxm",
+        "block": "[[[1,\"\\n      \"],[8,[39,0],null,[[\"@profilePath\",\"@model\"],[\"foobar\",[99,1,[\"@model\"]]]],[[\"default\"],[[[[1,\"\\n        template block text\\n      \"]],[]]]]],[1,\"\\n    \"]],[],false,[\"object/md-domain\",\"domain\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
-      assert.equal((0, _testHelpers.find)('form').textContent.replace(/[\s\n]+/g, '|').trim(), '|Domain|Information|Domain|Identifier|Code|Name|Common|Name|Description|Domain|Items|1|Add|OK|#|Domain|Item|Name|Value|Definition|0|More...|Delete|Domain|Reference|Edit|Title|Not|Defined|Alternate|Titles|No|alternate|titles|assigned.|Dates|No|dates|assigned.|Identifier|No|identifiers|assigned.|Responsible|Party|No|responsibility|assigned.|Edit|Citation|', 'block');
+      assert.equal((0, _testHelpers.find)('form').textContent.replace(/[\s\n]+/g, '|').trim(), '|Domain|Information|Domain|Identifier|Code|Name|Common|Name|Description|Description|Domain|Items|1|Add|OK|#|Domain|Item|Name|Value|Definition|0|More...|Delete|Domain|Reference|Edit|Title|Not|Defined|Alternate|Titles|No|alternate|titles|assigned.|Dates|No|dates|assigned.|Identifier|No|identifiers|assigned.|Responsible|Party|No|responsibility|assigned.|Edit|Citation|', 'block');
     });
   });
 });
-define("mdeditor/tests/integration/pods/components/object/md-domainitem/component-test", ["@ember/test-helpers", "qunit", "ember-qunit"], function (_testHelpers, _qunit, _emberQunit) {
+define("mdeditor/tests/integration/pods/components/object/md-domainitem/component-test", ["@ember/template-factory", "@ember/test-helpers", "qunit", "ember-qunit"], function (_templateFactory, _testHelpers, _qunit, _emberQunit) {
   "use strict";
 
-  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"htmlbars-inline-precompile"eaimeta@70e063a35619d71f
+  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"@ember/template-factory"eaimeta@70e063a35619d71f
   (0, _qunit.module)('Integration | Component | object/md domainitem', function (hooks) {
     (0, _emberQunit.setupRenderingTest)(hooks);
     (0, _qunit.test)('it renders', async function (assert) {
@@ -7380,19 +7707,20 @@ define("mdeditor/tests/integration/pods/components/object/md-domainitem/componen
           "title": "domainReference"
         }
       });
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         {{object/md-domainitem profilePath="foobar" model=item}}
       */
       {
-        id: "DQCyHSmh",
-        block: "{\"symbols\":[],\"statements\":[[1,[28,\"object/md-domainitem\",null,[[\"profilePath\",\"model\"],[\"foobar\",[24,[\"item\"]]]]],false]],\"hasEval\":false}",
-        meta: {}
+        "id": "qWtpBNF6",
+        "block": "[[[1,[28,[35,0],null,[[\"profilePath\",\"model\"],[\"foobar\",[33,1]]]]]],[],false,[\"object/md-domainitem\",\"item\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
-      assert.equal((0, _testHelpers.find)('form').textContent.replace(/[\s\n]+/g, '|').trim(), '|Name|Value|Definition|Item|Reference|Basic|Information|Title|No|Alternate|Title|found.|Add|Alternate|Title|No|Date|found.|Add|Date|No|Responsible|Party|found.|Add|Responsible|Party|No|Online|Resource|found.|Add|Online|Resource|No|Identifier|found.|Add|Identifier|No|Identifier|found.|Add|Identifier|No|Identifier|found.|Add|Identifier|');
+      assert.equal((0, _testHelpers.find)('form').textContent.replace(/[\s\n]+/g, '|').trim(), '|Name|Value|Definition|Definition|Item|Reference|Basic|Information|Title|No|Alternate|Title|found.|Add|Alternate|Title|No|Date|found.|Add|Date|No|Responsible|Party|found.|Add|Responsible|Party|No|Online|Resource|found.|Add|Online|Resource|No|Identifier|found.|Add|Identifier|No|Identifier|found.|Add|Identifier|No|Identifier|found.|Add|Identifier|');
 
       // Template block usage:
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         
             {{#object/md-domainitem profilePath="foobar" model=(hash)}}
@@ -7401,18 +7729,19 @@ define("mdeditor/tests/integration/pods/components/object/md-domainitem/componen
           
       */
       {
-        id: "X6RAna9g",
-        block: "{\"symbols\":[],\"statements\":[[0,\"\\n\"],[4,\"object/md-domainitem\",null,[[\"profilePath\",\"model\"],[\"foobar\",[28,\"hash\",null,null]]],{\"statements\":[[0,\"        template block text\\n\"]],\"parameters\":[]},null],[0,\"    \"]],\"hasEval\":false}",
-        meta: {}
+        "id": "x7LlKIvC",
+        "block": "[[[1,\"\\n\"],[6,[39,0],null,[[\"profilePath\",\"model\"],[\"foobar\",[28,[37,1],null,null]]],[[\"default\"],[[[[1,\"        template block text\\n\"]],[]]]]],[1,\"    \"]],[],false,[\"object/md-domainitem\",\"hash\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
-      assert.equal((0, _testHelpers.find)('form').textContent.replace(/[\s\n]+/g, '|').trim(), '|Name|Value|Definition|Item|Reference|Basic|Information|Title|No|Alternate|Title|found.|Add|Alternate|Title|No|Date|found.|Add|Date|No|Responsible|Party|found.|Add|Responsible|Party|No|Online|Resource|found.|Add|Online|Resource|No|Identifier|found.|Add|Identifier|No|Identifier|found.|Add|Identifier|No|Identifier|found.|Add|Identifier|', 'block');
+      assert.equal((0, _testHelpers.find)('form').textContent.replace(/[\s\n]+/g, '|').trim(), '|Name|Value|Definition|Definition|Item|Reference|Basic|Information|Title|No|Alternate|Title|found.|Add|Alternate|Title|No|Date|found.|Add|Date|No|Responsible|Party|found.|Add|Responsible|Party|No|Online|Resource|found.|Add|Online|Resource|No|Identifier|found.|Add|Identifier|No|Identifier|found.|Add|Identifier|No|Identifier|found.|Add|Identifier|', 'block');
     });
   });
 });
-define("mdeditor/tests/integration/pods/components/object/md-domainitem/preview/component-test", ["@ember/test-helpers", "qunit", "ember-qunit"], function (_testHelpers, _qunit, _emberQunit) {
+define("mdeditor/tests/integration/pods/components/object/md-domainitem/preview/component-test", ["@ember/template-factory", "@ember/test-helpers", "qunit", "ember-qunit"], function (_templateFactory, _testHelpers, _qunit, _emberQunit) {
   "use strict";
 
-  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"htmlbars-inline-precompile"eaimeta@70e063a35619d71f
+  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"@ember/template-factory"eaimeta@70e063a35619d71f
   (0, _qunit.module)('Integration | Component | object/md domainitem/preview', function (hooks) {
     (0, _emberQunit.setupRenderingTest)(hooks);
     (0, _qunit.test)('it renders', async function (assert) {
@@ -7425,14 +7754,15 @@ define("mdeditor/tests/integration/pods/components/object/md-domainitem/preview/
           "title": "domainReference"
         }
       });
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         {{object/md-domainitem/preview profilePath="foobar" model=item tagName="table"}}
       */
       {
-        id: "p03DaPWz",
-        block: "{\"symbols\":[],\"statements\":[[1,[28,\"object/md-domainitem/preview\",null,[[\"profilePath\",\"model\",\"tagName\"],[\"foobar\",[24,[\"item\"]],\"table\"]]],false]],\"hasEval\":false}",
-        meta: {}
+        "id": "6DH1MTp0",
+        "block": "[[[1,[28,[35,0],null,[[\"profilePath\",\"model\",\"tagName\"],[\"foobar\",[33,1],\"table\"]]]]],[],false,[\"object/md-domainitem/preview\",\"item\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       assert.equal((0, _testHelpers.findAll)('input').length, 3);
       assert.equal((0, _testHelpers.findAll)('input')[0].value, 'name0', 'name');
@@ -7440,92 +7770,96 @@ define("mdeditor/tests/integration/pods/components/object/md-domainitem/preview/
       assert.equal((0, _testHelpers.findAll)('input')[2].value, 'definition0', 'definition');
 
       // Template block usage:
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         
-            {{#object/md-domainitem/preview profilePath="foobar" model=item tagName="table"}}
+            <Object::MdDomainitem::Preview @profilePath="foobar" @model={{item}} @tagName="table">
               template block text
-            {{/object/md-domainitem/preview}}
+            </Object::MdDomainitem::Preview>
           
       */
       {
-        id: "xpy0yCpN",
-        block: "{\"symbols\":[],\"statements\":[[0,\"\\n\"],[4,\"object/md-domainitem/preview\",null,[[\"profilePath\",\"model\",\"tagName\"],[\"foobar\",[24,[\"item\"]],\"table\"]],{\"statements\":[[0,\"        template block text\\n\"]],\"parameters\":[]},null],[0,\"    \"]],\"hasEval\":false}",
-        meta: {}
+        "id": "YG4UKfAz",
+        "block": "[[[1,\"\\n      \"],[8,[39,0],null,[[\"@profilePath\",\"@model\",\"@tagName\"],[\"foobar\",[99,1,[\"@model\"]],\"table\"]],[[\"default\"],[[[[1,\"\\n        template block text\\n      \"]],[]]]]],[1,\"\\n    \"]],[],false,[\"object/md-domainitem/preview\",\"item\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       assert.equal((0, _testHelpers.find)('table').textContent.replace(/[\s\n]+/g, '|').trim(), '|', 'block');
     });
   });
 });
-define("mdeditor/tests/integration/pods/components/object/md-entity/component-test", ["@ember/test-helpers", "qunit", "ember-qunit", "mdeditor/tests/helpers/create-dictionary"], function (_testHelpers, _qunit, _emberQunit, _createDictionary) {
+define("mdeditor/tests/integration/pods/components/object/md-entity/component-test", ["@ember/template-factory", "@ember/test-helpers", "qunit", "ember-qunit", "mdeditor/tests/helpers/create-dictionary"], function (_templateFactory, _testHelpers, _qunit, _emberQunit, _createDictionary) {
   "use strict";
 
-  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"htmlbars-inline-precompile",0,"mdeditor/tests/helpers/create-dictionary"eaimeta@70e063a35619d71f
+  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"mdeditor/tests/helpers/create-dictionary",0,"@ember/template-factory"eaimeta@70e063a35619d71f
   (0, _qunit.module)('Integration | Component | object/md entity', function (hooks) {
     (0, _emberQunit.setupRenderingTest)(hooks);
     (0, _qunit.test)('it renders', async function (assert) {
       // Set any properties with this.set('myProperty', 'value');
       this.set('dictionary', (0, _createDictionary.createDictionary)(1)[0].json.dataDictionary);
       this.set('entity', this.dictionary.entity[0]);
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         {{object/md-entity dictionary=dictionary profilePath="foobar" model=entity}}
       */
       {
-        id: "VfNF51Hq",
-        block: "{\"symbols\":[],\"statements\":[[1,[28,\"object/md-entity\",null,[[\"dictionary\",\"profilePath\",\"model\"],[[24,[\"dictionary\"]],\"foobar\",[24,[\"entity\"]]]]],false]],\"hasEval\":false}",
-        meta: {}
+        "id": "rUrBjWNN",
+        "block": "[[[1,[28,[35,0],null,[[\"dictionary\",\"profilePath\",\"model\"],[[33,1],\"foobar\",[33,2]]]]]],[],false,[\"object/md-entity\",\"dictionary\",\"entity\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
-      assert.equal((0, _testHelpers.find)('form').textContent.replace(/[\s\n]+/g, '|').trim(), '|Entity|Information|Entity|Identifier|Code|Name|Definition|Common|Name|Aliases|2|Add|Alias|0|Delete|1|Delete|Attributes|3|Add|OK|#|Attribute|Name|Data|Type|Definition|Allow|Null?|0|dataType0|×|More...|Delete|1|dataType1|×|More...|Delete|2|dataType2|×|More...|Delete|Entity|Structure|Field|Separator|Character|#|Header|Lines|Quote|Character|Entity|Keys|Primary|Key|Attributes|×|primaryKeyAttributeCodeName0-0|×|primaryKeyAttributeCodeName1-0|Foreign|Keys|1|Add|Foreign|Key|#|Local|Attributes|Referenced|Entity|Referenced|Attributes|0|×|attributeCommonName0-0|referencedEntityCodeName00|×|×|referencedAttributeCodeName0-0|Delete|Entity|Indices|1|Add|#|Name|Attributes|Duplicates?|0|×|attributeCodeName0-0|?|Delete|No|Entity|Reference|found.|Add|Entity|Reference|');
+      assert.equal((0, _testHelpers.find)('form').textContent.replace(/[\s\n]+/g, '|').trim(), '|Entity|Information|Entity|Identifier|Code|Name|Definition|Definition|Common|Name|Aliases|2|Add|Alias|0|Delete|1|Delete|Attributes|3|Add|OK|#|Attribute|Name|Data|Type|Definition|Allow|Null?|0|dataType0|×|More...|Delete|1|dataType1|×|More...|Delete|2|dataType2|×|More...|Delete|Entity|Structure|Field|Separator|Character|#|Header|Lines|Quote|Character|Entity|Keys|Primary|Key|Attributes|×|primaryKeyAttributeCodeName0-0|×|primaryKeyAttributeCodeName1-0|Foreign|Keys|1|Add|Foreign|Key|#|Local|Attributes|Referenced|Entity|Referenced|Attributes|0|×|attributeCommonName0-0|referencedEntityCodeName00|×|×|referencedAttributeCodeName0-0|Delete|Entity|Indices|1|Add|#|Name|Attributes|Duplicates?|0|×|attributeCodeName0-0|?|Delete|No|Entity|Reference|found.|Add|Entity|Reference|');
       assert.dom('.md-indicator-related').isVisible({
         count: 2
       });
 
       // Template block usage:
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         
-            {{#object/md-entity dictionary=(hash) profilePath="foobar" model=(hash)}}
+            <Object::MdEntity @dictionary={{hash}} @profilePath="foobar" @model={{hash}}>
               template block text
-            {{/object/md-entity}}
+            </Object::MdEntity>
           
       */
       {
-        id: "Lw1Zxth9",
-        block: "{\"symbols\":[],\"statements\":[[0,\"\\n\"],[4,\"object/md-entity\",null,[[\"dictionary\",\"profilePath\",\"model\"],[[28,\"hash\",null,null],\"foobar\",[28,\"hash\",null,null]]],{\"statements\":[[0,\"        template block text\\n\"]],\"parameters\":[]},null],[0,\"    \"]],\"hasEval\":false}",
-        meta: {}
+        "id": "zWmoIpO8",
+        "block": "[[[1,\"\\n      \"],[8,[39,0],null,[[\"@dictionary\",\"@profilePath\",\"@model\"],[[99,1,[\"@dictionary\"]],\"foobar\",[99,1,[\"@model\"]]]],[[\"default\"],[[[[1,\"\\n        template block text\\n      \"]],[]]]]],[1,\"\\n    \"]],[],false,[\"object/md-entity\",\"hash\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
-      assert.equal((0, _testHelpers.find)('form').textContent.replace(/[\s\n]+/g, '|').trim(), '|Entity|Information|Entity|Identifier|Code|Name|Definition|Common|Name|No|Alias|found.|Add|Alias|No|Attributes|found.|Add|Attribute|Entity|Structure|Field|Separator|Character|#|Header|Lines|Quote|Character|Entity|Keys|Primary|Key|Attributes|No|Foreign|Key|found.|Add|Foreign|Key|No|Entity|Index|found.|Add|Entity|Index|No|Entity|Reference|found.|Add|Entity|Reference|', 'block');
+      assert.equal((0, _testHelpers.find)('form').textContent.replace(/[\s\n]+/g, '|').trim(), '|Entity|Information|Entity|Identifier|Code|Name|Definition|Definition|Common|Name|No|Alias|found.|Add|Alias|No|Attributes|found.|Add|Attribute|Entity|Structure|Field|Separator|Character|#|Header|Lines|Quote|Character|Entity|Keys|Primary|Key|Attributes|No|Foreign|Key|found.|Add|Foreign|Key|No|Entity|Index|found.|Add|Entity|Index|No|Entity|Reference|found.|Add|Entity|Reference|', 'block');
     });
   });
 });
-define("mdeditor/tests/integration/pods/components/object/md-extent/component-test", ["qunit", "ember-qunit", "@ember/test-helpers", "mdeditor/tests/helpers/create-extent"], function (_qunit, _emberQunit, _testHelpers, _createExtent) {
+define("mdeditor/tests/integration/pods/components/object/md-extent/component-test", ["@ember/template-factory", "qunit", "ember-qunit", "@ember/test-helpers", "mdeditor/tests/helpers/create-extent"], function (_templateFactory, _qunit, _emberQunit, _testHelpers, _createExtent) {
   "use strict";
 
-  0; //eaimeta@70e063a35619d71f0,"qunit",0,"ember-qunit",0,"@ember/test-helpers",0,"htmlbars-inline-precompile",0,"mdeditor/tests/helpers/create-extent"eaimeta@70e063a35619d71f
+  0; //eaimeta@70e063a35619d71f0,"qunit",0,"ember-qunit",0,"@ember/test-helpers",0,"mdeditor/tests/helpers/create-extent",0,"@ember/template-factory"eaimeta@70e063a35619d71f
   (0, _qunit.module)('Integration | Component | object/md-extent', function (hooks) {
     (0, _emberQunit.setupRenderingTest)(hooks);
     (0, _qunit.test)('it renders', async function (assert) {
       assert.expect(9);
       // Set any properties with this.set('myProperty', 'value');
       this.set('model', (0, _createExtent.default)(1)[0]);
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         {{object/md-extent profilePath="foobar" extent=model}}
       */
       {
-        id: "fs1CjFbQ",
-        block: "{\"symbols\":[],\"statements\":[[1,[28,\"object/md-extent\",null,[[\"profilePath\",\"extent\"],[\"foobar\",[24,[\"model\"]]]]],false]],\"hasEval\":false}",
-        meta: {}
+        "id": "F/+hJCqR",
+        "block": "[[[1,[28,[35,0],null,[[\"profilePath\",\"extent\"],[\"foobar\",[33,1]]]]]],[],false,[\"object/md-extent\",\"model\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
-      assert.equal(this.element.textContent.replace(/[\s\n]+/g, '|').trim(), '|Extent|Description|Geographic|Extent|Bounding|Box|North|East|South|West|Calculate|Clear|Description|Contains|Data|The|geographic|extent|contains|some|or|all|of|the|data|Edit|Features|Clear|Features|+−|Terrain|Features|Bounding|BoxLeaflet|');
+      assert.equal(this.element.textContent.replace(/[\s\n]+/g, '|').trim(), '|Extent|Description|Extent|Description|Geographic|Extent|Bounding|Box|North|East|South|West|Minimum|Altitude|Maximum|Altitude|Units|of|Altitude|Calculate|Clear|Description|Description|Contains|Data|The|geographic|extent|contains|some|or|all|of|the|data|Edit|Features|Clear|Features|+-|Terrain|Features|Bounding|BoxLeaflet|Vertical|Extents|2|Add|OK|#|Description|Min|Value|Max|Value|0|description0|9.9|9.9|Edit|Delete|1|Not|Defined|9.9|9.9|Edit|Delete|Temporal|Extents|2|Add|OK|#|Description|0|Not|Defined|Edit|Delete|1|Not|Defined|Edit|Delete|');
       const inputs = (0, _testHelpers.findAll)('.form-group input, .form-group textarea');
-      inputs.forEach(i => assert.dom(i).hasValue());
+      inputs.filter(i => i.value).forEach(i => assert.dom(i).hasValue());
       this.set('model.geographicExtent.firstObject.geographicElement', []);
       this.set('model.geographicExtent.firstObject.boundingBox', {});
 
       // Template block usage:
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         
             {{#object/md-extent profilePath="foobar" extent=model}}
@@ -7534,18 +7868,19 @@ define("mdeditor/tests/integration/pods/components/object/md-extent/component-te
           
       */
       {
-        id: "VALjKwHA",
-        block: "{\"symbols\":[],\"statements\":[[0,\"\\n\"],[4,\"object/md-extent\",null,[[\"profilePath\",\"extent\"],[\"foobar\",[24,[\"model\"]]]],{\"statements\":[[0,\"        template block text\\n\"]],\"parameters\":[]},null],[0,\"    \"]],\"hasEval\":false}",
-        meta: {}
+        "id": "ARY3lWkF",
+        "block": "[[[1,\"\\n\"],[6,[39,0],null,[[\"profilePath\",\"extent\"],[\"foobar\",[33,1]]],[[\"default\"],[[[[1,\"        template block text\\n\"]],[]]]]],[1,\"    \"]],[],false,[\"object/md-extent\",\"model\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
-      assert.equal(this.element.textContent.replace(/[\s\n]+/g, '|').trim(), '|Extent|Description|Geographic|Extent|Bounding|Box|North|East|South|West|Calculate|Clear|Description|Contains|Data|The|geographic|extent|contains|some|or|all|of|the|data|No|Features|to|display.|Add|Features|');
+      assert.equal(this.element.textContent.replace(/[\s\n]+/g, '|').trim(), '|Extent|Description|Extent|Description|Geographic|Extent|Bounding|Box|North|East|South|West|Minimum|Altitude|Maximum|Altitude|Units|of|Altitude|Calculate|Clear|Description|Description|Contains|Data|The|geographic|extent|contains|some|or|all|of|the|data|No|Features|to|display.|Add|Features|Vertical|Extents|2|Add|OK|#|Description|Min|Value|Max|Value|0|description0|9.9|9.9|Edit|Delete|1|Not|Defined|9.9|9.9|Edit|Delete|Temporal|Extents|2|Add|OK|#|Description|0|Not|Defined|Edit|Delete|1|Not|Defined|Edit|Delete|');
     });
   });
 });
-define("mdeditor/tests/integration/pods/components/object/md-extent/spatial/component-test", ["@ember/test-helpers", "qunit", "ember-qunit"], function (_testHelpers, _qunit, _emberQunit) {
+define("mdeditor/tests/integration/pods/components/object/md-extent/spatial/component-test", ["@ember/template-factory", "@ember/test-helpers", "qunit", "ember-qunit"], function (_templateFactory, _testHelpers, _qunit, _emberQunit) {
   "use strict";
 
-  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"htmlbars-inline-precompile"eaimeta@70e063a35619d71f
+  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"@ember/template-factory"eaimeta@70e063a35619d71f
   (0, _qunit.module)('Integration | Component | object/md extent/spatial', function (hooks) {
     (0, _emberQunit.setupRenderingTest)(hooks);
     (0, _qunit.test)('it renders', async function (assert) {
@@ -7579,7 +7914,7 @@ define("mdeditor/tests/integration/pods/components/object/md-extent/spatial/comp
           }]
         }]
       };
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         {{object/md-extent/spatial
             extent=extent
@@ -7590,11 +7925,12 @@ define("mdeditor/tests/integration/pods/components/object/md-extent/spatial/comp
           }}
       */
       {
-        id: "onnypTQh",
-        block: "{\"symbols\":[],\"statements\":[[1,[28,\"object/md-extent/spatial\",null,[[\"extent\",\"index\",\"deleteFeatures\",\"editFeatures\",\"profilePath\"],[[24,[\"extent\"]],9,[24,[\"deleteFeatures\"]],[24,[\"editFeatures\"]],\"foobar\"]]],false]],\"hasEval\":false}",
-        meta: {}
+        "id": "NKPwne/n",
+        "block": "[[[1,[28,[35,0],null,[[\"extent\",\"index\",\"deleteFeatures\",\"editFeatures\",\"profilePath\"],[[33,1],9,[33,2],[33,3],\"foobar\"]]]]],[],false,[\"object/md-extent/spatial\",\"extent\",\"deleteFeatures\",\"editFeatures\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
-      assert.equal(this.element.textContent.replace(/[\s\n]+/g, '|').trim(), '|Geographic|Extent|Bounding|Box|North|East|South|West|Calculate|Clear|Description|Contains|Data|The|geographic|extent|contains|some|or|all|of|the|data|Edit|Features|Clear|Features|+−|Terrain|FeaturesLeaflet|');
+      assert.equal(this.element.textContent.replace(/[\s\n]+/g, '|').trim(), '|Geographic|Extent|Bounding|Box|North|East|South|West|Minimum|Altitude|Maximum|Altitude|Units|of|Altitude|Calculate|Clear|Description|Description|Contains|Data|The|geographic|extent|contains|some|or|all|of|the|data|Edit|Features|Clear|Features|+-|Terrain|FeaturesLeaflet|');
       await (0, _testHelpers.click)('.btn-primary');
       assert.equal(JSON.stringify(this.extent.geographicExtent[0].boundingBox), JSON.stringify({
         "northLatitude": 34.741612,
@@ -7607,7 +7943,10 @@ define("mdeditor/tests/integration/pods/components/object/md-extent/spatial/comp
         "northLatitude": null,
         "southLatitude": null,
         "eastLongitude": null,
-        "westLongitude": null
+        "westLongitude": null,
+        "minimumAltitude": null,
+        "maximumAltitude": null,
+        "unitsOfAltitude": null
       }), 'clearBox');
       await (0, _testHelpers.click)('.btn-toolbar .btn-success');
       await (0, _testHelpers.doubleClick)('.btn-toolbar .btn-danger');
@@ -7615,7 +7954,7 @@ define("mdeditor/tests/integration/pods/components/object/md-extent/spatial/comp
         geographicExtent: [{}]
       };
       // Template block usage:
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         
             {{#object/md-extent/spatial extent=empty profilePath="foobar"
@@ -7625,18 +7964,19 @@ define("mdeditor/tests/integration/pods/components/object/md-extent/spatial/comp
           
       */
       {
-        id: "JmHmFY2R",
-        block: "{\"symbols\":[],\"statements\":[[0,\"\\n\"],[4,\"object/md-extent/spatial\",null,[[\"extent\",\"profilePath\"],[[24,[\"empty\"]],\"foobar\"]],{\"statements\":[[0,\"        template block text\\n\"]],\"parameters\":[]},null],[0,\"    \"]],\"hasEval\":false}",
-        meta: {}
+        "id": "yOm6jQrB",
+        "block": "[[[1,\"\\n\"],[6,[39,0],null,[[\"extent\",\"profilePath\"],[[33,1],\"foobar\"]],[[\"default\"],[[[[1,\"        template block text\\n\"]],[]]]]],[1,\"    \"]],[],false,[\"object/md-extent/spatial\",\"empty\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
-      assert.equal(this.element.textContent.replace(/[\s\n]+/g, '|').trim(), '|Geographic|Extent|Bounding|Box|North|East|South|West|Calculate|Clear|Description|Contains|Data|The|geographic|extent|contains|some|or|all|of|the|data|No|Features|to|display.|Add|Features|', 'block');
+      assert.equal(this.element.textContent.replace(/[\s\n]+/g, '|').trim(), '|Geographic|Extent|Bounding|Box|North|East|South|West|Minimum|Altitude|Maximum|Altitude|Units|of|Altitude|Calculate|Clear|Description|Description|Contains|Data|The|geographic|extent|contains|some|or|all|of|the|data|No|Features|to|display.|Add|Features|', 'block');
     });
   });
 });
-define("mdeditor/tests/integration/pods/components/object/md-funding/component-test", ["@ember/test-helpers", "qunit", "ember-qunit"], function (_testHelpers, _qunit, _emberQunit) {
+define("mdeditor/tests/integration/pods/components/object/md-funding/component-test", ["@ember/template-factory", "@ember/test-helpers", "qunit", "ember-qunit"], function (_templateFactory, _testHelpers, _qunit, _emberQunit) {
   "use strict";
 
-  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"htmlbars-inline-precompile"eaimeta@70e063a35619d71f
+  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"@ember/template-factory"eaimeta@70e063a35619d71f
   (0, _qunit.module)('Integration | Component | object/md funding', function (hooks) {
     (0, _emberQunit.setupRenderingTest)(hooks);
     (0, _qunit.test)('it renders', async function (assert) {
@@ -7673,19 +8013,20 @@ define("mdeditor/tests/integration/pods/components/object/md-funding/component-t
         },
         description: 'foo is bar.'
       });
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         {{object/md-funding model=funding profilePath="foobar"}}
       */
       {
-        id: "6q2W+QCK",
-        block: "{\"symbols\":[],\"statements\":[[1,[28,\"object/md-funding\",null,[[\"model\",\"profilePath\"],[[24,[\"funding\"]],\"foobar\"]]],false]],\"hasEval\":false}",
-        meta: {}
+        "id": "YTw/oJqc",
+        "block": "[[[1,[28,[35,0],null,[[\"model\",\"profilePath\"],[[33,1],\"foobar\"]]]]],[],false,[\"object/md-funding\",\"funding\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
-      assert.equal((0, _testHelpers.find)('form').textContent.replace(/[\s\n]+/g, '|').trim(), '|Allocation|1|Add|OK|#|Amount|Currency|Matching|0|9.9|currency|Not|Defined|Edit|Delete|Time|Period|Dates|Start|Date|End|Date|Pick|Fiscal|Year|Pick|a|Fiscal|Year|Identifier|Description|Time|Period|Names|2|Add|Time|Period|Name|0|Delete|1|Delete|Interval|Interval|Amount|Time|Unit|year|×|Duration|Years|Months|Days|Hours|Minutes|Seconds|Description|');
+      assert.equal((0, _testHelpers.find)('form').textContent.replace(/[\s\n]+/g, '|').trim(), '|Allocation|1|Add|OK|#|Amount|Currency|Matching|0|9.9|currency|Not|Defined|Edit|Delete|Time|Period|Dates|Precision|Year|Start|Date|End|Date|Pick|Fiscal|Year|Pick|a|Fiscal|Year|Identifier|Description|Description|Time|Period|Names|2|Add|Time|Period|Name|0|Delete|1|Delete|Interval|Interval|Amount|Time|Unit|year|×|Duration|Years|Months|Days|Hours|Minutes|Seconds|Description|Description|');
 
       // Template block usage:
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         
             {{#object/md-funding model=(hash) profilePath="foobar"}}
@@ -7694,18 +8035,19 @@ define("mdeditor/tests/integration/pods/components/object/md-funding/component-t
           
       */
       {
-        id: "f9ZRveQ5",
-        block: "{\"symbols\":[],\"statements\":[[0,\"\\n\"],[4,\"object/md-funding\",null,[[\"model\",\"profilePath\"],[[28,\"hash\",null,null],\"foobar\"]],{\"statements\":[[0,\"        template block text\\n\"]],\"parameters\":[]},null],[0,\"    \"]],\"hasEval\":false}",
-        meta: {}
+        "id": "RW0f7Eq2",
+        "block": "[[[1,\"\\n\"],[6,[39,0],null,[[\"model\",\"profilePath\"],[[28,[37,1],null,null],\"foobar\"]],[[\"default\"],[[[[1,\"        template block text\\n\"]],[]]]]],[1,\"    \"]],[],false,[\"object/md-funding\",\"hash\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
-      assert.equal((0, _testHelpers.find)('form').textContent.replace(/[\s\n]+/g, '|').trim(), '|No|Allocation|found.|Add|Allocation|Time|Period|Dates|Start|Date|End|Date|Pick|Fiscal|Year|Pick|a|Fiscal|Year|Identifier|Description|No|Time|Period|Name|found.|Add|Time|Period|Name|Interval|Interval|Amount|Time|Unit|Choose|unit|of|time|Duration|Years|Months|Days|Hours|Minutes|Seconds|Description|', 'block');
+      assert.equal((0, _testHelpers.find)('form').textContent.replace(/[\s\n]+/g, '|').trim(), '|No|Allocation|found.|Add|Allocation|Time|Period|Dates|Precision|Year|Start|Date|End|Date|Pick|Fiscal|Year|Pick|a|Fiscal|Year|Identifier|Description|Description|No|Time|Period|Name|found.|Add|Time|Period|Name|Interval|Interval|Amount|Time|Unit|Choose|unit|of|time|Duration|Years|Months|Days|Hours|Minutes|Seconds|Description|Description|', 'block');
     });
   });
 });
-define("mdeditor/tests/integration/pods/components/object/md-funding/preview/component-test", ["@ember/test-helpers", "qunit", "ember-qunit"], function (_testHelpers, _qunit, _emberQunit) {
+define("mdeditor/tests/integration/pods/components/object/md-funding/preview/component-test", ["@ember/template-factory", "@ember/test-helpers", "qunit", "ember-qunit"], function (_templateFactory, _testHelpers, _qunit, _emberQunit) {
   "use strict";
 
-  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"htmlbars-inline-precompile"eaimeta@70e063a35619d71f
+  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"@ember/template-factory"eaimeta@70e063a35619d71f
   (0, _qunit.module)('Integration | Component | object/md funding/preview', function (hooks) {
     (0, _emberQunit.setupRenderingTest)(hooks);
     (0, _qunit.test)('it renders', async function (assert) {
@@ -7719,39 +8061,41 @@ define("mdeditor/tests/integration/pods/components/object/md-funding/preview/com
           "endDateTime": "2016-12-31"
         }
       });
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         <section>{{object/md-funding/preview item=funding}}</section>
       */
       {
-        id: "Q8uI/JwI",
-        block: "{\"symbols\":[],\"statements\":[[7,\"section\",true],[8],[1,[28,\"object/md-funding/preview\",null,[[\"item\"],[[24,[\"funding\"]]]]],false],[9]],\"hasEval\":false}",
-        meta: {}
+        "id": "bjC7dTU/",
+        "block": "[[[10,\"section\"],[12],[1,[28,[35,0],null,[[\"item\"],[[33,1]]]]],[13]],[],false,[\"object/md-funding/preview\",\"funding\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       assert.equal((0, _testHelpers.find)('section').textContent.replace(/[\s\n]+/g, '|').trim(), '|Start|Date:|Not|defined|End|Date:|12-31-2016|Allocations|Amount|Currency|Source|Recipient|Match?|9.9|currency|--|--|--|');
 
       // Template block usage:
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         <section>
-            {{#object/md-funding/preview item=(hash)}}
+            <Object::MdFunding::Preview @item={{hash}}>
               template block text
-            {{/object/md-funding/preview}}</section>
+            </Object::MdFunding::Preview></section>
           
       */
       {
-        id: "Z+60OAaN",
-        block: "{\"symbols\":[],\"statements\":[[7,\"section\",true],[8],[0,\"\\n\"],[4,\"object/md-funding/preview\",null,[[\"item\"],[[28,\"hash\",null,null]]],{\"statements\":[[0,\"        template block text\\n      \"]],\"parameters\":[]},null],[9],[0,\"\\n    \"]],\"hasEval\":false}",
-        meta: {}
+        "id": "MRQMm6/N",
+        "block": "[[[10,\"section\"],[12],[1,\"\\n      \"],[8,[39,0],null,[[\"@item\"],[[99,1,[\"@item\"]]]],[[\"default\"],[[[[1,\"\\n        template block text\\n      \"]],[]]]]],[13],[1,\"\\n    \"]],[],false,[\"object/md-funding/preview\",\"hash\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       assert.equal((0, _testHelpers.find)('section').textContent.replace(/[\s\n]+/g, '|').trim(), '|Start|Date:|Not|defined|End|Date:|Not|defined|Allocations|Amount|Currency|Source|Recipient|Match?|No|allocations|found.|', 'block');
     });
   });
 });
-define("mdeditor/tests/integration/pods/components/object/md-graphic-array/component-test", ["@ember/test-helpers", "qunit", "ember-qunit"], function (_testHelpers, _qunit, _emberQunit) {
+define("mdeditor/tests/integration/pods/components/object/md-graphic-array/component-test", ["@ember/template-factory", "@ember/test-helpers", "qunit", "ember-qunit"], function (_templateFactory, _testHelpers, _qunit, _emberQunit) {
   "use strict";
 
-  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"htmlbars-inline-precompile"eaimeta@70e063a35619d71f
+  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"@ember/template-factory"eaimeta@70e063a35619d71f
   (0, _qunit.module)('Integration | Component | object/md graphic array', function (hooks) {
     (0, _emberQunit.setupRenderingTest)(hooks);
     (0, _qunit.test)('it renders', async function (assert) {
@@ -7771,40 +8115,42 @@ define("mdeditor/tests/integration/pods/components/object/md-graphic-array/compo
           "uri": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUAAAAFCAYAAACNbyblAAAAHElEQVQI12P4//8/w38GIAXDIBKE0DHxgljNBAAO9TXL0Y4OHwAAAABJRU5ErkJggg=="
         }]
       }]);
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         {{object/md-graphic-array model=graphic}}
       */
       {
-        id: "jM9fWjKK",
-        block: "{\"symbols\":[],\"statements\":[[1,[28,\"object/md-graphic-array\",null,[[\"model\"],[[24,[\"graphic\"]]]]],false]],\"hasEval\":false}",
-        meta: {}
+        "id": "YHWDqLXW",
+        "block": "[[[1,[28,[35,0],null,[[\"model\"],[[33,1]]]]]],[],false,[\"object/md-graphic-array\",\"graphic\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       assert.equal((0, _testHelpers.find)('.md-object-table').textContent.replace(/[\s\n]+/g, '|').trim(), '|Graphic|2|Add|OK|0|fileName:|Edit|Delete|1|fileName1:|Edit|Delete|');
       assert.ok((0, _testHelpers.find)('.md-logo-preview').complete, 'loaded image');
 
       // Template block usage:
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         
-            {{#object/md-graphic-array model=graphic}}
+            <Object::MdGraphicArray @model={{graphic}}>
               template block text
-            {{/object/md-graphic-array}}
+            </Object::MdGraphicArray>
           
       */
       {
-        id: "2uHo3Yy4",
-        block: "{\"symbols\":[],\"statements\":[[0,\"\\n\"],[4,\"object/md-graphic-array\",null,[[\"model\"],[[24,[\"graphic\"]]]],{\"statements\":[[0,\"        template block text\\n\"]],\"parameters\":[]},null],[0,\"    \"]],\"hasEval\":false}",
-        meta: {}
+        "id": "8rMwQxsr",
+        "block": "[[[1,\"\\n      \"],[8,[39,0],null,[[\"@model\"],[[99,1,[\"@model\"]]]],[[\"default\"],[[[[1,\"\\n        template block text\\n      \"]],[]]]]],[1,\"\\n    \"]],[],false,[\"object/md-graphic-array\",\"graphic\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       assert.equal((0, _testHelpers.find)('.md-object-table').textContent.replace(/[\s\n]+/g, '|').trim(), '|Graphic|2|Add|OK|0|fileName:|Edit|Delete|1|fileName1:|Edit|Delete|', 'block');
     });
   });
 });
-define("mdeditor/tests/integration/pods/components/object/md-identifier-array/component-test", ["@ember/test-helpers", "qunit", "ember-qunit"], function (_testHelpers, _qunit, _emberQunit) {
+define("mdeditor/tests/integration/pods/components/object/md-identifier-array/component-test", ["@ember/template-factory", "@ember/test-helpers", "qunit", "ember-qunit"], function (_templateFactory, _testHelpers, _qunit, _emberQunit) {
   "use strict";
 
-  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"htmlbars-inline-precompile"eaimeta@70e063a35619d71f
+  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"@ember/template-factory"eaimeta@70e063a35619d71f
   (0, _qunit.module)('Integration | Component | object/md identifier array', function (hooks) {
     (0, _emberQunit.setupRenderingTest)(hooks);
     (0, _qunit.test)('it renders', async function (assert) {
@@ -7825,14 +8171,15 @@ define("mdeditor/tests/integration/pods/components/object/md-identifier-array/co
       this.set('edit', function (id) {
         assert.ok(id, 'called edit');
       });
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         {{object/md-identifier-array model=id editItem=edit}}
       */
       {
-        id: "/3bM0zOy",
-        block: "{\"symbols\":[],\"statements\":[[1,[28,\"object/md-identifier-array\",null,[[\"model\",\"editItem\"],[[24,[\"id\"]],[24,[\"edit\"]]]]],false]],\"hasEval\":false}",
-        meta: {}
+        "id": "j2WNsczY",
+        "block": "[[[1,[28,[35,0],null,[[\"model\",\"editItem\"],[[33,1],[33,2]]]]]],[],false,[\"object/md-identifier-array\",\"id\",\"edit\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       assert.equal((0, _testHelpers.find)('.md-object-table').textContent.replace(/[\s\n]+/g, '|').trim(), '|Identifier|2|Add|OK|#|Identifier|Namespace|Description|0|identifier|Not|Defined|Not|Defined|More...|Delete|1|identifier1|Not|Defined|Not|Defined|More...|Delete|');
       await (0, _testHelpers.click)('.btn-info');
@@ -7841,84 +8188,92 @@ define("mdeditor/tests/integration/pods/components/object/md-identifier-array/co
       assert.equal(this.id.length, 2), 'delete item';
 
       // Template block usage:
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         <section>
-            {{#object/md-identifier-array}}
+            <Object::MdIdentifierArray>
               template block text
-            {{/object/md-identifier-array}}
+            </Object::MdIdentifierArray>
             </section>
           
       */
       {
-        id: "5Mm4RR9N",
-        block: "{\"symbols\":[],\"statements\":[[7,\"section\",true],[8],[0,\"\\n\"],[4,\"object/md-identifier-array\",null,null,{\"statements\":[[0,\"        template block text\\n\"]],\"parameters\":[]},null],[0,\"      \"],[9],[0,\"\\n    \"]],\"hasEval\":false}",
-        meta: {}
+        "id": "AKXwW+lQ",
+        "block": "[[[10,\"section\"],[12],[1,\"\\n      \"],[8,[39,0],null,null,[[\"default\"],[[[[1,\"\\n        template block text\\n      \"]],[]]]]],[1,\"\\n      \"],[13],[1,\"\\n    \"]],[],false,[\"object/md-identifier-array\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       assert.equal((0, _testHelpers.find)('section').textContent.replace(/[\s\n]+/g, '|').trim(), '|No|Identifier|found.|Add|Identifier|template|block|text|', 'block');
     });
   });
 });
-define("mdeditor/tests/integration/pods/components/object/md-identifier-object-table/component-test", ["@ember/test-helpers", "qunit", "ember-qunit", "mdeditor/tests/helpers/create-identifier"], function (_testHelpers, _qunit, _emberQunit, _createIdentifier) {
+define("mdeditor/tests/integration/pods/components/object/md-identifier-object-table/component-test", ["@ember/template-factory", "@ember/test-helpers", "qunit", "ember-qunit", "mdeditor/tests/helpers/create-identifier"], function (_templateFactory, _testHelpers, _qunit, _emberQunit, _createIdentifier) {
   "use strict";
 
-  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"htmlbars-inline-precompile",0,"mdeditor/tests/helpers/create-identifier"eaimeta@70e063a35619d71f
+  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"mdeditor/tests/helpers/create-identifier",0,"@ember/template-factory"eaimeta@70e063a35619d71f
   (0, _qunit.module)('Integration | Component | object/md identifier object table', function (hooks) {
     (0, _emberQunit.setupRenderingTest)(hooks);
     (0, _qunit.test)('it renders', async function (assert) {
       // Set any properties with this.set('myProperty', 'value');
       this.set('id', (0, _createIdentifier.default)(2));
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         {{object/md-identifier-object-table model=id}}
       */
       {
-        id: "CAHsy/y/",
-        block: "{\"symbols\":[],\"statements\":[[1,[28,\"object/md-identifier-object-table\",null,[[\"model\"],[[24,[\"id\"]]]]],false]],\"hasEval\":false}",
-        meta: {}
+        "id": "o4/UO+Z2",
+        "block": "[[[1,[28,[35,0],null,[[\"model\"],[[33,1]]]]]],[],false,[\"object/md-identifier-object-table\",\"id\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
-      assert.equal((0, _testHelpers.find)('.md-object-table').textContent.replace(/[\s\n]+/g, '|').trim(), '|Identifier|2|Add|OK|#|Identifier|Namespace|0|identifier0|namespace0|Edit|Delete|1|identifier1|namespace1|Edit|Delete|');
+      assert.equal((0, _testHelpers.find)('.md-object-table').textContent.replace(/[\s\n]+/g, '|').trim(), '|Identifier|2|Add|OK|#|Identifier|Namespace|Description|0|identifier0|namespace0|description0|Edit|Delete|1|identifier1|namespace1|description1|Edit|Delete|');
 
       // Template block usage:
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         
-            {{#object/md-identifier-object-table}}
+            <Object::MdIdentifierObjectTable>
               template block text
-            {{/object/md-identifier-object-table}}
+            </Object::MdIdentifierObjectTable>
           
       */
       {
-        id: "e+6pAH/T",
-        block: "{\"symbols\":[],\"statements\":[[0,\"\\n\"],[4,\"object/md-identifier-object-table\",null,null,{\"statements\":[[0,\"        template block text\\n\"]],\"parameters\":[]},null],[0,\"    \"]],\"hasEval\":false}",
-        meta: {}
+        "id": "xLRC/Dni",
+        "block": "[[[1,\"\\n      \"],[8,[39,0],null,null,[[\"default\"],[[[[1,\"\\n        template block text\\n      \"]],[]]]]],[1,\"\\n    \"]],[],false,[\"object/md-identifier-object-table\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       assert.equal((0, _testHelpers.find)('.md-object-table').textContent.replace(/[\s\n]+/g, '|').trim(), '|No|Identifier|found.|Add|Identifier|', 'block');
     });
   });
 });
-define("mdeditor/tests/integration/pods/components/object/md-identifier/component-test", ["@ember/test-helpers", "qunit", "ember-qunit", "mdeditor/tests/helpers/create-identifier"], function (_testHelpers, _qunit, _emberQunit, _createIdentifier) {
+define("mdeditor/tests/integration/pods/components/object/md-identifier/component-test", ["@ember/template-factory", "@ember/test-helpers", "qunit", "ember-qunit", "mdeditor/tests/helpers/create-identifier"], function (_templateFactory, _testHelpers, _qunit, _emberQunit, _createIdentifier) {
   "use strict";
 
-  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"htmlbars-inline-precompile",0,"mdeditor/tests/helpers/create-identifier"eaimeta@70e063a35619d71f
+  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"mdeditor/tests/helpers/create-identifier",0,"@ember/template-factory"eaimeta@70e063a35619d71f
   (0, _qunit.module)('Integration | Component | object/md identifier', function (hooks) {
     (0, _emberQunit.setupRenderingTest)(hooks);
     (0, _qunit.test)('it renders', async function (assert) {
       // Set any properties with this.set('myProperty', 'value');
       this.set('id', (0, _createIdentifier.default)(1)[0]);
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         {{object/md-identifier model=id profilePath="foobar"}}
       */
       {
-        id: "/A8dkIwJ",
-        block: "{\"symbols\":[],\"statements\":[[1,[28,\"object/md-identifier\",null,[[\"model\",\"profilePath\"],[[24,[\"id\"]],\"foobar\"]]],false]],\"hasEval\":false}",
-        meta: {}
+        "id": "OGnzQJZo",
+        "block": "[[[1,[28,[35,0],null,[[\"model\",\"profilePath\"],[[33,1],\"foobar\"]]]]],[],false,[\"object/md-identifier\",\"id\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
-      assert.equal((0, _testHelpers.find)('.md-identifier').textContent.replace(/[\s\n]+/g, '|').trim(), '|Identifier|Namespace|namespace0|×|Version|Description|Authority|Basic|Information|Title|No|Alternate|Title|found.|Add|Alternate|Title|No|Date|found.|Add|Date|No|Responsible|Party|found.|Add|Responsible|Party|No|Online|Resource|found.|Add|Online|Resource|No|Identifier|found.|Add|Identifier|No|Identifier|found.|Add|Identifier|No|Identifier|found.|Add|Identifier|');
+      let text = (0, _testHelpers.find)('.md-identifier').textContent.replace(/[\s\n]+/g, '|').trim();
+      assert.true(text.includes('|Identifier|Namespace|namespace0|'));
+      assert.true(text.includes('|Authority|Basic|Information|Title|'));
+      assert.true(text.includes('|Online|Resource|'));
       assert.equal((0, _testHelpers.find)('input').value, 'identifier0', 'assign value');
+
       // Template block usage:
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         
             {{#object/md-identifier profilePath="foobar" model=(hash)}}
@@ -7927,18 +8282,33 @@ define("mdeditor/tests/integration/pods/components/object/md-identifier/componen
           
       */
       {
-        id: "S0bKBB76",
-        block: "{\"symbols\":[],\"statements\":[[0,\"\\n\"],[4,\"object/md-identifier\",null,[[\"profilePath\",\"model\"],[\"foobar\",[28,\"hash\",null,null]]],{\"statements\":[[0,\"        template block text\\n\"]],\"parameters\":[]},null],[0,\"    \"]],\"hasEval\":false}",
-        meta: {}
+        "id": "LKJ2tjIN",
+        "block": "[[[1,\"\\n\"],[6,[39,0],null,[[\"profilePath\",\"model\"],[\"foobar\",[28,[37,1],null,null]]],[[\"default\"],[[[[1,\"        template block text\\n\"]],[]]]]],[1,\"    \"]],[],false,[\"object/md-identifier\",\"hash\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
-      assert.equal((0, _testHelpers.find)('.md-identifier').textContent.replace(/[\s\n]+/g, '|').trim(), "|Identifier|Namespace|Select|or|type|a|namespace|for|the|identifier.|Version|Description|Authority|Basic|Information|Title|No|Alternate|Title|found.|Add|Alternate|Title|No|Date|found.|Add|Date|No|Responsible|Party|found.|Add|Responsible|Party|No|Online|Resource|found.|Add|Online|Resource|No|Identifier|found.|Add|Identifier|No|Identifier|found.|Add|Identifier|No|Identifier|found.|Add|Identifier|template|block|text|", 'block');
+      text = (0, _testHelpers.find)('.md-identifier').textContent.replace(/[\s\n]+/g, '|').trim();
+      assert.true(text.includes('|Identifier|Namespace|Select|or|type|a|namespace|for|the|identifier.|'), 'block');
+      assert.true(text.includes('|template|block|text|'), 'block content');
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
+      /*
+        {{object/md-identifier profilePath="foobar"}}
+      */
+      {
+        "id": "/3b1wHCx",
+        "block": "[[[1,[28,[35,0],null,[[\"profilePath\"],[\"foobar\"]]]]],[],false,[\"object/md-identifier\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
+      }));
+      text = (0, _testHelpers.find)('.md-identifier').textContent.replace(/[\s\n]+/g, '|').trim();
+      assert.true(text.includes('|Identifier|Namespace|Select|or|type|a|namespace|for|the|identifier.|'), 'renders without model');
     });
   });
 });
-define("mdeditor/tests/integration/pods/components/object/md-keyword-citation/component-test", ["@ember/test-helpers", "qunit", "ember-qunit", "mdeditor/tests/helpers/create-citation"], function (_testHelpers, _qunit, _emberQunit, _createCitation) {
+define("mdeditor/tests/integration/pods/components/object/md-keyword-citation/component-test", ["@ember/template-factory", "@ember/test-helpers", "qunit", "ember-qunit", "mdeditor/tests/helpers/create-citation"], function (_templateFactory, _testHelpers, _qunit, _emberQunit, _createCitation) {
   "use strict";
 
-  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"htmlbars-inline-precompile",0,"mdeditor/tests/helpers/create-citation"eaimeta@70e063a35619d71f
+  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"mdeditor/tests/helpers/create-citation",0,"@ember/template-factory"eaimeta@70e063a35619d71f
   (0, _qunit.module)('Integration | Component | object/md keyword citation', function (hooks) {
     (0, _emberQunit.setupRenderingTest)(hooks);
     (0, _qunit.test)('it renders', async function (assert) {
@@ -7947,41 +8317,43 @@ define("mdeditor/tests/integration/pods/components/object/md-keyword-citation/co
         keywordType: 'theme',
         thesaurus: (0, _createCitation.default)(1)[0]
       });
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         {{object/md-keyword-citation model=keyword profilePath="foobar"}}
       */
       {
-        id: "f4hP+NZa",
-        block: "{\"symbols\":[],\"statements\":[[1,[28,\"object/md-keyword-citation\",null,[[\"model\",\"profilePath\"],[[24,[\"keyword\"]],\"foobar\"]]],false]],\"hasEval\":false}",
-        meta: {}
+        "id": "eLsaM//z",
+        "block": "[[[1,[28,[35,0],null,[[\"model\",\"profilePath\"],[[33,1],\"foobar\"]]]]],[],false,[\"object/md-keyword-citation\",\"keyword\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       assert.equal((0, _testHelpers.find)('form').textContent.replace(/[\s\n]+/g, '|').trim(), '|Title|Date|Date|Type|Choose|date|type|Type|theme|?|Edition|URL|');
       var input = (0, _testHelpers.findAll)('form input').mapBy('value').join('|');
-      assert.equal(input, "title0|2016-10-13|edition|http://adiwg.org", 'input values');
+      assert.equal(input, "title0|2016-10-13T00:00:00-04:00|edition|http://adiwg.org", 'input values');
 
       // Template block usage:
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         
-            {{#object/md-keyword-citation model=(hash thesaurus=(hash)) profilePath="foobar"}}
+            <Object::MdKeywordCitation @model={{hash thesaurus=(hash)}} @profilePath="foobar">
               template block text
-            {{/object/md-keyword-citation}}
+            </Object::MdKeywordCitation>
           
       */
       {
-        id: "2BL9vNbl",
-        block: "{\"symbols\":[],\"statements\":[[0,\"\\n\"],[4,\"object/md-keyword-citation\",null,[[\"model\",\"profilePath\"],[[28,\"hash\",null,[[\"thesaurus\"],[[28,\"hash\",null,null]]]],\"foobar\"]],{\"statements\":[[0,\"        template block text\\n\"]],\"parameters\":[]},null],[0,\"    \"]],\"hasEval\":false}",
-        meta: {}
+        "id": "r7taFxIp",
+        "block": "[[[1,\"\\n      \"],[8,[39,0],null,[[\"@model\",\"@profilePath\"],[[28,[37,1],null,[[\"thesaurus\"],[[28,[37,1],null,null]]]],\"foobar\"]],[[\"default\"],[[[[1,\"\\n        template block text\\n      \"]],[]]]]],[1,\"\\n    \"]],[],false,[\"object/md-keyword-citation\",\"hash\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       assert.equal((0, _testHelpers.find)('form').textContent.replace(/[\s\n]+/g, '|').trim(), "|Title|Date|Date|Type|Choose|date|type|Type|Choose|keyword|type|Edition|URL|", 'block');
     });
   });
 });
-define("mdeditor/tests/integration/pods/components/object/md-keyword-list/component-test", ["@ember/test-helpers", "qunit", "ember-qunit"], function (_testHelpers, _qunit, _emberQunit) {
+define("mdeditor/tests/integration/pods/components/object/md-keyword-list/component-test", ["@ember/template-factory", "@ember/test-helpers", "qunit", "ember-qunit"], function (_templateFactory, _testHelpers, _qunit, _emberQunit) {
   "use strict";
 
-  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"htmlbars-inline-precompile"eaimeta@70e063a35619d71f
+  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"@ember/template-factory"eaimeta@70e063a35619d71f
   (0, _qunit.module)('Integration | Component | object/md keyword list', function (hooks) {
     (0, _emberQunit.setupRenderingTest)(hooks);
     (0, _qunit.test)('it renders', async function (assert) {
@@ -7997,24 +8369,26 @@ define("mdeditor/tests/integration/pods/components/object/md-keyword-list/compon
           'path': ['foo1', 'bar1']
         }]
       });
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         {{object/md-keyword-list model=model profilePath="foobar"}}
       */
       {
-        id: "H4IRxUCa",
-        block: "{\"symbols\":[],\"statements\":[[1,[28,\"object/md-keyword-list\",null,[[\"model\",\"profilePath\"],[[24,[\"model\"]],\"foobar\"]]],false]],\"hasEval\":false}",
-        meta: {}
+        "id": "1E6EKRGO",
+        "block": "[[[1,[28,[35,0],null,[[\"model\",\"profilePath\"],[[33,1],\"foobar\"]]]]],[],false,[\"object/md-keyword-list\",\"model\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       assert.equal((0, _testHelpers.find)('ul').textContent.replace(/[ \n]+/g, '|').trim(), '|Delete|foo1|Delete|bar1|');
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         {{object/md-keyword-list model=model readOnly=false profilePath="foobar"}}
       */
       {
-        id: "KP3cNAbQ",
-        block: "{\"symbols\":[],\"statements\":[[1,[28,\"object/md-keyword-list\",null,[[\"model\",\"readOnly\",\"profilePath\"],[[24,[\"model\"]],false,\"foobar\"]]],false]],\"hasEval\":false}",
-        meta: {}
+        "id": "eKN3HIsK",
+        "block": "[[[1,[28,[35,0],null,[[\"model\",\"readOnly\",\"profilePath\"],[[33,1],false,\"foobar\"]]]]],[],false,[\"object/md-keyword-list\",\"model\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       assert.equal((0, _testHelpers.findAll)('tr').length, 4, 'Check number of rows.');
       assert.equal((0, _testHelpers.findAll)('input').length, 4, 'Check number of input el.');
@@ -8023,7 +8397,7 @@ define("mdeditor/tests/integration/pods/components/object/md-keyword-list/compon
       assert.equal((0, _testHelpers.find)('table').textContent.replace(/[ \n]+/g, '|').trim(), '|Keyword|Id|(Optional)|Delete|Delete|Add|Keyword|Toggle|Thesaurus|', 'readOnly = false.');
 
       // Template block usage:
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         <section>
             {{#object/md-keyword-list profilePath="foobar"}}
@@ -8032,18 +8406,19 @@ define("mdeditor/tests/integration/pods/components/object/md-keyword-list/compon
           
       */
       {
-        id: "IQ1acbqm",
-        block: "{\"symbols\":[],\"statements\":[[7,\"section\",true],[8],[0,\"\\n\"],[4,\"object/md-keyword-list\",null,[[\"profilePath\"],[\"foobar\"]],{\"statements\":[[0,\"        template block text\\n      \"]],\"parameters\":[]},null],[9],[0,\"\\n    \"]],\"hasEval\":false}",
-        meta: {}
+        "id": "UCUHOBHf",
+        "block": "[[[10,\"section\"],[12],[1,\"\\n\"],[6,[39,0],null,[[\"profilePath\"],[\"foobar\"]],[[\"default\"],[[[[1,\"        template block text\\n      \"]],[]]]]],[13],[1,\"\\n    \"]],[],false,[\"object/md-keyword-list\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       assert.equal((0, _testHelpers.find)('section').textContent.replace(/[ \n]+/g, '|').trim(), '|Add|some|keywords.|template|block|text|', 'Block form renders.');
     });
   });
 });
-define("mdeditor/tests/integration/pods/components/object/md-lineage/component-test", ["@ember/test-helpers", "qunit", "ember-qunit"], function (_testHelpers, _qunit, _emberQunit) {
+define("mdeditor/tests/integration/pods/components/object/md-lineage/component-test", ["@ember/template-factory", "@ember/test-helpers", "qunit", "ember-qunit"], function (_templateFactory, _testHelpers, _qunit, _emberQunit) {
   "use strict";
 
-  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"htmlbars-inline-precompile"eaimeta@70e063a35619d71f
+  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"@ember/template-factory"eaimeta@70e063a35619d71f
   (0, _qunit.module)('Integration | Component | object/md lineage', function (hooks) {
     (0, _emberQunit.setupRenderingTest)(hooks);
     (0, _qunit.test)('it renders', async function (assert) {
@@ -8069,39 +8444,41 @@ define("mdeditor/tests/integration/pods/components/object/md-lineage/component-t
           "description": "description"
         }]
       });
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         <section>{{object/md-lineage profilePath="foobar" model=lineage}}</section>
       */
       {
-        id: "S+cZidXh",
-        block: "{\"symbols\":[],\"statements\":[[7,\"section\",true],[8],[1,[28,\"object/md-lineage\",null,[[\"profilePath\",\"model\"],[\"foobar\",[24,[\"lineage\"]]]]],false],[9]],\"hasEval\":false}",
-        meta: {}
+        "id": "9f7IQHoo",
+        "block": "[[[10,\"section\"],[12],[1,[28,[35,0],null,[[\"profilePath\",\"model\"],[\"foobar\",[33,1]]]]],[13]],[],false,[\"object/md-lineage\",\"lineage\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
-      assert.equal((0, _testHelpers.find)('section').textContent.replace(/[\s\n]+/g, '|').trim(), '|Statement|No|Process|Step|found.|Add|Process|Step|Source|2|Add|OK|#|Description|0|More...|Delete|1|More...|Delete|Citation|2|Add|OK|#|Title|0|title|More...|Delete|1|title|More...|Delete|Scope|scopeCode|×|');
+      assert.equal((0, _testHelpers.find)('section').textContent.replace(/[\s\n]+/g, '|').trim(), '|Statement|Statement|No|Process|Step|found.|Add|Process|Step|Source|2|Add|OK|#|Description|0|More...|Delete|1|More...|Delete|Citation|2|Add|OK|#|Title|0|title|More...|Delete|1|title|More...|Delete|Scope|scopeCode|×|');
 
       // Template block usage:
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         <section>
-            {{#object/md-lineage profilePath="foobar" model=(hash)}}
+            <Object::MdLineage @profilePath="foobar" @model={{hash}}>
               template block text
-            {{/object/md-lineage}}</section>
+            </Object::MdLineage></section>
           
       */
       {
-        id: "NQkI0apa",
-        block: "{\"symbols\":[],\"statements\":[[7,\"section\",true],[8],[0,\"\\n\"],[4,\"object/md-lineage\",null,[[\"profilePath\",\"model\"],[\"foobar\",[28,\"hash\",null,null]]],{\"statements\":[[0,\"        template block text\\n      \"]],\"parameters\":[]},null],[9],[0,\"\\n    \"]],\"hasEval\":false}",
-        meta: {}
+        "id": "2JT1mtgW",
+        "block": "[[[10,\"section\"],[12],[1,\"\\n      \"],[8,[39,0],null,[[\"@profilePath\",\"@model\"],[\"foobar\",[99,1,[\"@model\"]]]],[[\"default\"],[[[[1,\"\\n        template block text\\n      \"]],[]]]]],[13],[1,\"\\n    \"]],[],false,[\"object/md-lineage\",\"hash\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
-      assert.equal((0, _testHelpers.find)('section').textContent.replace(/[\s\n]+/g, '|').trim(), '|Statement|No|Process|Step|found.|Add|Process|Step|No|Source|found.|Add|Source|No|Citation|found.|Add|Citation|Scope|Select|type|of|resource.|template|block|text|', 'block');
+      assert.equal((0, _testHelpers.find)('section').textContent.replace(/[\s\n]+/g, '|').trim(), '|Statement|Statement|No|Process|Step|found.|Add|Process|Step|No|Source|found.|Add|Source|No|Citation|found.|Add|Citation|Scope|Select|type|of|resource.|template|block|text|', 'block');
     });
   });
 });
-define("mdeditor/tests/integration/pods/components/object/md-lineage/preview/component-test", ["@ember/test-helpers", "qunit", "ember-qunit"], function (_testHelpers, _qunit, _emberQunit) {
+define("mdeditor/tests/integration/pods/components/object/md-lineage/preview/component-test", ["@ember/template-factory", "@ember/test-helpers", "qunit", "ember-qunit"], function (_templateFactory, _testHelpers, _qunit, _emberQunit) {
   "use strict";
 
-  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"htmlbars-inline-precompile"eaimeta@70e063a35619d71f
+  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"@ember/template-factory"eaimeta@70e063a35619d71f
   (0, _qunit.module)('Integration | Component | object/md lineage/preview', function (hooks) {
     (0, _emberQunit.setupRenderingTest)(hooks);
     (0, _qunit.test)('it renders', async function (assert) {
@@ -8128,39 +8505,41 @@ define("mdeditor/tests/integration/pods/components/object/md-lineage/preview/com
           "description": "description"
         }]
       });
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         <section>{{object/md-lineage/preview item=lineage}}</section>
       */
       {
-        id: "cyboD7KQ",
-        block: "{\"symbols\":[],\"statements\":[[7,\"section\",true],[8],[1,[28,\"object/md-lineage/preview\",null,[[\"item\"],[[24,[\"lineage\"]]]]],false],[9]],\"hasEval\":false}",
-        meta: {}
+        "id": "8hlX0hQs",
+        "block": "[[[10,\"section\"],[12],[1,[28,[35,0],null,[[\"item\"],[[33,1]]]]],[13]],[],false,[\"object/md-lineage/preview\",\"lineage\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       assert.equal((0, _testHelpers.find)('section').textContent.replace(/[\s\n]+/g, '|').trim(), '|Lineage|#|Statement|statement|Process|Step|No|process|steps|assigned.|');
 
       // Template block usage:
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         <section>
-            {{#object/md-lineage/preview}}
+            <Object::MdLineage::Preview>
               template block text
-            {{/object/md-lineage/preview}}</section>
+            </Object::MdLineage::Preview></section>
           
       */
       {
-        id: "6CYwiqob",
-        block: "{\"symbols\":[],\"statements\":[[7,\"section\",true],[8],[0,\"\\n\"],[4,\"object/md-lineage/preview\",null,null,{\"statements\":[[0,\"        template block text\\n      \"]],\"parameters\":[]},null],[9],[0,\"\\n    \"]],\"hasEval\":false}",
-        meta: {}
+        "id": "siFqyQXV",
+        "block": "[[[10,\"section\"],[12],[1,\"\\n      \"],[8,[39,0],null,null,[[\"default\"],[[[[1,\"\\n        template block text\\n      \"]],[]]]]],[13],[1,\"\\n    \"]],[],false,[\"object/md-lineage/preview\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       assert.equal((0, _testHelpers.find)('section').textContent.replace(/[\s\n]+/g, '|').trim(), '|Lineage|#|Statement|Not|Defined|Process|Step|No|process|steps|assigned.|', 'template block');
     });
   });
 });
-define("mdeditor/tests/integration/pods/components/object/md-locale-array/component-test", ["@ember/test-helpers", "qunit", "ember-qunit"], function (_testHelpers, _qunit, _emberQunit) {
+define("mdeditor/tests/integration/pods/components/object/md-locale-array/component-test", ["@ember/template-factory", "@ember/test-helpers", "qunit", "ember-qunit"], function (_templateFactory, _testHelpers, _qunit, _emberQunit) {
   "use strict";
 
-  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"htmlbars-inline-precompile"eaimeta@70e063a35619d71f
+  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"@ember/template-factory"eaimeta@70e063a35619d71f
   (0, _qunit.module)('Integration | Component | object/md locale array', function (hooks) {
     (0, _emberQunit.setupRenderingTest)(hooks);
     (0, _qunit.test)('it renders', async function (assert) {
@@ -8174,83 +8553,87 @@ define("mdeditor/tests/integration/pods/components/object/md-locale-array/compon
         characterSet: "UTF-32",
         country: "BDI"
       }]);
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         {{object/md-locale-array value=locales}}
       */
       {
-        id: "HP04e62h",
-        block: "{\"symbols\":[],\"statements\":[[1,[28,\"object/md-locale-array\",null,[[\"value\"],[[24,[\"locales\"]]]]],false]],\"hasEval\":false}",
-        meta: {}
+        "id": "lyNw8PXC",
+        "block": "[[[1,[28,[35,0],null,[[\"value\"],[[33,1]]]]]],[],false,[\"object/md-locale-array\",\"locales\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       assert.equal((0, _testHelpers.find)('.panel').textContent.replace(/[\s\n]+/g, '|').trim(), '|2|Add|#|Language|Character|Set|Country|0|eng|?|×|UTF-8|?|×|USA|?|×|Delete|1|spa|?|×|UTF-32|?|×|BDI|?|×|Delete|');
 
       // Template block usage:
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         
-            {{#object/md-locale-array}}
+            <Object::MdLocaleArray>
               template block text
-            {{/object/md-locale-array}}
+            </Object::MdLocaleArray>
           
       */
       {
-        id: "RpEtvD8W",
-        block: "{\"symbols\":[],\"statements\":[[0,\"\\n\"],[4,\"object/md-locale-array\",null,null,{\"statements\":[[0,\"        template block text\\n\"]],\"parameters\":[]},null],[0,\"    \"]],\"hasEval\":false}",
-        meta: {}
+        "id": "Fw//ayiL",
+        "block": "[[[1,\"\\n      \"],[8,[39,0],null,null,[[\"default\"],[[[[1,\"\\n        template block text\\n      \"]],[]]]]],[1,\"\\n    \"]],[],false,[\"object/md-locale-array\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       assert.equal((0, _testHelpers.find)('.panel').textContent.replace(/[\s\n]+/g, '|').trim(), '|Add|#|Language|Character|Set|Country|Add|', 'block');
     });
   });
 });
-define("mdeditor/tests/integration/pods/components/object/md-locale/component-test", ["@ember/test-helpers", "qunit", "ember-qunit"], function (_testHelpers, _qunit, _emberQunit) {
+define("mdeditor/tests/integration/pods/components/object/md-locale/component-test", ["@ember/template-factory", "@ember/test-helpers", "qunit", "ember-qunit", "@ember/object"], function (_templateFactory, _testHelpers, _qunit, _emberQunit, _object) {
   "use strict";
 
-  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"htmlbars-inline-precompile",0,"@ember/object"eaimeta@70e063a35619d71f
+  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"@ember/object",0,"@ember/template-factory"eaimeta@70e063a35619d71f
   (0, _qunit.module)('Integration | Component | object/md locale', function (hooks) {
     (0, _emberQunit.setupRenderingTest)(hooks);
     (0, _qunit.test)('it renders', async function (assert) {
       // Set any properties with this.set('myProperty', 'value');
-      this.set('settings', Ember.Object.create({
-        data: Ember.Object.create({
+      this.set('settings', _object.default.create({
+        data: _object.default.create({
           language: "eng",
           characterSet: "UTF-8",
           country: "USA"
         })
       }));
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         <section>{{object/md-locale settings=settings model=(hash) profilePath="foobar"}}</section>
       */
       {
-        id: "c61yMLcj",
-        block: "{\"symbols\":[],\"statements\":[[7,\"section\",true],[8],[1,[28,\"object/md-locale\",null,[[\"settings\",\"model\",\"profilePath\"],[[24,[\"settings\"]],[28,\"hash\",null,null],\"foobar\"]]],false],[9]],\"hasEval\":false}",
-        meta: {}
+        "id": "kuwaHHMg",
+        "block": "[[[10,\"section\"],[12],[1,[28,[35,0],null,[[\"settings\",\"model\",\"profilePath\"],[[33,1],[28,[37,2],null,null],\"foobar\"]]]],[13]],[],false,[\"object/md-locale\",\"settings\",\"hash\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       assert.equal((0, _testHelpers.find)('section').textContent.replace(/[\s\n]+/g, '|').trim(), '|Language|eng|?|×|Character|Set|UTF-8|?|×|Country|USA|?|×|');
 
       // Template block usage:
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         <section>
-            {{#object/md-locale settings=settings model=(hash) profilePath="foobar"}}
+            <Object::MdLocale @settings={{settings}} @model={{hash}} @profilePath="foobar">
               template block text
-            {{/object/md-locale}}</section>
+            </Object::MdLocale></section>
           
       */
       {
-        id: "t+dPPCQy",
-        block: "{\"symbols\":[],\"statements\":[[7,\"section\",true],[8],[0,\"\\n\"],[4,\"object/md-locale\",null,[[\"settings\",\"model\",\"profilePath\"],[[24,[\"settings\"]],[28,\"hash\",null,null],\"foobar\"]],{\"statements\":[[0,\"        template block text\\n      \"]],\"parameters\":[]},null],[9],[0,\"\\n    \"]],\"hasEval\":false}",
-        meta: {}
+        "id": "pBrWrxGV",
+        "block": "[[[10,\"section\"],[12],[1,\"\\n      \"],[8,[39,0],null,[[\"@settings\",\"@model\",\"@profilePath\"],[[99,1,[\"@settings\"]],[99,2,[\"@model\"]],\"foobar\"]],[[\"default\"],[[[[1,\"\\n        template block text\\n      \"]],[]]]]],[13],[1,\"\\n    \"]],[],false,[\"object/md-locale\",\"settings\",\"hash\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       assert.equal((0, _testHelpers.find)('section').textContent.replace(/[\s\n]+/g, '|').trim(), '|Language|eng|?|×|Character|Set|UTF-8|?|×|Country|USA|?|×|template|block|text|', 'template block');
     });
   });
 });
-define("mdeditor/tests/integration/pods/components/object/md-maintenance/component-test", ["@ember/test-helpers", "qunit", "ember-qunit"], function (_testHelpers, _qunit, _emberQunit) {
+define("mdeditor/tests/integration/pods/components/object/md-maintenance/component-test", ["@ember/template-factory", "@ember/test-helpers", "qunit", "ember-qunit"], function (_templateFactory, _testHelpers, _qunit, _emberQunit) {
   "use strict";
 
-  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"htmlbars-inline-precompile"eaimeta@70e063a35619d71f
+  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"@ember/template-factory"eaimeta@70e063a35619d71f
   (0, _qunit.module)('Integration | Component | object/md maintenance', function (hooks) {
     (0, _emberQunit.setupRenderingTest)(hooks);
     (0, _qunit.test)('it renders', async function (assert) {
@@ -8296,39 +8679,41 @@ define("mdeditor/tests/integration/pods/components/object/md-maintenance/compone
           }]
         }]
       };
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         {{object/md-maintenance profilePath="foobar" model=model}}
       */
       {
-        id: "XzuGL4wJ",
-        block: "{\"symbols\":[],\"statements\":[[1,[28,\"object/md-maintenance\",null,[[\"profilePath\",\"model\"],[\"foobar\",[24,[\"model\"]]]]],false]],\"hasEval\":false}",
-        meta: {}
+        "id": "dj8JdVVg",
+        "block": "[[[1,[28,[35,0],null,[[\"profilePath\",\"model\"],[\"foobar\",[33,1]]]]]],[],false,[\"object/md-maintenance\",\"model\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
-      assert.equal((0, _testHelpers.find)('form').textContent.replace(/[\s\n]+/g, '|').trim(), '|Frequency|frequency|×|Dates|2|Add|Date|#|Date|Date|Type|Description|0|creation|?|×|Delete|1|publication|?|×|Delete|Contacts|2|Add|Contact|#|Role|Contacts|0|author|?|×|Delete|1|publisher|?|×|Delete|Notes|2|Add|Notes|0|Delete|1|Delete|Scope|×|scopeCode0|×|scopeCode1|');
+      assert.equal((0, _testHelpers.find)('form').textContent.replace(/[\s\n]+/g, '|').trim(), '|Frequency|frequency|×|Dates|2|Add|Date|#|Precision|Date|Date|Type|Description|0|Day|creation|?|×|Delete|1|Day|publication|?|×|Delete|Contacts|2|Add|Contact|#|Role|Contacts|0|author|?|×|Delete|1|publisher|?|×|Delete|Notes|2|Add|Notes|0|Delete|1|Delete|Scope|×|scopeCode0|×|scopeCode1|');
 
       // Template block usage:
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         
-            {{#object/md-maintenance profilePath="foobar"}}
+            <Object::MdMaintenance @profilePath="foobar">
               template block text
-            {{/object/md-maintenance}}
+            </Object::MdMaintenance>
           
       */
       {
-        id: "n3hfZH+Z",
-        block: "{\"symbols\":[],\"statements\":[[0,\"\\n\"],[4,\"object/md-maintenance\",null,[[\"profilePath\"],[\"foobar\"]],{\"statements\":[[0,\"        template block text\\n\"]],\"parameters\":[]},null],[0,\"    \"]],\"hasEval\":false}",
-        meta: {}
+        "id": "XpaV86kO",
+        "block": "[[[1,\"\\n      \"],[8,[39,0],null,[[\"@profilePath\"],[\"foobar\"]],[[\"default\"],[[[[1,\"\\n        template block text\\n      \"]],[]]]]],[1,\"\\n    \"]],[],false,[\"object/md-maintenance\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       assert.equal((0, _testHelpers.find)('form').textContent.replace(/[\s\n]+/g, '|').trim(), '|Frequency|Choose|a|value.|No|Date|found.|Add|Date|No|Contact|found.|Add|Contact|No|Notes|found.|Add|Note|Scope|template|block|text|', 'block');
     });
   });
 });
-define("mdeditor/tests/integration/pods/components/object/md-medium/component-test", ["@ember/test-helpers", "qunit", "ember-qunit"], function (_testHelpers, _qunit, _emberQunit) {
+define("mdeditor/tests/integration/pods/components/object/md-medium/component-test", ["@ember/template-factory", "@ember/test-helpers", "qunit", "ember-qunit"], function (_templateFactory, _testHelpers, _qunit, _emberQunit) {
   "use strict";
 
-  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"htmlbars-inline-precompile"eaimeta@70e063a35619d71f
+  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"@ember/template-factory"eaimeta@70e063a35619d71f
   (0, _qunit.module)('Integration | Component | object/md medium', function (hooks) {
     (0, _emberQunit.setupRenderingTest)(hooks);
     (0, _qunit.test)('it renders', async function (assert) {
@@ -8346,39 +8731,41 @@ define("mdeditor/tests/integration/pods/components/object/md-medium/component-te
           "identifier": "identifier"
         }
       };
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         {{object/md-medium profilePath="foobar" model=model}}
       */
       {
-        id: "JLaw0qhe",
-        block: "{\"symbols\":[],\"statements\":[[1,[28,\"object/md-medium\",null,[[\"profilePath\",\"model\"],[\"foobar\",[24,[\"model\"]]]]],false]],\"hasEval\":false}",
-        meta: {}
+        "id": "TLZPuo3+",
+        "block": "[[[1,[28,[35,0],null,[[\"profilePath\",\"model\"],[\"foobar\",[33,1]]]]]],[],false,[\"object/md-medium\",\"model\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
-      assert.equal((0, _testHelpers.find)('form').textContent.replace(/[\s\n]+/g, '|').trim(), '|Medium|Title|Storage|Density|Density|Units|Number|Of|Volumes|Storage|Format|×|mediumFormat0|×|mediumFormat1|Identifier|Namespace|Select|or|type|a|namespace|for|the|identifier.|Version|Description|Note|');
+      assert.equal((0, _testHelpers.find)('form').textContent.replace(/[\s\n]+/g, '|').trim(), '|Medium|Title|Storage|Density|Density|Units|Number|Of|Volumes|Storage|Format|×|mediumFormat0|×|mediumFormat1|Identifier|Namespace|Select|or|type|a|namespace|for|the|identifier.|Version|Description|Description|Note|Note|');
 
       // Template block usage:
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         
-            {{#object/md-medium profilePath="foobar" model=(hash)}}
+            <Object::MdMedium @profilePath="foobar" @model={{hash}}>
               template block text
-            {{/object/md-medium}}
+            </Object::MdMedium>
           
       */
       {
-        id: "CeRB0Yod",
-        block: "{\"symbols\":[],\"statements\":[[0,\"\\n\"],[4,\"object/md-medium\",null,[[\"profilePath\",\"model\"],[\"foobar\",[28,\"hash\",null,null]]],{\"statements\":[[0,\"        template block text\\n\"]],\"parameters\":[]},null],[0,\"    \"]],\"hasEval\":false}",
-        meta: {}
+        "id": "VGvqbGtK",
+        "block": "[[[1,\"\\n      \"],[8,[39,0],null,[[\"@profilePath\",\"@model\"],[\"foobar\",[99,1,[\"@model\"]]]],[[\"default\"],[[[[1,\"\\n        template block text\\n      \"]],[]]]]],[1,\"\\n    \"]],[],false,[\"object/md-medium\",\"hash\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
-      assert.equal((0, _testHelpers.find)('form').textContent.replace(/[\s\n]+/g, '|').trim(), "|Medium|Title|Storage|Density|Density|Units|Number|Of|Volumes|Storage|Format|Identifier|Namespace|Select|or|type|a|namespace|for|the|identifier.|Version|Description|Note|template|block|text|", 'block');
+      assert.equal((0, _testHelpers.find)('form').textContent.replace(/[\s\n]+/g, '|').trim(), "|Medium|Title|Storage|Density|Density|Units|Number|Of|Volumes|Storage|Format|Identifier|Namespace|Select|or|type|a|namespace|for|the|identifier.|Version|Description|Description|Note|Note|template|block|text|", 'block');
     });
   });
 });
-define("mdeditor/tests/integration/pods/components/object/md-object-table/component-test", ["qunit", "ember-qunit", "@ember/test-helpers"], function (_qunit, _emberQunit, _testHelpers) {
+define("mdeditor/tests/integration/pods/components/object/md-object-table/component-test", ["@ember/template-factory", "qunit", "ember-qunit", "@ember/test-helpers"], function (_templateFactory, _qunit, _emberQunit, _testHelpers) {
   "use strict";
 
-  0; //eaimeta@70e063a35619d71f0,"qunit",0,"ember-qunit",0,"@ember/test-helpers",0,"htmlbars-inline-precompile"eaimeta@70e063a35619d71f
+  0; //eaimeta@70e063a35619d71f0,"qunit",0,"ember-qunit",0,"@ember/test-helpers",0,"@ember/template-factory"eaimeta@70e063a35619d71f
   (0, _qunit.module)('Integration | Component | object/md-object-table', function (hooks) {
     (0, _emberQunit.setupRenderingTest)(hooks);
     (0, _qunit.test)('it renders', async function (assert) {
@@ -8391,19 +8778,20 @@ define("mdeditor/tests/integration/pods/components/object/md-object-table/compon
         biz: 'biz1',
         baz: 'baz1'
       }];
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         {{object/md-object-table header="Foo Bars" attributes="biz,baz"}}
       */
       {
-        id: "mLSftx/q",
-        block: "{\"symbols\":[],\"statements\":[[1,[28,\"object/md-object-table\",null,[[\"header\",\"attributes\"],[\"Foo Bars\",\"biz,baz\"]]],false]],\"hasEval\":false}",
-        meta: {}
+        "id": "L8An+XMQ",
+        "block": "[[[1,[28,[35,0],null,[[\"header\",\"attributes\"],[\"Foo Bars\",\"biz,baz\"]]]]],[],false,[\"object/md-object-table\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       assert.equal(this.element.textContent.replace(/[\s\n]+/g, '|').trim(), '|No|Foo|Bars|found.|Add|Foo|Bar|');
 
       // Template block usage:
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         
             {{#object/md-object-table
@@ -8420,18 +8808,19 @@ define("mdeditor/tests/integration/pods/components/object/md-object-table/compon
           
       */
       {
-        id: "EKoK956b",
-        block: "{\"symbols\":[\"foo\"],\"statements\":[[0,\"\\n\"],[4,\"object/md-object-table\",null,[[\"items\",\"header\",\"buttonText\",\"ellipsis\",\"profilePath\",\"attributes\"],[[24,[\"model\"]],\"FooBar\",\"Add FooBar\",true,\"foobar\",\"biz,baz\"]],{\"statements\":[[0,\"        \"],[7,\"span\",true],[8],[0,\"Biz:\"],[1,[23,1,[\"biz\"]],false],[9],[0,\"\\n        \"],[7,\"span\",true],[8],[0,\"Baz:\"],[1,[23,1,[\"baz\"]],false],[9],[0,\"\\n\"]],\"parameters\":[1]},null],[0,\"    \"]],\"hasEval\":false}",
-        meta: {}
+        "id": "t3jAilqI",
+        "block": "[[[1,\"\\n\"],[6,[39,0],null,[[\"items\",\"header\",\"buttonText\",\"ellipsis\",\"profilePath\",\"attributes\"],[[33,1],\"FooBar\",\"Add FooBar\",true,\"foobar\",\"biz,baz\"]],[[\"default\"],[[[[1,\"        \"],[10,1],[12],[1,\"Biz:\"],[1,[30,1,[\"biz\"]]],[13],[1,\"\\n        \"],[10,1],[12],[1,\"Baz:\"],[1,[30,1,[\"baz\"]]],[13],[1,\"\\n\"]],[1]]]]],[1,\"    \"]],[\"foo\"],false,[\"object/md-object-table\",\"model\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       assert.equal(this.element.textContent.replace(/[\s\n]+/g, '|').trim(), '|FooBar|2|Add|OK|#|Biz|Baz|0|biz0|baz0|Edit|Delete|1|biz1|baz1|Edit|Delete|', 'block');
     });
   });
 });
-define("mdeditor/tests/integration/pods/components/object/md-objectroute-table/component-test", ["@ember/test-helpers", "qunit", "ember-qunit"], function (_testHelpers, _qunit, _emberQunit) {
+define("mdeditor/tests/integration/pods/components/object/md-objectroute-table/component-test", ["@ember/template-factory", "@ember/test-helpers", "qunit", "ember-qunit"], function (_templateFactory, _testHelpers, _qunit, _emberQunit) {
   "use strict";
 
-  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"htmlbars-inline-precompile"eaimeta@70e063a35619d71f
+  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"@ember/template-factory"eaimeta@70e063a35619d71f
   (0, _qunit.module)('Integration | Component | object/md objectroute table', function (hooks) {
     (0, _emberQunit.setupRenderingTest)(hooks);
     (0, _qunit.test)('it renders', async function (assert) {
@@ -8444,94 +8833,93 @@ define("mdeditor/tests/integration/pods/components/object/md-objectroute-table/c
         biz: 'biz1',
         baz: 'baz1'
       }];
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         {{object/md-objectroute-table attributes="biz,baz" header="FooBar"}}
       */
       {
-        id: "FotqDrNK",
-        block: "{\"symbols\":[],\"statements\":[[1,[28,\"object/md-objectroute-table\",null,[[\"attributes\",\"header\"],[\"biz,baz\",\"FooBar\"]]],false]],\"hasEval\":false}",
-        meta: {}
+        "id": "KPQTA2IQ",
+        "block": "[[[1,[28,[35,0],null,[[\"attributes\",\"header\"],[\"biz,baz\",\"FooBar\"]]]]],[],false,[\"object/md-objectroute-table\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       assert.equal(this.element.textContent.replace(/[\s\n]+/g, '|').trim(), '|No|FooBar|found.|Add|FooBar|');
 
       // Template block usage:
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         
-            {{#object/md-objectroute-table
-             items=model
-             header="FooBar"
-             buttonText="Add FooBar"
-             ellipsis=true
-             profilePath="foobar"
-             attributes="biz,baz" as |foo|
-            }}
+            <Object::MdObjectrouteTable @items={{model}} @header="FooBar" @buttonText="Add FooBar" @ellipsis={{true}} @profilePath="foobar" @attributes="biz,baz" as |foo|>
               <span>Biz:{{foo.biz}}</span>
               <span>Baz:{{foo.baz}}</span>
-            {{/object/md-objectroute-table}}
+            </Object::MdObjectrouteTable>
           
       */
       {
-        id: "FeR2hN55",
-        block: "{\"symbols\":[\"foo\"],\"statements\":[[0,\"\\n\"],[4,\"object/md-objectroute-table\",null,[[\"items\",\"header\",\"buttonText\",\"ellipsis\",\"profilePath\",\"attributes\"],[[24,[\"model\"]],\"FooBar\",\"Add FooBar\",true,\"foobar\",\"biz,baz\"]],{\"statements\":[[0,\"        \"],[7,\"span\",true],[8],[0,\"Biz:\"],[1,[23,1,[\"biz\"]],false],[9],[0,\"\\n        \"],[7,\"span\",true],[8],[0,\"Baz:\"],[1,[23,1,[\"baz\"]],false],[9],[0,\"\\n\"]],\"parameters\":[1]},null],[0,\"    \"]],\"hasEval\":false}",
-        meta: {}
+        "id": "FH7A1kMn",
+        "block": "[[[1,\"\\n      \"],[8,[39,0],null,[[\"@items\",\"@header\",\"@buttonText\",\"@ellipsis\",\"@profilePath\",\"@attributes\"],[[99,1,[\"@items\"]],\"FooBar\",\"Add FooBar\",true,\"foobar\",\"biz,baz\"]],[[\"default\"],[[[[1,\"\\n        \"],[10,1],[12],[1,\"Biz:\"],[1,[30,1,[\"biz\"]]],[13],[1,\"\\n        \"],[10,1],[12],[1,\"Baz:\"],[1,[30,1,[\"baz\"]]],[13],[1,\"\\n      \"]],[1]]]]],[1,\"\\n    \"]],[\"foo\"],false,[\"object/md-objectroute-table\",\"model\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       assert.equal(this.element.textContent.replace(/[\s\n]+/g, '|').trim(), '|FooBar|2|Add|OK|#|Biz|Baz|0|biz0|baz0|More...|Delete|1|biz1|baz1|More...|Delete|', 'block');
     });
   });
 });
-define("mdeditor/tests/integration/pods/components/object/md-online-resource/component-test", ["@ember/test-helpers", "qunit", "ember-qunit"], function (_testHelpers, _qunit, _emberQunit) {
+define("mdeditor/tests/integration/pods/components/object/md-online-resource/component-test", ["@ember/template-factory", "@ember/test-helpers", "qunit", "ember-qunit"], function (_templateFactory, _testHelpers, _qunit, _emberQunit) {
   "use strict";
 
-  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"htmlbars-inline-precompile"eaimeta@70e063a35619d71f
+  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"@ember/template-factory"eaimeta@70e063a35619d71f
   (0, _qunit.module)('Integration | Component | object/md online resource', function (hooks) {
     (0, _emberQunit.setupRenderingTest)(hooks);
     (0, _qunit.test)('it renders', async function (assert) {
       // Set any properties with this.set('myProperty', 'value');
       // Handle any actions with this.on('myAction', function(val) { ... });
       this.model = {
-        "uri": "http://URI.example.com",
-        "protocol": "protocol",
-        "name": "name",
-        "description": "description",
-        "function": "download",
-        "applicationProfile": "applicationProfile",
-        "protocolRequest": "protocolRequest"
+        uri: 'http://URI.example.com',
+        protocol: 'protocol',
+        name: 'name',
+        description: 'description',
+        function: 'download',
+        applicationProfile: 'applicationProfile',
+        protocolRequest: 'protocolRequest'
       };
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         {{object/md-online-resource model=model profilePath="foobar"}}
       */
       {
-        id: "5wXqjXqN",
-        block: "{\"symbols\":[],\"statements\":[[1,[28,\"object/md-online-resource\",null,[[\"model\",\"profilePath\"],[[24,[\"model\"]],\"foobar\"]]],false]],\"hasEval\":false}",
-        meta: {}
+        "id": "3TyVevF2",
+        "block": "[[[1,[28,[35,0],null,[[\"model\",\"profilePath\"],[[33,1],\"foobar\"]]]]],[],false,[\"object/md-online-resource\",\"model\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
-      assert.equal(this.element.textContent.replace(/[\s\n]+/g, '|').trim(), '|Name|URI|Protocol|Description|Function|download|?|×|Application|Profile|applicationProfile|×|Protocol|Request|');
+      await (0, _testHelpers.fillIn)('input[id$="-input"]', 'resource-name-updated');
+      assert.strictEqual(this.model.name, 'resource-name-updated', 'name writes to model');
+      assert.equal(this.element.textContent.replace(/[\s\n]+/g, '|').trim(), '|Name|URI|Protocol|Description|Description|Function|download|?|×|Application|Profile|applicationProfile|×|Protocol|Request|Protocol|Request|');
 
       // Template block usage:
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         
-            {{#object/md-online-resource profilePath="foobar" model=model}}
+            <Object::MdOnlineResource @profilePath="foobar" @model={{model}}>
               template block text
-            {{/object/md-online-resource}}
+            </Object::MdOnlineResource>
           
       */
       {
-        id: "lCJo8dT9",
-        block: "{\"symbols\":[],\"statements\":[[0,\"\\n\"],[4,\"object/md-online-resource\",null,[[\"profilePath\",\"model\"],[\"foobar\",[24,[\"model\"]]]],{\"statements\":[[0,\"        template block text\\n\"]],\"parameters\":[]},null],[0,\"    \"]],\"hasEval\":false}",
-        meta: {}
+        "id": "VLod7cvl",
+        "block": "[[[1,\"\\n      \"],[8,[39,0],null,[[\"@profilePath\",\"@model\"],[\"foobar\",[99,1,[\"@model\"]]]],[[\"default\"],[[[[1,\"\\n        template block text\\n      \"]],[]]]]],[1,\"\\n    \"]],[],false,[\"object/md-online-resource\",\"model\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
-      assert.equal(this.element.textContent.replace(/[\s\n]+/g, '|').trim(), '|Name|URI|Protocol|Description|Function|download|?|×|Application|Profile|applicationProfile|×|Protocol|Request|template|block|text|', 'block');
+      assert.equal(this.element.textContent.replace(/[\s\n]+/g, '|').trim(), '|Name|URI|Protocol|Description|Description|Function|download|?|×|Application|Profile|applicationProfile|×|Protocol|Request|Protocol|Request|template|block|text|', 'block');
     });
   });
 });
-define("mdeditor/tests/integration/pods/components/object/md-party-array/component-test", ["@ember/test-helpers", "qunit", "ember-qunit", "mdeditor/tests/helpers/create-contact"], function (_testHelpers, _qunit, _emberQunit, _createContact) {
+define("mdeditor/tests/integration/pods/components/object/md-party-array/component-test", ["@ember/template-factory", "@ember/test-helpers", "qunit", "ember-qunit", "mdeditor/tests/helpers/create-contact"], function (_templateFactory, _testHelpers, _qunit, _emberQunit, _createContact) {
   "use strict";
 
-  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"htmlbars-inline-precompile",0,"mdeditor/tests/helpers/create-contact"eaimeta@70e063a35619d71f
+  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"mdeditor/tests/helpers/create-contact",0,"@ember/template-factory"eaimeta@70e063a35619d71f
   (0, _qunit.module)('Integration | Component | object/md party array', function (hooks) {
     (0, _emberQunit.setupRenderingTest)(hooks);
     (0, _qunit.test)('it renders', async function (assert) {
@@ -8558,39 +8946,41 @@ define("mdeditor/tests/integration/pods/components/object/md-party-array/compone
       var contacts = (0, _createContact.default)(2);
       var cs = this.owner.lookup('service:contacts');
       cs.set('contacts', contacts);
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         {{object/md-party-array value=party profilePath="foobar"}}
       */
       {
-        id: "K0cFGeTa",
-        block: "{\"symbols\":[],\"statements\":[[1,[28,\"object/md-party-array\",null,[[\"value\",\"profilePath\"],[[24,[\"party\"]],\"foobar\"]]],false]],\"hasEval\":false}",
-        meta: {}
+        "id": "SA3rvQ3J",
+        "block": "[[[1,[28,[35,0],null,[[\"value\",\"profilePath\"],[[33,1],\"foobar\"]]]]],[],false,[\"object/md-party-array\",\"party\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       assert.equal(this.element.textContent.replace(/[\s\n]+/g, '|').trim(), '|2|Add|#|Role|Contacts|0|author|?|×|×|Contact0|Delete|1|publisher|?|×|×|Contact1|Delete|');
 
       // Template block usage:
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         
-            {{#object/md-party-array model=(hash) profilePath="foobar"}}
+            <Object::MdPartyArray @model={{hash}} @profilePath="foobar">
               template block text
-            {{/object/md-party-array}}
+            </Object::MdPartyArray>
           
       */
       {
-        id: "yyKFpwnZ",
-        block: "{\"symbols\":[],\"statements\":[[0,\"\\n\"],[4,\"object/md-party-array\",null,[[\"model\",\"profilePath\"],[[28,\"hash\",null,null],\"foobar\"]],{\"statements\":[[0,\"        template block text\\n\"]],\"parameters\":[]},null],[0,\"    \"]],\"hasEval\":false}",
-        meta: {}
+        "id": "4W3/rzwd",
+        "block": "[[[1,\"\\n      \"],[8,[39,0],null,[[\"@model\",\"@profilePath\"],[[99,1,[\"@model\"]],\"foobar\"]],[[\"default\"],[[[[1,\"\\n        template block text\\n      \"]],[]]]]],[1,\"\\n    \"]],[],false,[\"object/md-party-array\",\"hash\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       assert.equal(this.element.textContent.replace(/[\s\n]+/g, '|').trim(), '|Add|#|Role|Contacts|Add|', 'block');
     });
   });
 });
-define("mdeditor/tests/integration/pods/components/object/md-party/component-test", ["@ember/test-helpers", "qunit", "ember-qunit", "mdeditor/tests/helpers/create-contact"], function (_testHelpers, _qunit, _emberQunit, _createContact) {
+define("mdeditor/tests/integration/pods/components/object/md-party/component-test", ["@ember/template-factory", "@ember/test-helpers", "qunit", "ember-qunit", "mdeditor/tests/helpers/create-contact"], function (_templateFactory, _testHelpers, _qunit, _emberQunit, _createContact) {
   "use strict";
 
-  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"htmlbars-inline-precompile",0,"mdeditor/tests/helpers/create-contact"eaimeta@70e063a35619d71f
+  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"mdeditor/tests/helpers/create-contact",0,"@ember/template-factory"eaimeta@70e063a35619d71f
   (0, _qunit.module)('Integration | Component | object/md party', function (hooks) {
     (0, _emberQunit.setupRenderingTest)(hooks);
     (0, _qunit.test)('it renders', async function (assert) {
@@ -8611,39 +9001,41 @@ define("mdeditor/tests/integration/pods/components/object/md-party/component-tes
       var contacts = (0, _createContact.default)(2);
       var cs = this.owner.lookup('service:contacts');
       cs.set('contacts', contacts);
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         {{object/md-party model=party}}
       */
       {
-        id: "KOhCxx2D",
-        block: "{\"symbols\":[],\"statements\":[[1,[28,\"object/md-party\",null,[[\"model\"],[[24,[\"party\"]]]]],false]],\"hasEval\":false}",
-        meta: {}
+        "id": "gePEMMKf",
+        "block": "[[[1,[28,[35,0],null,[[\"model\"],[[33,1]]]]]],[],false,[\"object/md-party\",\"party\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       assert.equal(this.element.textContent.replace(/[\s\n]+/g, '|').trim(), '|Role|author|?|×|Contacts|×|Contact0|');
 
       // Template block usage:
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         
-            {{#object/md-party model=(hash)}}
+            <Object::MdParty @model={{hash}}>
               template block text
-            {{/object/md-party}}
+            </Object::MdParty>
           
       */
       {
-        id: "LGrqDqqp",
-        block: "{\"symbols\":[],\"statements\":[[0,\"\\n\"],[4,\"object/md-party\",null,[[\"model\"],[[28,\"hash\",null,null]]],{\"statements\":[[0,\"        template block text\\n\"]],\"parameters\":[]},null],[0,\"    \"]],\"hasEval\":false}",
-        meta: {}
+        "id": "NfU/QaLC",
+        "block": "[[[1,\"\\n      \"],[8,[39,0],null,[[\"@model\"],[[99,1,[\"@model\"]]]],[[\"default\"],[[[[1,\"\\n        template block text\\n      \"]],[]]]]],[1,\"\\n    \"]],[],false,[\"object/md-party\",\"hash\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       assert.equal(this.element.textContent.replace(/[\s\n]+/g, '|').trim(), "|Role|Select|or|enter|a|role|Contacts|", 'block');
     });
   });
 });
-define("mdeditor/tests/integration/pods/components/object/md-process-step/component-test", ["@ember/test-helpers", "qunit", "ember-qunit", "mdeditor/tests/helpers/create-contact"], function (_testHelpers, _qunit, _emberQunit, _createContact) {
+define("mdeditor/tests/integration/pods/components/object/md-process-step/component-test", ["@ember/template-factory", "@ember/test-helpers", "qunit", "ember-qunit", "mdeditor/tests/helpers/create-contact"], function (_templateFactory, _testHelpers, _qunit, _emberQunit, _createContact) {
   "use strict";
 
-  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"htmlbars-inline-precompile",0,"mdeditor/tests/helpers/create-contact"eaimeta@70e063a35619d71f
+  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"mdeditor/tests/helpers/create-contact",0,"@ember/template-factory"eaimeta@70e063a35619d71f
   (0, _qunit.module)('Integration | Component | object/md process step', function (hooks) {
     (0, _emberQunit.setupRenderingTest)(hooks);
     (0, _qunit.test)('it renders', async function (assert) {
@@ -8735,19 +9127,20 @@ define("mdeditor/tests/integration/pods/components/object/md-process-step/compon
           "title": "title1"
         }]
       };
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         {{object/md-process-step profilePath="foobar" model=step}}
       */
       {
-        id: "uzoARtvT",
-        block: "{\"symbols\":[],\"statements\":[[1,[28,\"object/md-process-step\",null,[[\"profilePath\",\"model\"],[\"foobar\",[24,[\"step\"]]]]],false]],\"hasEval\":false}",
-        meta: {}
+        "id": "m4PQJ63K",
+        "block": "[[[1,[28,[35,0],null,[[\"profilePath\",\"model\"],[\"foobar\",[33,1]]]]]],[],false,[\"object/md-process-step\",\"step\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
-      assert.equal(this.element.textContent.replace(/[\s\n]+/g, '|').trim(), "|Step|ID|Description|Step|Sources|1|Add|#|Description|0|Delete|Step|Products|1|Add|#|Description|0|Delete|Processors|2|Add|#|Role|Contacts|0|role|×|Delete|1|role|×|Delete|Step|Reference|2|Add|OK|#|Title|0|title0|More...|Delete|1|title1|More...|Delete|Time|Period|Dates|Start|Date|End|Date|Pick|Fiscal|Year|Pick|a|Fiscal|Year|Identifier|Description|No|Time|Period|Name|found.|Add|Time|Period|Name|Interval|Interval|Amount|Time|Unit|Choose|unit|of|time|Duration|Years|Months|Days|Hours|Minutes|Seconds|Scope|Select|type|of|resource.|");
+      assert.equal(this.element.textContent.replace(/[\s\n]+/g, '|').trim(), "|Step|ID|Description|Description|Step|Sources|1|Add|#|Description|0|Delete|Step|Products|1|Add|#|Description|0|Delete|Processors|2|Add|#|Role|Contacts|0|role|×|Delete|1|role|×|Delete|Step|Reference|2|Add|OK|#|Title|0|title0|More...|Delete|1|title1|More...|Delete|Time|Period|Dates|Precision|Day|Start|Date|End|Date|Pick|Fiscal|Year|Pick|a|Fiscal|Year|Identifier|Description|Description|No|Time|Period|Name|found.|Add|Time|Period|Name|Interval|Interval|Amount|Time|Unit|Choose|unit|of|time|Duration|Years|Months|Days|Hours|Minutes|Seconds|Scope|Select|type|of|resource.|");
 
       // Template block usage:
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         
             {{#object/md-process-step profilePath="foobar" model=step}}
@@ -8756,18 +9149,19 @@ define("mdeditor/tests/integration/pods/components/object/md-process-step/compon
           
       */
       {
-        id: "aedjZNnb",
-        block: "{\"symbols\":[],\"statements\":[[0,\"\\n\"],[4,\"object/md-process-step\",null,[[\"profilePath\",\"model\"],[\"foobar\",[24,[\"step\"]]]],{\"statements\":[[0,\"        template block text\\n\"]],\"parameters\":[]},null],[0,\"    \"]],\"hasEval\":false}",
-        meta: {}
+        "id": "siJgBpS0",
+        "block": "[[[1,\"\\n\"],[6,[39,0],null,[[\"profilePath\",\"model\"],[\"foobar\",[33,1]]],[[\"default\"],[[[[1,\"        template block text\\n\"]],[]]]]],[1,\"    \"]],[],false,[\"object/md-process-step\",\"step\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
-      assert.equal(this.element.textContent.replace(/[\s\n]+/g, '|').trim(), "|Step|ID|Description|Step|Sources|1|Add|#|Description|0|Delete|Step|Products|1|Add|#|Description|0|Delete|Processors|2|Add|#|Role|Contacts|0|role|×|Delete|1|role|×|Delete|Step|Reference|2|Add|OK|#|Title|0|title0|More...|Delete|1|title1|More...|Delete|Time|Period|Dates|Start|Date|End|Date|Pick|Fiscal|Year|Pick|a|Fiscal|Year|Identifier|Description|No|Time|Period|Name|found.|Add|Time|Period|Name|Interval|Interval|Amount|Time|Unit|Choose|unit|of|time|Duration|Years|Months|Days|Hours|Minutes|Seconds|Scope|Select|type|of|resource.|template|block|text|", 'block');
+      assert.equal(this.element.textContent.replace(/[\s\n]+/g, '|').trim(), "|Step|ID|Description|Description|Step|Sources|1|Add|#|Description|0|Delete|Step|Products|1|Add|#|Description|0|Delete|Processors|2|Add|#|Role|Contacts|0|role|×|Delete|1|role|×|Delete|Step|Reference|2|Add|OK|#|Title|0|title0|More...|Delete|1|title1|More...|Delete|Time|Period|Dates|Precision|Day|Start|Date|End|Date|Pick|Fiscal|Year|Pick|a|Fiscal|Year|Identifier|Description|Description|No|Time|Period|Name|found.|Add|Time|Period|Name|Interval|Interval|Amount|Time|Unit|Choose|unit|of|time|Duration|Years|Months|Days|Hours|Minutes|Seconds|Scope|Select|type|of|resource.|template|block|text|", 'block');
     });
   });
 });
-define("mdeditor/tests/integration/pods/components/object/md-process-step/preview/component-test", ["qunit", "ember-qunit", "@ember/test-helpers"], function (_qunit, _emberQunit, _testHelpers) {
+define("mdeditor/tests/integration/pods/components/object/md-process-step/preview/component-test", ["@ember/template-factory", "qunit", "ember-qunit", "@ember/test-helpers"], function (_templateFactory, _qunit, _emberQunit, _testHelpers) {
   "use strict";
 
-  0; //eaimeta@70e063a35619d71f0,"qunit",0,"ember-qunit",0,"@ember/test-helpers",0,"htmlbars-inline-precompile"eaimeta@70e063a35619d71f
+  0; //eaimeta@70e063a35619d71f0,"qunit",0,"ember-qunit",0,"@ember/test-helpers",0,"@ember/template-factory"eaimeta@70e063a35619d71f
   (0, _qunit.module)('Integration | Component | object/md-process-step/preview', function (hooks) {
     (0, _emberQunit.setupRenderingTest)(hooks);
     (0, _qunit.test)('it renders', async function (assert) {
@@ -8803,198 +9197,187 @@ define("mdeditor/tests/integration/pods/components/object/md-process-step/previe
           "description": "description1"
         }]
       };
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         {{object/md-process-step/preview model=source profilePath="foobar"}}
       */
       {
-        id: "Ml4L1GuD",
-        block: "{\"symbols\":[],\"statements\":[[1,[28,\"object/md-process-step/preview\",null,[[\"model\",\"profilePath\"],[[24,[\"source\"]],\"foobar\"]]],false]],\"hasEval\":false}",
-        meta: {}
+        "id": "mm1pGoQo",
+        "block": "[[[1,[28,[35,0],null,[[\"model\",\"profilePath\"],[[33,1],\"foobar\"]]]]],[],false,[\"object/md-process-step/preview\",\"source\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       assert.equal((0, _testHelpers.find)('textarea').value, 'description');
 
       // Template block usage:
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         
-            {{#object/md-process-step/preview model=source profilePath="foobar"}}
+            <Object::MdProcessStep::Preview @model={{source}} @profilePath="foobar">
               template block text
-            {{/object/md-process-step/preview}}
+            </Object::MdProcessStep::Preview>
           
       */
       {
-        id: "6P6AX1CU",
-        block: "{\"symbols\":[],\"statements\":[[0,\"\\n\"],[4,\"object/md-process-step/preview\",null,[[\"model\",\"profilePath\"],[[24,[\"source\"]],\"foobar\"]],{\"statements\":[[0,\"        template block text\\n\"]],\"parameters\":[]},null],[0,\"    \"]],\"hasEval\":false}",
-        meta: {}
+        "id": "wCh5Fp/8",
+        "block": "[[[1,\"\\n      \"],[8,[39,0],null,[[\"@model\",\"@profilePath\"],[[99,1,[\"@model\"]],\"foobar\"]],[[\"default\"],[[[[1,\"\\n        template block text\\n      \"]],[]]]]],[1,\"\\n    \"]],[],false,[\"object/md-process-step/preview\",\"source\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       assert.equal((0, _testHelpers.find)('textarea').value, 'description');
     });
   });
 });
-define("mdeditor/tests/integration/pods/components/object/md-profile/component-test", ["qunit", "ember-qunit", "@ember/test-helpers", "mdeditor/tests/helpers/create-profile"], function (_qunit, _emberQunit, _testHelpers, _createProfile) {
+define("mdeditor/tests/integration/pods/components/object/md-profile/component-test", ["@ember/template-factory", "qunit", "ember-qunit", "@ember/test-helpers", "mdeditor/tests/helpers/create-profile"], function (_templateFactory, _qunit, _emberQunit, _testHelpers, _createProfile) {
   "use strict";
 
-  0; //eaimeta@70e063a35619d71f0,"qunit",0,"ember-qunit",0,"@ember/test-helpers",0,"htmlbars-inline-precompile",0,"mdeditor/tests/helpers/create-profile"eaimeta@70e063a35619d71f
+  0; //eaimeta@70e063a35619d71f0,"qunit",0,"ember-qunit",0,"@ember/test-helpers",0,"mdeditor/tests/helpers/create-profile",0,"@ember/template-factory"eaimeta@70e063a35619d71f
   (0, _qunit.module)('Integration | Component | object/md-profile', function (hooks) {
     (0, _emberQunit.setupRenderingTest)(hooks);
     (0, _qunit.test)('it renders', async function (assert) {
-      // Set any properties with this.set('myProperty', 'value');
-      // Handle any actions with this.set('myAction', function(val) { ... });
       this.model = (0, _createProfile.default)(1)[0];
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
-      /*
-        {{object/md-profile record=model}}
-      */
-      {
-        id: "koQIUq/w",
-        block: "{\"symbols\":[],\"statements\":[[1,[28,\"object/md-profile\",null,[[\"record\"],[[24,[\"model\"]]]]],false]],\"hasEval\":false}",
-        meta: {}
-      }));
-      assert.equal(this.element.textContent.replace(/[ \n]+/g, '|').trim(), '|URL|Alias|Version|0.0.0|Update|Available|(0.0.1)|Title|Minimal|Description|A|Minimalist|Profile|Identifier|minimal|Namespace|org.adiwg.profile|');
-
-      // Template block usage:
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         
-            {{#object/md-profile record=model}}
-              template block text
-            {{/object/md-profile}}
+            <Object::MdProfile @record={{this.model}} />
           
       */
       {
-        id: "3KIb/ZG3",
-        block: "{\"symbols\":[],\"statements\":[[0,\"\\n\"],[4,\"object/md-profile\",null,[[\"record\"],[[24,[\"model\"]]]],{\"statements\":[[0,\"        template block text\\n\"]],\"parameters\":[]},null],[0,\"    \"]],\"hasEval\":false}",
-        meta: {}
+        "id": "XinYobKL",
+        "block": "[[[1,\"\\n      \"],[8,[39,0],null,[[\"@record\"],[[30,0,[\"model\"]]]],null],[1,\"\\n    \"]],[],false,[\"object/md-profile\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       assert.equal(this.element.textContent.replace(/[ \n]+/g, '|').trim(), '|URL|Alias|Version|0.0.0|Update|Available|(0.0.1)|Title|Minimal|Description|A|Minimalist|Profile|Identifier|minimal|Namespace|org.adiwg.profile|');
     });
   });
 });
-define("mdeditor/tests/integration/pods/components/object/md-profile/custom/component-test", ["qunit", "ember-qunit", "@ember/test-helpers"], function (_qunit, _emberQunit, _testHelpers) {
+define("mdeditor/tests/integration/pods/components/object/md-profile/custom/component-test", ["@ember/template-factory", "qunit", "ember-qunit", "@ember/test-helpers"], function (_templateFactory, _qunit, _emberQunit, _testHelpers) {
   "use strict";
 
-  0; //eaimeta@70e063a35619d71f0,"qunit",0,"ember-qunit",0,"@ember/test-helpers",0,"htmlbars-inline-precompile"eaimeta@70e063a35619d71f
+  0; //eaimeta@70e063a35619d71f0,"qunit",0,"ember-qunit",0,"@ember/test-helpers",0,"@ember/template-factory"eaimeta@70e063a35619d71f
   (0, _qunit.module)('Integration | Component | object/md-profile/custom', function (hooks) {
     (0, _emberQunit.setupRenderingTest)(hooks);
     (0, _qunit.test)('it renders', async function (assert) {
-      // Set any properties with this.set('myProperty', 'value');
-      // Handle any actions with this.set('myAction', function(val) { ... });
       this.model = {
         title: 'testme',
         description: 'testing description'
       };
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
-      /*
-        {{object/md-profile/custom record=model}}
-      */
-      {
-        id: "z+SNgkSX",
-        block: "{\"symbols\":[],\"statements\":[[1,[28,\"object/md-profile/custom\",null,[[\"record\"],[[24,[\"model\"]]]]],false]],\"hasEval\":false}",
-        meta: {}
-      }));
-      assert.equal(this.element.textContent.replace(/[ \n]+/g, '|').trim(), '|Title|Description|Profile|Definition|Select|the|profile|definition.|Select|Schemas|No|schemas|avialable.|Schemas|Selected|Select|schemas|from|the|list.|');
-
-      // Template block usage:
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         
-            {{#object/md-profile/custom record=model}}
-              template block text
-            {{/object/md-profile/custom}}
+            <Object::MdProfile::Custom @record={{this.model}} />
           
       */
       {
-        id: "KM4Hbwhi",
-        block: "{\"symbols\":[],\"statements\":[[0,\"\\n\"],[4,\"object/md-profile/custom\",null,[[\"record\"],[[24,[\"model\"]]]],{\"statements\":[[0,\"        template block text\\n\"]],\"parameters\":[]},null],[0,\"    \"]],\"hasEval\":false}",
-        meta: {}
+        "id": "nkDUZx32",
+        "block": "[[[1,\"\\n      \"],[8,[39,0],null,[[\"@record\"],[[30,0,[\"model\"]]]],null],[1,\"\\n    \"]],[],false,[\"object/md-profile/custom\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
-      assert.equal(this.element.textContent.replace(/[ \n]+/g, '|').trim(), '|Title|Description|Profile|Definition|Select|the|profile|definition.|Select|Schemas|No|schemas|avialable.|Schemas|Selected|Select|schemas|from|the|list.|template|block|text|');
+      assert.equal(this.element.textContent.replace(/[ \n]+/g, '|').trim(), '|Title|Description|Description|Profile|Definition|Select|the|profile|definition.|Select|Schemas|No|schemas|avialable.|Schemas|Selected|Select|schemas|from|the|list.|');
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
+      /*
+        
+            <Object::MdProfile::Custom @record={{this.model}}>
+              template block text
+            </Object::MdProfile::Custom>
+          
+      */
+      {
+        "id": "IvrsPQ2Z",
+        "block": "[[[1,\"\\n      \"],[8,[39,0],null,[[\"@record\"],[[30,0,[\"model\"]]]],[[\"default\"],[[[[1,\"\\n        template block text\\n      \"]],[]]]]],[1,\"\\n    \"]],[],false,[\"object/md-profile/custom\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
+      }));
+      assert.equal(this.element.textContent.replace(/[ \n]+/g, '|').trim(), '|Title|Description|Description|Profile|Definition|Select|the|profile|definition.|Select|Schemas|No|schemas|avialable.|Schemas|Selected|Select|schemas|from|the|list.|template|block|text|');
     });
   });
 });
-define("mdeditor/tests/integration/pods/components/object/md-profile/form/component-test", ["qunit", "ember-qunit", "@ember/test-helpers", "mdeditor/tests/helpers/create-profile"], function (_qunit, _emberQunit, _testHelpers, _createProfile) {
+define("mdeditor/tests/integration/pods/components/object/md-profile/form/component-test", ["@ember/template-factory", "qunit", "ember-qunit", "@ember/test-helpers", "mdeditor/tests/helpers/create-profile"], function (_templateFactory, _qunit, _emberQunit, _testHelpers, _createProfile) {
   "use strict";
 
-  0; //eaimeta@70e063a35619d71f0,"qunit",0,"ember-qunit",0,"@ember/test-helpers",0,"htmlbars-inline-precompile",0,"mdeditor/tests/helpers/create-profile"eaimeta@70e063a35619d71f
+  0; //eaimeta@70e063a35619d71f0,"qunit",0,"ember-qunit",0,"@ember/test-helpers",0,"mdeditor/tests/helpers/create-profile",0,"@ember/template-factory"eaimeta@70e063a35619d71f
   (0, _qunit.module)('Integration | Component | object/md-profile/form', function (hooks) {
     (0, _emberQunit.setupRenderingTest)(hooks);
     (0, _qunit.test)('it renders', async function (assert) {
-      // Set any properties with this.set('myProperty', 'value');
-      // Handle any actions with this.set('myAction', function(val) { ... });
       this.model = (0, _createProfile.default)(1)[0];
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
-      /*
-        {{object/md-profile/form record=model}}
-      */
-      {
-        id: "W/2x61O8",
-        block: "{\"symbols\":[],\"statements\":[[1,[28,\"object/md-profile/form\",null,[[\"record\"],[[24,[\"model\"]]]]],false]],\"hasEval\":false}",
-        meta: {}
-      }));
-      assert.equal(this.element.textContent.replace(/[\s\n]+/g, '|').trim(), '|URL|Alias|Version|0.0.0|Update|Available|(0.0.1)|Title|Minimal|Description|A|Minimalist|Profile|Identifier|minimal|Namespace|org.adiwg.profile|');
-
-      // Template block usage:
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         
-            {{#object/md-profile/form record=model}}
-              template block text
-            {{/object/md-profile/form}}
+            <Object::MdProfile::Form @record={{this.model}} />
           
       */
       {
-        id: "oE+O+NSo",
-        block: "{\"symbols\":[],\"statements\":[[0,\"\\n\"],[4,\"object/md-profile/form\",null,[[\"record\"],[[24,[\"model\"]]]],{\"statements\":[[0,\"        template block text\\n\"]],\"parameters\":[]},null],[0,\"    \"]],\"hasEval\":false}",
-        meta: {}
+        "id": "sSBY4/X4",
+        "block": "[[[1,\"\\n      \"],[8,[39,0],null,[[\"@record\"],[[30,0,[\"model\"]]]],null],[1,\"\\n    \"]],[],false,[\"object/md-profile/form\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
+      }));
+      assert.equal(this.element.textContent.replace(/[\s\n]+/g, '|').trim(), '|URL|Alias|Version|0.0.0|Update|Available|(0.0.1)|Title|Minimal|Description|A|Minimalist|Profile|Identifier|minimal|Namespace|org.adiwg.profile|');
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
+      /*
+        
+            <Object::MdProfile::Form @record={{this.model}}>
+              template block text
+            </Object::MdProfile::Form>
+          
+      */
+      {
+        "id": "q+9rgAQb",
+        "block": "[[[1,\"\\n      \"],[8,[39,0],null,[[\"@record\"],[[30,0,[\"model\"]]]],[[\"default\"],[[[[1,\"\\n        template block text\\n      \"]],[]]]]],[1,\"\\n    \"]],[],false,[\"object/md-profile/form\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       assert.equal(this.element.textContent.replace(/[ \n]+/g, '|').trim(), '|URL|Alias|Version|0.0.0|Update|Available|(0.0.1)|Title|Minimal|Description|A|Minimalist|Profile|Identifier|minimal|Namespace|org.adiwg.profile|template|block|text|');
     });
   });
 });
-define("mdeditor/tests/integration/pods/components/object/md-profile/preview/component-test", ["qunit", "ember-qunit", "@ember/test-helpers", "mdeditor/tests/helpers/create-profile"], function (_qunit, _emberQunit, _testHelpers, _createProfile) {
+define("mdeditor/tests/integration/pods/components/object/md-profile/preview/component-test", ["@ember/template-factory", "qunit", "ember-qunit", "@ember/test-helpers", "mdeditor/tests/helpers/create-profile"], function (_templateFactory, _qunit, _emberQunit, _testHelpers, _createProfile) {
   "use strict";
 
-  0; //eaimeta@70e063a35619d71f0,"qunit",0,"ember-qunit",0,"@ember/test-helpers",0,"htmlbars-inline-precompile",0,"mdeditor/tests/helpers/create-profile"eaimeta@70e063a35619d71f
+  0; //eaimeta@70e063a35619d71f0,"qunit",0,"ember-qunit",0,"@ember/test-helpers",0,"mdeditor/tests/helpers/create-profile",0,"@ember/template-factory"eaimeta@70e063a35619d71f
   (0, _qunit.module)('Integration | Component | object/md-profile/preview', function (hooks) {
     (0, _emberQunit.setupRenderingTest)(hooks);
     (0, _qunit.test)('it renders', async function (assert) {
-      // Set any properties with this.set('myProperty', 'value');
-      // Handle any actions with this.set('myAction', function(val) { ... });
       this.model = (0, _createProfile.default)(1)[0];
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
-      /*
-        {{object/md-profile/preview  record=model}}
-      */
-      {
-        id: "9SAZavA7",
-        block: "{\"symbols\":[],\"statements\":[[1,[28,\"object/md-profile/preview\",null,[[\"record\"],[[24,[\"model\"]]]]],false]],\"hasEval\":false}",
-        meta: {}
-      }));
-      assert.equal(this.element.textContent.replace(/[ \n]+/g, '|').trim(), '|Title|Minimal|Description|A|Minimalist|Profile|Identifier|minimal|Namespace|org.adiwg.profile|');
-
-      // Template block usage:
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         
-            {{#object/md-profile/preview record=model}}
-              template block text
-            {{/object/md-profile/preview}}
+            <Object::MdProfile::Preview @record={{this.model}} />
           
       */
       {
-        id: "fj2A1Puf",
-        block: "{\"symbols\":[],\"statements\":[[0,\"\\n\"],[4,\"object/md-profile/preview\",null,[[\"record\"],[[24,[\"model\"]]]],{\"statements\":[[0,\"        template block text\\n\"]],\"parameters\":[]},null],[0,\"    \"]],\"hasEval\":false}",
-        meta: {}
+        "id": "obfWP+kr",
+        "block": "[[[1,\"\\n      \"],[8,[39,0],null,[[\"@record\"],[[30,0,[\"model\"]]]],null],[1,\"\\n    \"]],[],false,[\"object/md-profile/preview\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
+      assert.dom('.text-muted').exists('applies muted styling on the wrapper');
+      assert.equal(this.element.textContent.replace(/[ \n]+/g, '|').trim(), '|Title|Minimal|Description|A|Minimalist|Profile|Identifier|minimal|Namespace|org.adiwg.profile|');
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
+      /*
+        
+            <Object::MdProfile::Preview @record={{this.model}} class='list-group-item-text'>
+              template block text
+            </Object::MdProfile::Preview>
+          
+      */
+      {
+        "id": "8LsEkxKW",
+        "block": "[[[1,\"\\n      \"],[8,[39,0],[[24,0,\"list-group-item-text\"]],[[\"@record\"],[[30,0,[\"model\"]]]],[[\"default\"],[[[[1,\"\\n        template block text\\n      \"]],[]]]]],[1,\"\\n    \"]],[],false,[\"object/md-profile/preview\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
+      }));
+      assert.dom('.text-muted.list-group-item-text').exists('merges caller class with muted wrapper');
       assert.equal(this.element.textContent.replace(/[ \n]+/g, '|').trim(), '|Title|Minimal|Description|A|Minimalist|Profile|Identifier|minimal|Namespace|org.adiwg.profile|template|block|text|');
     });
   });
 });
-define("mdeditor/tests/integration/pods/components/object/md-raster/attrgroup/attribute/component-test", ["qunit", "ember-qunit", "@ember/test-helpers", "mdeditor/tests/helpers/create-record", "mdeditor/tests/helpers/md-helpers"], function (_qunit, _emberQunit, _testHelpers, _createRecord, _mdHelpers) {
+define("mdeditor/tests/integration/pods/components/object/md-raster/attrgroup/attribute/component-test", ["@ember/template-factory", "qunit", "ember-qunit", "@ember/test-helpers", "mdeditor/tests/helpers/create-record", "mdeditor/tests/helpers/md-helpers"], function (_templateFactory, _qunit, _emberQunit, _testHelpers, _createRecord, _mdHelpers) {
   "use strict";
 
-  0; //eaimeta@70e063a35619d71f0,"qunit",0,"ember-qunit",0,"@ember/test-helpers",0,"htmlbars-inline-precompile",0,"mdeditor/tests/helpers/create-record",0,"mdeditor/tests/helpers/md-helpers"eaimeta@70e063a35619d71f
+  0; //eaimeta@70e063a35619d71f0,"qunit",0,"ember-qunit",0,"@ember/test-helpers",0,"mdeditor/tests/helpers/create-record",0,"mdeditor/tests/helpers/md-helpers",0,"@ember/template-factory"eaimeta@70e063a35619d71f
   (0, _qunit.module)('Integration | Component | object/md-raster/attrgroup/attribute', function (hooks) {
     (0, _emberQunit.setupRenderingTest)(hooks);
 
@@ -9005,44 +9388,46 @@ define("mdeditor/tests/integration/pods/components/object/md-raster/attrgroup/at
       let attribute = (0, _createRecord.createAttribute)(1);
       this.set('model', attribute[0]);
       let input = (0, _mdHelpers.nestedValues)(attribute[0]).join('|');
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         {{object/md-raster/attrgroup/attribute profilePath="foobar" model=model}}
       */
       {
-        id: "s5xJBO98",
-        block: "{\"symbols\":[],\"statements\":[[1,[28,\"object/md-raster/attrgroup/attribute\",null,[[\"profilePath\",\"model\"],[\"foobar\",[24,[\"model\"]]]]],false]],\"hasEval\":false}",
-        meta: {}
+        "id": "vfPwzRpx",
+        "block": "[[[1,[28,[35,0],null,[[\"profilePath\",\"model\"],[\"foobar\",[33,1]]]]]],[],false,[\"object/md-raster/attrgroup/attribute\",\"model\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       assert.equal((0, _mdHelpers.formatContent)(this.element).trim(), "|Attribute|Description|Attribute|Identifier|1|Add|OK|#|Identifier|Namespace|0|identifier0|namespace0|Edit|Delete|Band|Boundary|Definition|×|bandBoundaryDefinition0|Transfer|Function|Type|×|transferFunctionType0|Transmitted|Polarization|×|transmittedPolarization0|Detected|Polarization|×|detectedPolarization0|Sequence|Identifier|Sequence|Identifier|Type|Min|Value|Max|Value|Units|Scale|Factor|Offset|Mean|Value|Number|Of|Values|Standard|Deviation|Bits|Per|Value|Bound|Min|Bound|Max|Bound|Units|Peak|Response|Tone|Gradations|Nominal|Spatial|Resolution|");
       assert.equal((0, _mdHelpers.parseInput)(this.element), input);
     });
   });
 });
-define("mdeditor/tests/integration/pods/components/object/md-raster/attrgroup/component-test", ["qunit", "ember-qunit", "@ember/test-helpers"], function (_qunit, _emberQunit, _testHelpers) {
+define("mdeditor/tests/integration/pods/components/object/md-raster/attrgroup/component-test", ["@ember/template-factory", "qunit", "ember-qunit", "@ember/test-helpers"], function (_templateFactory, _qunit, _emberQunit, _testHelpers) {
   "use strict";
 
-  0; //eaimeta@70e063a35619d71f0,"qunit",0,"ember-qunit",0,"@ember/test-helpers",0,"htmlbars-inline-precompile"eaimeta@70e063a35619d71f
+  0; //eaimeta@70e063a35619d71f0,"qunit",0,"ember-qunit",0,"@ember/test-helpers",0,"@ember/template-factory"eaimeta@70e063a35619d71f
   (0, _qunit.module)('Integration | Component | object/md-raster/attrgroup', function (hooks) {
     (0, _emberQunit.setupRenderingTest)(hooks);
     (0, _qunit.test)('it renders', async function (assert) {
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         {{object/md-raster/attrgroup }}
       */
       {
-        id: "JRuxaajN",
-        block: "{\"symbols\":[],\"statements\":[[1,[22,\"object/md-raster/attrgroup\"],false]],\"hasEval\":false}",
-        meta: {}
+        "id": "TFH8Z7DA",
+        "block": "[[[1,[34,0]]],[],false,[\"object/md-raster/attrgroup\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       assert.equal(this.element.textContent.replace(/[\s\n]+/g, '|').trim(), '|No|Item|found.|Add|Item|', 'attrgroup component renders');
     });
   });
 });
-define("mdeditor/tests/integration/pods/components/object/md-raster/component-test", ["qunit", "ember-qunit", "@ember/test-helpers", "mdeditor/tests/helpers/md-helpers"], function (_qunit, _emberQunit, _testHelpers, _mdHelpers) {
+define("mdeditor/tests/integration/pods/components/object/md-raster/component-test", ["@ember/template-factory", "qunit", "ember-qunit", "@ember/test-helpers", "mdeditor/tests/helpers/md-helpers"], function (_templateFactory, _qunit, _emberQunit, _testHelpers, _mdHelpers) {
   "use strict";
 
-  0; //eaimeta@70e063a35619d71f0,"qunit",0,"ember-qunit",0,"@ember/test-helpers",0,"htmlbars-inline-precompile",0,"mdeditor/tests/helpers/md-helpers"eaimeta@70e063a35619d71f
+  0; //eaimeta@70e063a35619d71f0,"qunit",0,"ember-qunit",0,"@ember/test-helpers",0,"mdeditor/tests/helpers/md-helpers",0,"@ember/template-factory"eaimeta@70e063a35619d71f
   (0, _qunit.module)('Integration | Component | object/md-raster', function (hooks) {
     (0, _emberQunit.setupRenderingTest)(hooks);
 
@@ -9082,24 +9467,25 @@ define("mdeditor/tests/integration/pods/components/object/md-raster/component-te
       };
       let nestedValues = obj => typeof obj === 'object' ? Object.values(obj).map(nestedValues).flat() : [obj];
       let input = nestedValues(this.model).join('|');
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         {{object/md-raster profilePath="foobar" model=model}}
       */
       {
-        id: "cbejHDsd",
-        block: "{\"symbols\":[],\"statements\":[[1,[28,\"object/md-raster\",null,[[\"profilePath\",\"model\"],[\"foobar\",[24,[\"model\"]]]]],false]],\"hasEval\":false}",
-        meta: {}
+        "id": "hx0kxqPy",
+        "block": "[[[1,[28,[35,0],null,[[\"profilePath\",\"model\"],[\"foobar\",[33,1]]]]]],[],false,[\"object/md-raster\",\"model\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       assert.equal((0, _mdHelpers.formatContent)(this.element).trim(), '|Name|Description|Attribute|Groups|1|Add|Attribute|Group|#0|Attribute|Content|Type|×|attributeContentType1|×|attributeContentType2|Attribute|1|Add|OK|#|Attribute|Description|0|More...|Delete|Processing|Level|Code|Identifier|Namespace|namespace1|×|More|Image|Description|Image|Quality|Code|Identifier|Namespace|namespace2|×|More|Illumination|Elevation|Angle|Illumination|Azimuth|Angle|Imaging|Condition|Cloud|Cover|Percent|Compression|Quantity|Triangulation|Indicator|Radiometric|Calibration|Available|Camera|Calibration|Available|Film|Distortion|Available|Lens|Distortion|Available|');
       assert.equal((0, _mdHelpers.parseInput)(this.element), input, 'input renders');
     });
   });
 });
-define("mdeditor/tests/integration/pods/components/object/md-raster/image-desc/component-test", ["qunit", "ember-qunit", "@ember/test-helpers", "mdeditor/tests/helpers/md-helpers"], function (_qunit, _emberQunit, _testHelpers, _mdHelpers) {
+define("mdeditor/tests/integration/pods/components/object/md-raster/image-desc/component-test", ["@ember/template-factory", "qunit", "ember-qunit", "@ember/test-helpers", "mdeditor/tests/helpers/md-helpers"], function (_templateFactory, _qunit, _emberQunit, _testHelpers, _mdHelpers) {
   "use strict";
 
-  0; //eaimeta@70e063a35619d71f0,"qunit",0,"ember-qunit",0,"@ember/test-helpers",0,"htmlbars-inline-precompile",0,"mdeditor/tests/helpers/md-helpers"eaimeta@70e063a35619d71f
+  0; //eaimeta@70e063a35619d71f0,"qunit",0,"ember-qunit",0,"@ember/test-helpers",0,"mdeditor/tests/helpers/md-helpers",0,"@ember/template-factory"eaimeta@70e063a35619d71f
   (0, _qunit.module)('Integration | Component | object/md-raster/image-desc', function (hooks) {
     (0, _emberQunit.setupRenderingTest)(hooks);
     (0, _qunit.test)('it renders', async function (assert) {
@@ -9120,24 +9506,25 @@ define("mdeditor/tests/integration/pods/components/object/md-raster/image-desc/c
         "lensDistortionAvailable": "true"
       };
       let input = (0, _mdHelpers.nestedValues)(this.model).join('|');
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         {{object/md-raster/image-desc profilePath="foobar" model=model}}
       */
       {
-        id: "ssHkrvWq",
-        block: "{\"symbols\":[],\"statements\":[[1,[28,\"object/md-raster/image-desc\",null,[[\"profilePath\",\"model\"],[\"foobar\",[24,[\"model\"]]]]],false]],\"hasEval\":false}",
-        meta: {}
+        "id": "nqgMV7n/",
+        "block": "[[[1,[28,[35,0],null,[[\"profilePath\",\"model\"],[\"foobar\",[33,1]]]]]],[],false,[\"object/md-raster/image-desc\",\"model\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       assert.equal((0, _mdHelpers.formatContent)(this.element).trim(), '|Image|Quality|Code|Identifier|Namespace|namespace|×|More|Illumination|Elevation|Angle|Illumination|Azimuth|Angle|Imaging|Condition|Cloud|Cover|Percent|Compression|Quantity|Triangulation|Indicator|Radiometric|Calibration|Available|Camera|Calibration|Available|Film|Distortion|Available|Lens|Distortion|Available|', 'md-raster/image-desc component renders');
       assert.equal((0, _mdHelpers.parseInput)(this.element), input, 'md-raster/image-desc inputs render');
     });
   });
 });
-define("mdeditor/tests/integration/pods/components/object/md-raster/preview/component-test", ["qunit", "ember-qunit", "@ember/test-helpers", "mdeditor/tests/helpers/md-helpers"], function (_qunit, _emberQunit, _testHelpers, _mdHelpers) {
+define("mdeditor/tests/integration/pods/components/object/md-raster/preview/component-test", ["@ember/template-factory", "qunit", "ember-qunit", "@ember/test-helpers", "mdeditor/tests/helpers/md-helpers"], function (_templateFactory, _qunit, _emberQunit, _testHelpers, _mdHelpers) {
   "use strict";
 
-  0; //eaimeta@70e063a35619d71f0,"qunit",0,"ember-qunit",0,"@ember/test-helpers",0,"htmlbars-inline-precompile",0,"mdeditor/tests/helpers/md-helpers"eaimeta@70e063a35619d71f
+  0; //eaimeta@70e063a35619d71f0,"qunit",0,"ember-qunit",0,"@ember/test-helpers",0,"mdeditor/tests/helpers/md-helpers",0,"@ember/template-factory"eaimeta@70e063a35619d71f
   (0, _qunit.module)('Integration | Component | object/md-raster/preview', function (hooks) {
     (0, _emberQunit.setupRenderingTest)(hooks);
     (0, _qunit.test)('it renders', async function (assert) {
@@ -9146,24 +9533,25 @@ define("mdeditor/tests/integration/pods/components/object/md-raster/preview/comp
         "coverageDescription": "coverageDescription"
       };
       let input = Object.values(this.model).join('|');
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
-        {{object/md-raster/preview profilePath="foobar" model=model}}
+        {{object/md-raster/preview profilePath="foobar" item=this.model}}
       */
       {
-        id: "//YFtB5/",
-        block: "{\"symbols\":[],\"statements\":[[1,[28,\"object/md-raster/preview\",null,[[\"profilePath\",\"model\"],[\"foobar\",[24,[\"model\"]]]]],false]],\"hasEval\":false}",
-        meta: {}
+        "id": "BVNKJkHq",
+        "block": "[[[1,[28,[35,0],null,[[\"profilePath\",\"item\"],[\"foobar\",[30,0,[\"model\"]]]]]]],[],false,[\"object/md-raster/preview\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       assert.equal((0, _mdHelpers.formatContent)(this.element).trim(), '|Raster|Name|Raster|Description|', 'md-raster-preview component renders');
       assert.equal((0, _mdHelpers.parseInput)(this.element), input, 'md-raster-preview inputs renders');
     });
   });
 });
-define("mdeditor/tests/integration/pods/components/object/md-repository-array/component-test", ["@ember/test-helpers", "qunit", "ember-qunit"], function (_testHelpers, _qunit, _emberQunit) {
+define("mdeditor/tests/integration/pods/components/object/md-repository-array/component-test", ["@ember/template-factory", "@ember/test-helpers", "qunit", "ember-qunit"], function (_templateFactory, _testHelpers, _qunit, _emberQunit) {
   "use strict";
 
-  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"htmlbars-inline-precompile"eaimeta@70e063a35619d71f
+  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"@ember/template-factory"eaimeta@70e063a35619d71f
   (0, _qunit.module)('Integration | Component | object/md repository array', function (hooks) {
     (0, _emberQunit.setupRenderingTest)(hooks);
     (0, _qunit.test)('it renders', async function (assert) {
@@ -9180,40 +9568,42 @@ define("mdeditor/tests/integration/pods/components/object/md-repository-array/co
         },
         "repository": "data.gov"
       }];
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         {{object/md-repository-array value=repo profilePath="foo"}}
       */
       {
-        id: "wlAh+/SZ",
-        block: "{\"symbols\":[],\"statements\":[[1,[28,\"object/md-repository-array\",null,[[\"value\",\"profilePath\"],[[24,[\"repo\"]],\"foo\"]]],false]],\"hasEval\":false}",
-        meta: {}
+        "id": "oD1hlfuQ",
+        "block": "[[[1,[28,[35,0],null,[[\"value\",\"profilePath\"],[[33,1],\"foo\"]]]]],[],false,[\"object/md-repository-array\",\"repo\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       assert.equal(this.element.textContent.replace(/[\s\n]+/g, '|').trim(), '|Metadata|Repositories|2|Add|#|Repository|Collection|Title|0|data.gov|?|×|Delete|1|data.gov|?|×|Delete|');
       assert.dom('.md-input input').hasValue('Arctic LCC data.gov');
       assert.dom('.select-value').hasText('data.gov');
       // Template block usage:
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         
-            {{#object/md-repository-array profilePath="foo"}}
+            <Object::MdRepositoryArray @profilePath="foo">
               template block text
-            {{/object/md-repository-array}}
+            </Object::MdRepositoryArray>
           
       */
       {
-        id: "l4pQMrgv",
-        block: "{\"symbols\":[],\"statements\":[[0,\"\\n\"],[4,\"object/md-repository-array\",null,[[\"profilePath\"],[\"foo\"]],{\"statements\":[[0,\"        template block text\\n\"]],\"parameters\":[]},null],[0,\"    \"]],\"hasEval\":false}",
-        meta: {}
+        "id": "X3+ofg/C",
+        "block": "[[[1,\"\\n      \"],[8,[39,0],null,[[\"@profilePath\"],[\"foo\"]],[[\"default\"],[[[[1,\"\\n        template block text\\n      \"]],[]]]]],[1,\"\\n    \"]],[],false,[\"object/md-repository-array\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       assert.equal(this.element.textContent.replace(/[\s\n]+/g, '|').trim(), '|Metadata|Repositories|Add|#|Repository|Collection|Title|Add|Metadata|Repository|', 'block');
     });
   });
 });
-define("mdeditor/tests/integration/pods/components/object/md-resource-type-array/component-test", ["@ember/test-helpers", "qunit", "ember-qunit"], function (_testHelpers, _qunit, _emberQunit) {
+define("mdeditor/tests/integration/pods/components/object/md-resource-type-array/component-test", ["@ember/template-factory", "@ember/test-helpers", "qunit", "ember-qunit"], function (_templateFactory, _testHelpers, _qunit, _emberQunit) {
   "use strict";
 
-  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"htmlbars-inline-precompile"eaimeta@70e063a35619d71f
+  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"@ember/template-factory"eaimeta@70e063a35619d71f
   (0, _qunit.module)('Integration | Component | object/md resource type array', function (hooks) {
     (0, _emberQunit.setupRenderingTest)(hooks);
     (0, _qunit.test)('it renders', async function (assert) {
@@ -9225,130 +9615,136 @@ define("mdeditor/tests/integration/pods/components/object/md-resource-type-array
       }, {
         "type": "map"
       }];
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         {{object/md-resource-type-array value=rt profilePath="foobar"}}
       */
       {
-        id: "DK9kiKq4",
-        block: "{\"symbols\":[],\"statements\":[[1,[28,\"object/md-resource-type-array\",null,[[\"value\",\"profilePath\"],[[24,[\"rt\"]],\"foobar\"]]],false]],\"hasEval\":false}",
-        meta: {}
+        "id": "z5fBw/jv",
+        "block": "[[[1,[28,[35,0],null,[[\"value\",\"profilePath\"],[[33,1],\"foobar\"]]]]],[],false,[\"object/md-resource-type-array\",\"rt\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       assert.equal(this.element.textContent.replace(/[\s\n]+/g, '|').trim(), '|Resource|Types|2|Add|#|Type|Name|0|project|?|×|Delete|1|map|?|×|Delete|');
 
       // Template block usage:
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         
-            {{#object/md-resource-type-array profilePath="foobar"}}
+            <Object::MdResourceTypeArray @profilePath="foobar">
               template block text
-            {{/object/md-resource-type-array}}
+            </Object::MdResourceTypeArray>
           
       */
       {
-        id: "HUfG50uE",
-        block: "{\"symbols\":[],\"statements\":[[0,\"\\n\"],[4,\"object/md-resource-type-array\",null,[[\"profilePath\"],[\"foobar\"]],{\"statements\":[[0,\"        template block text\\n\"]],\"parameters\":[]},null],[0,\"    \"]],\"hasEval\":false}",
-        meta: {}
+        "id": "MzOH5yTr",
+        "block": "[[[1,\"\\n      \"],[8,[39,0],null,[[\"@profilePath\"],[\"foobar\"]],[[\"default\"],[[[[1,\"\\n        template block text\\n      \"]],[]]]]],[1,\"\\n    \"]],[],false,[\"object/md-resource-type-array\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       assert.equal(this.element.textContent.replace(/[\s\n]+/g, '|').trim(), '|Resource|Types|Add|#|Type|Name|Add|Resource|Type|', 'block');
     });
   });
 });
-define("mdeditor/tests/integration/pods/components/object/md-schema/component-test", ["qunit", "ember-qunit", "@ember/test-helpers"], function (_qunit, _emberQunit, _testHelpers) {
+define("mdeditor/tests/integration/pods/components/object/md-schema/component-test", ["@ember/template-factory", "qunit", "ember-qunit", "@ember/test-helpers", "@ember/object"], function (_templateFactory, _qunit, _emberQunit, _testHelpers, _object) {
   "use strict";
 
-  0; //eaimeta@70e063a35619d71f0,"qunit",0,"ember-qunit",0,"@ember/test-helpers",0,"htmlbars-inline-precompile",0,"@ember/object"eaimeta@70e063a35619d71f
+  0; //eaimeta@70e063a35619d71f0,"qunit",0,"ember-qunit",0,"@ember/test-helpers",0,"@ember/object",0,"@ember/template-factory"eaimeta@70e063a35619d71f
   (0, _qunit.module)('Integration | Component | object/md-schema', function (hooks) {
     (0, _emberQunit.setupRenderingTest)(hooks);
     (0, _qunit.test)('it renders', async function (assert) {
       // Set any properties with this.set('myProperty', 'value');
       // Handle any actions with this.set('myAction', function(val) { ... });
-      this.set('data', Ember.Object.create({
+      this.set('data', _object.default.create({
         title: 'foo',
         uri: 'bar',
         remoteVersion: '1.1',
         localVersion: '1.0',
         hasUpdate: true
       }));
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         {{object/md-schema record=data}}
       */
       {
-        id: "aeWXPLJE",
-        block: "{\"symbols\":[],\"statements\":[[1,[28,\"object/md-schema\",null,[[\"record\"],[[24,[\"data\"]]]]],false]],\"hasEval\":false}",
-        meta: {}
+        "id": "DjZNp6pR",
+        "block": "[[[1,[28,[35,0],null,[[\"record\"],[[33,1]]]]]],[],false,[\"object/md-schema\",\"data\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
-      assert.equal(this.element.textContent.replace(/[ \s\n]+/g, '|').trim(), '|Info|Schemas|Title|URL|Version|1.0|Update|Available|(1.1)|Description|Type|Select|the|record|type|for|schema.|Apply|Globally?|No|Yes|');
+      assert.equal(this.element.textContent.replace(/[ \s\n]+/g, '|').trim(), '|Info|Schemas|Title|URL|Version|1.0|Update|Available|(1.1)|Description|Description|Type|Select|the|record|type|for|schema.|Apply|Globally?|No|Yes|');
       assert.equal((0, _testHelpers.find)('.md-schema input').value, 'foo', 'render form');
       // Template block usage:
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         
-            {{#object/md-schema record=data}}
+            <Object::MdSchema @record={{data}}>
               template block text
-            {{/object/md-schema}}
+            </Object::MdSchema>
           
       */
       {
-        id: "nvBqZFUC",
-        block: "{\"symbols\":[],\"statements\":[[0,\"\\n\"],[4,\"object/md-schema\",null,[[\"record\"],[[24,[\"data\"]]]],{\"statements\":[[0,\"        template block text\\n\"]],\"parameters\":[]},null],[0,\"    \"]],\"hasEval\":false}",
-        meta: {}
+        "id": "E6+utADk",
+        "block": "[[[1,\"\\n      \"],[8,[39,0],null,[[\"@record\"],[[99,1,[\"@record\"]]]],[[\"default\"],[[[[1,\"\\n        template block text\\n      \"]],[]]]]],[1,\"\\n    \"]],[],false,[\"object/md-schema\",\"data\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
-      assert.equal(this.element.textContent.replace(/[ \s\n]+/g, '|').trim(), '|Info|Schemas|Title|URL|Version|1.0|Update|Available|(1.1)|Description|Type|Select|the|record|type|for|schema.|Apply|Globally?|No|Yes|');
+      assert.equal(this.element.textContent.replace(/[ \s\n]+/g, '|').trim(), '|Info|Schemas|Title|URL|Version|1.0|Update|Available|(1.1)|Description|Description|Type|Select|the|record|type|for|schema.|Apply|Globally?|No|Yes|');
     });
   });
 });
-define("mdeditor/tests/integration/pods/components/object/md-schema/form/component-test", ["qunit", "ember-qunit", "@ember/test-helpers"], function (_qunit, _emberQunit, _testHelpers) {
+define("mdeditor/tests/integration/pods/components/object/md-schema/form/component-test", ["@ember/template-factory", "qunit", "ember-qunit", "@ember/test-helpers", "@ember/object"], function (_templateFactory, _qunit, _emberQunit, _testHelpers, _object) {
   "use strict";
 
-  0; //eaimeta@70e063a35619d71f0,"qunit",0,"ember-qunit",0,"@ember/test-helpers",0,"htmlbars-inline-precompile",0,"@ember/object"eaimeta@70e063a35619d71f
+  0; //eaimeta@70e063a35619d71f0,"qunit",0,"ember-qunit",0,"@ember/test-helpers",0,"@ember/object",0,"@ember/template-factory"eaimeta@70e063a35619d71f
   (0, _qunit.module)('Integration | Component | object/md-schema/form', function (hooks) {
     (0, _emberQunit.setupRenderingTest)(hooks);
     (0, _qunit.test)('it renders', async function (assert) {
       // Set any properties with this.set('myProperty', 'value');
       // Handle any actions with this.set('myAction', function(val) { ... });
-      this.set('data', Ember.Object.create({
+      this.set('data', _object.default.create({
         title: 'foo',
         uri: 'bar',
         remoteVersion: '1.1',
         localVersion: '1.0',
         hasUpdate: true
       }));
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         {{object/md-schema/form record=data}}
       */
       {
-        id: "+MyiVzQN",
-        block: "{\"symbols\":[],\"statements\":[[1,[28,\"object/md-schema/form\",null,[[\"record\"],[[24,[\"data\"]]]]],false]],\"hasEval\":false}",
-        meta: {}
+        "id": "RcZYyoU/",
+        "block": "[[[1,[28,[35,0],null,[[\"record\"],[[33,1]]]]]],[],false,[\"object/md-schema/form\",\"data\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
-      assert.equal(this.element.textContent.replace(/[ \s\n]+/g, '|').trim(), '|Title|URL|Version|1.0|Update|Available|(1.1)|Description|Type|Select|the|record|type|for|schema.|Apply|Globally?|No|Yes|');
+      assert.equal(this.element.textContent.replace(/[ \s\n]+/g, '|').trim(), '|Title|URL|Version|1.0|Update|Available|(1.1)|Description|Description|Type|Select|the|record|type|for|schema.|Apply|Globally?|No|Yes|');
       assert.equal((0, _testHelpers.find)('input').value, 'foo', 'render form');
 
       // Template block usage:
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         
-            {{#object/md-schema/form record=data}}
+            <Object::MdSchema::Form @record={{data}}>
               template block text
-            {{/object/md-schema/form}}
+            </Object::MdSchema::Form>
           
       */
       {
-        id: "GsxwB8iq",
-        block: "{\"symbols\":[],\"statements\":[[0,\"\\n\"],[4,\"object/md-schema/form\",null,[[\"record\"],[[24,[\"data\"]]]],{\"statements\":[[0,\"        template block text\\n\"]],\"parameters\":[]},null],[0,\"    \"]],\"hasEval\":false}",
-        meta: {}
+        "id": "kOttnapS",
+        "block": "[[[1,\"\\n      \"],[8,[39,0],null,[[\"@record\"],[[99,1,[\"@record\"]]]],[[\"default\"],[[[[1,\"\\n        template block text\\n      \"]],[]]]]],[1,\"\\n    \"]],[],false,[\"object/md-schema/form\",\"data\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
-      assert.equal(this.element.textContent.replace(/[ \s\n]+/g, '|').trim(), '|Title|URL|Version|1.0|Update|Available|(1.1)|Description|Type|Select|the|record|type|for|schema.|Apply|Globally?|No|Yes|template|block|text|');
+      assert.equal(this.element.textContent.replace(/[ \s\n]+/g, '|').trim(), '|Title|URL|Version|1.0|Update|Available|(1.1)|Description|Description|Type|Select|the|record|type|for|schema.|Apply|Globally?|No|Yes|template|block|text|');
     });
   });
 });
-define("mdeditor/tests/integration/pods/components/object/md-simple-array-table/component-test", ["@ember/test-helpers", "qunit", "ember-qunit"], function (_testHelpers, _qunit, _emberQunit) {
+define("mdeditor/tests/integration/pods/components/object/md-simple-array-table/component-test", ["@ember/template-factory", "@ember/test-helpers", "qunit", "ember-qunit"], function (_templateFactory, _testHelpers, _qunit, _emberQunit) {
   "use strict";
 
-  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"htmlbars-inline-precompile"eaimeta@70e063a35619d71f
+  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"@ember/template-factory"eaimeta@70e063a35619d71f
   (0, _qunit.module)('Integration | Component | object/md simple array table', function (hooks) {
     (0, _emberQunit.setupRenderingTest)(hooks);
     (0, _qunit.test)('it renders', async function (assert) {
@@ -9363,19 +9759,20 @@ define("mdeditor/tests/integration/pods/components/object/md-simple-array-table/
       //   this.model.pushObject(val);
       // });
 
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         {{object/md-simple-array-table}}
       */
       {
-        id: "elWQtSaT",
-        block: "{\"symbols\":[],\"statements\":[[1,[22,\"object/md-simple-array-table\"],false]],\"hasEval\":false}",
-        meta: {}
+        "id": "zvPm+TCP",
+        "block": "[[[1,[34,0]]],[],false,[\"object/md-simple-array-table\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       assert.equal(this.element.textContent.replace(/[\s\n]+/g, '|').trim(), '|No|Item|found.|Add|Item|');
 
       // Template block usage:
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         
             {{#object/md-simple-array-table
@@ -9391,9 +9788,10 @@ define("mdeditor/tests/integration/pods/components/object/md-simple-array-table/
           
       */
       {
-        id: "II9umch+",
-        block: "{\"symbols\":[\"foo\"],\"statements\":[[0,\"\\n\"],[4,\"object/md-simple-array-table\",null,[[\"title\",\"required\",\"plain\",\"value\"],[\"FooBar\",false,true,[24,[\"model\"]]]],{\"statements\":[[0,\"        \"],[7,\"td\",true],[8],[0,\"\\n            \"],[1,[23,1,[\"item\",\"value\"]],false],[0,\"\\n        \"],[9],[0,\"\\n\"]],\"parameters\":[1]},null],[0,\"    \"]],\"hasEval\":false}",
-        meta: {}
+        "id": "1FPsOUh2",
+        "block": "[[[1,\"\\n\"],[6,[39,0],null,[[\"title\",\"required\",\"plain\",\"value\"],[\"FooBar\",false,true,[33,1]]],[[\"default\"],[[[[1,\"        \"],[10,\"td\"],[12],[1,\"\\n            \"],[1,[30,1,[\"item\",\"value\"]]],[1,\"\\n        \"],[13],[1,\"\\n\"]],[1]]]]],[1,\"    \"]],[\"foo\"],false,[\"object/md-simple-array-table\",\"model\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       assert.equal(this.element.textContent.replace(/[\s\n]+/g, '|').trim(), '|FooBars|2|Add|FooBar|0|biz|Delete|1|baz|Delete|');
       await (0, _testHelpers.click)('.btn-info');
@@ -9403,16 +9801,16 @@ define("mdeditor/tests/integration/pods/components/object/md-simple-array-table/
     });
   });
 });
-define("mdeditor/tests/integration/pods/components/object/md-source/component-test", ["@ember/test-helpers", "qunit", "ember-qunit"], function (_testHelpers, _qunit, _emberQunit) {
+define("mdeditor/tests/integration/pods/components/object/md-source/component-test", ["@ember/template-factory", "@ember/test-helpers", "qunit", "ember-qunit"], function (_templateFactory, _testHelpers, _qunit, _emberQunit) {
   "use strict";
 
-  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"htmlbars-inline-precompile"eaimeta@70e063a35619d71f
+  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"@ember/template-factory"eaimeta@70e063a35619d71f
   (0, _qunit.module)('Integration | Component | object/md source', function (hooks) {
     (0, _emberQunit.setupRenderingTest)(hooks);
     (0, _qunit.test)('it renders', async function (assert) {
       // Set any properties with this.set('myProperty', 'value');
       // Handle any actions with this.on('myAction', function(val) { ... });
-      this.source = {
+      this.set('source', {
         "description": "description",
         "sourceCitation": {
           "title": "title"
@@ -9440,40 +9838,42 @@ define("mdeditor/tests/integration/pods/components/object/md-source/component-te
         }, {
           "description": "description1"
         }]
-      };
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      });
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
-        {{object/md-source profilePath="foobar" model=source}}
+        {{object/md-source profilePath="foobar" model=this.source}}
       */
       {
-        id: "vqCFfQaa",
-        block: "{\"symbols\":[],\"statements\":[[1,[28,\"object/md-source\",null,[[\"profilePath\",\"model\"],[\"foobar\",[24,[\"source\"]]]]],false]],\"hasEval\":false}",
-        meta: {}
+        "id": "hn5lXQpZ",
+        "block": "[[[1,[28,[35,0],null,[[\"profilePath\",\"model\"],[\"foobar\",[30,0,[\"source\"]]]]]]],[],false,[\"object/md-source\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
-      assert.equal(this.element.textContent.replace(/[\s\n]+/g, '|').trim(), '|Source|ID|Description|Scope|Select|type|of|resource.|Source|Citation|Basic|Information|Title|No|Alternate|Title|found.|Add|Alternate|Title|No|Date|found.|Add|Date|No|Responsible|Party|found.|Add|Responsible|Party|No|Online|Resource|found.|Add|Online|Resource|No|Identifier|found.|Add|Identifier|No|Identifier|found.|Add|Identifier|No|Identifier|found.|Add|Identifier|Metadata|Citation|2|Add|OK|#|Title|0|title0|Edit|Delete|1|title1|Edit|Delete|Spatial|Reference|System|Reference|System|Type|referenceSystemType|×|Reference|System|Identifier|Identifier|Namespace|Select|or|type|a|namespace|for|the|identifier.|Version|Description|Authority|Basic|Information|Title|No|Alternate|Title|found.|Add|Alternate|Title|No|Date|found.|Add|Date|No|Responsible|Party|found.|Add|Responsible|Party|No|Online|Resource|found.|Add|Online|Resource|No|Identifier|found.|Add|Identifier|No|Identifier|found.|Add|Identifier|No|Identifier|found.|Add|Identifier|Spatial|Resolution|Scale|Factor|Level|Of|Detail|Measure|Measure|Type|distance|Value|Units|');
+      assert.equal(this.element.textContent.replace(/[\s\n]+/g, '|').trim(), '|Source|ID|Description|Description|Scope|Select|type|of|resource.|Source|Citation|Basic|Information|Title|No|Alternate|Title|found.|Add|Alternate|Title|No|Date|found.|Add|Date|Edition|Presentation|Form|No|Responsible|Party|found.|Add|Responsible|Party|No|Online|Resource|found.|Add|Online|Resource|No|Identifier|found.|Add|Identifier|No|Identifier|found.|Add|Identifier|No|Identifier|found.|Add|Identifier|Series|Name|Issue|Page|No|Other|Details|found.|Add|Other|Detail|No|Graphic|found.|Add|Graphic|Metadata|Citation|2|Add|OK|#|Title|0|title0|Edit|Delete|1|title1|Edit|Delete|Spatial|Reference|System|Reference|System|Type|referenceSystemType|×|Reference|System|Identifier|Identifier|Namespace|Select|or|type|a|namespace|for|the|identifier.|Version|Description|Description|Authority|Basic|Information|Title|No|Alternate|Title|found.|Add|Alternate|Title|No|Date|found.|Add|Date|No|Responsible|Party|found.|Add|Responsible|Party|No|Online|Resource|found.|Add|Online|Resource|No|Identifier|found.|Add|Identifier|No|Identifier|found.|Add|Identifier|No|Identifier|found.|Add|Identifier|Spatial|Resolution|Scale|Factor|Level|Of|Detail|Measure|Measure|Type|distance|Value|Units|');
 
       // Template block usage:
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         
-            {{#object/md-source profilePath="foobar" model=(hash)}}
+            <Object::MdSource @profilePath="foobar" @model={{(hash)}}>
               template block text
-            {{/object/md-source}}
+            </Object::MdSource>
           
       */
       {
-        id: "liklxbTM",
-        block: "{\"symbols\":[],\"statements\":[[0,\"\\n\"],[4,\"object/md-source\",null,[[\"profilePath\",\"model\"],[\"foobar\",[28,\"hash\",null,null]]],{\"statements\":[[0,\"        template block text\\n\"]],\"parameters\":[]},null],[0,\"    \"]],\"hasEval\":false}",
-        meta: {}
+        "id": "60MKpVvr",
+        "block": "[[[1,\"\\n      \"],[8,[39,0],null,[[\"@profilePath\",\"@model\"],[\"foobar\",[28,[37,1],null,null]]],[[\"default\"],[[[[1,\"\\n        template block text\\n      \"]],[]]]]],[1,\"\\n    \"]],[],false,[\"object/md-source\",\"hash\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
-      assert.equal(this.element.textContent.replace(/[\s\n]+/g, '|').trim(), "|Source|ID|Description|Scope|Select|type|of|resource.|Source|Citation|Basic|Information|Title|No|Alternate|Title|found.|Add|Alternate|Title|No|Date|found.|Add|Date|No|Responsible|Party|found.|Add|Responsible|Party|No|Online|Resource|found.|Add|Online|Resource|No|Identifier|found.|Add|Identifier|No|Identifier|found.|Add|Identifier|No|Identifier|found.|Add|Identifier|No|Metadata|Citation|found.|Add|Metadata|Citation|Spatial|Reference|System|Reference|System|Type|Select|type|of|reference|system|used.|Reference|System|Identifier|Identifier|Namespace|Select|or|type|a|namespace|for|the|identifier.|Version|Description|Authority|Basic|Information|Title|No|Alternate|Title|found.|Add|Alternate|Title|No|Date|found.|Add|Date|No|Responsible|Party|found.|Add|Responsible|Party|No|Online|Resource|found.|Add|Online|Resource|No|Identifier|found.|Add|Identifier|No|Identifier|found.|Add|Identifier|No|Identifier|found.|Add|Identifier|Spatial|Resolution|Scale|Factor|Level|Of|Detail|Measure|Measure|Type|The|type|of|measurement.|Value|Units|", 'block');
+      assert.equal(this.element.textContent.replace(/[\s\n]+/g, '|').trim(), "|Source|ID|Description|Description|Scope|Select|type|of|resource.|Source|Citation|Basic|Information|Title|No|Alternate|Title|found.|Add|Alternate|Title|No|Date|found.|Add|Date|Edition|Presentation|Form|No|Responsible|Party|found.|Add|Responsible|Party|No|Online|Resource|found.|Add|Online|Resource|No|Identifier|found.|Add|Identifier|No|Identifier|found.|Add|Identifier|No|Identifier|found.|Add|Identifier|Series|Name|Issue|Page|No|Other|Details|found.|Add|Other|Detail|No|Graphic|found.|Add|Graphic|No|Metadata|Citation|found.|Add|Metadata|Citation|Spatial|Reference|System|Reference|System|Type|Select|type|of|reference|system|used.|Reference|System|Identifier|Identifier|Namespace|Select|or|type|a|namespace|for|the|identifier.|Version|Description|Description|Authority|Basic|Information|Title|No|Alternate|Title|found.|Add|Alternate|Title|No|Date|found.|Add|Date|No|Responsible|Party|found.|Add|Responsible|Party|No|Online|Resource|found.|Add|Online|Resource|No|Identifier|found.|Add|Identifier|No|Identifier|found.|Add|Identifier|No|Identifier|found.|Add|Identifier|Spatial|Resolution|Scale|Factor|Level|Of|Detail|Measure|Measure|Type|The|type|of|measurement.|Value|Units|", 'block');
     });
   });
 });
-define("mdeditor/tests/integration/pods/components/object/md-source/preview/component-test", ["@ember/test-helpers", "qunit", "ember-qunit"], function (_testHelpers, _qunit, _emberQunit) {
+define("mdeditor/tests/integration/pods/components/object/md-source/preview/component-test", ["@ember/template-factory", "@ember/test-helpers", "qunit", "ember-qunit"], function (_templateFactory, _testHelpers, _qunit, _emberQunit) {
   "use strict";
 
-  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"htmlbars-inline-precompile"eaimeta@70e063a35619d71f
+  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"@ember/template-factory"eaimeta@70e063a35619d71f
   (0, _qunit.module)('Integration | Component | object/md source/preview', function (hooks) {
     (0, _emberQunit.setupRenderingTest)(hooks);
     (0, _qunit.test)('it renders', async function (assert) {
@@ -9508,39 +9908,41 @@ define("mdeditor/tests/integration/pods/components/object/md-source/preview/comp
           "description": "description1"
         }]
       };
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         {{object/md-source/preview model=source profilePath="foobar"}}
       */
       {
-        id: "JirYe/lT",
-        block: "{\"symbols\":[],\"statements\":[[1,[28,\"object/md-source/preview\",null,[[\"model\",\"profilePath\"],[[24,[\"source\"]],\"foobar\"]]],false]],\"hasEval\":false}",
-        meta: {}
+        "id": "Cb7tw0U9",
+        "block": "[[[1,[28,[35,0],null,[[\"model\",\"profilePath\"],[[33,1],\"foobar\"]]]]],[],false,[\"object/md-source/preview\",\"source\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       assert.equal((0, _testHelpers.find)('textarea').value, 'description');
 
       // Template block usage:
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         
-            {{#object/md-source/preview model=source profilePath="foobar"}}
+            <Object::MdSource::Preview @model={{source}} @profilePath="foobar">
               template block text
-            {{/object/md-source/preview}}
+            </Object::MdSource::Preview>
           
       */
       {
-        id: "+un1IO3o",
-        block: "{\"symbols\":[],\"statements\":[[0,\"\\n\"],[4,\"object/md-source/preview\",null,[[\"model\",\"profilePath\"],[[24,[\"source\"]],\"foobar\"]],{\"statements\":[[0,\"        template block text\\n\"]],\"parameters\":[]},null],[0,\"    \"]],\"hasEval\":false}",
-        meta: {}
+        "id": "cDE4XOIJ",
+        "block": "[[[1,\"\\n      \"],[8,[39,0],null,[[\"@model\",\"@profilePath\"],[[99,1,[\"@model\"]],\"foobar\"]],[[\"default\"],[[[[1,\"\\n        template block text\\n      \"]],[]]]]],[1,\"\\n    \"]],[],false,[\"object/md-source/preview\",\"source\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       assert.equal((0, _testHelpers.find)('textarea').value, 'description');
     });
   });
 });
-define("mdeditor/tests/integration/pods/components/object/md-spatial-info/component-test", ["@ember/test-helpers", "qunit", "ember-qunit"], function (_testHelpers, _qunit, _emberQunit) {
+define("mdeditor/tests/integration/pods/components/object/md-spatial-info/component-test", ["@ember/template-factory", "@ember/test-helpers", "qunit", "ember-qunit"], function (_templateFactory, _testHelpers, _qunit, _emberQunit) {
   "use strict";
 
-  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"htmlbars-inline-precompile"eaimeta@70e063a35619d71f
+  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"@ember/template-factory"eaimeta@70e063a35619d71f
   (0, _qunit.module)('Integration | Component | object/md spatial info', function (hooks) {
     (0, _emberQunit.setupRenderingTest)(hooks);
     (0, _qunit.test)('it renders', async function (assert) {
@@ -9622,30 +10024,32 @@ define("mdeditor/tests/integration/pods/components/object/md-spatial-info/compon
         }],
         spatialRepresentationType: ["vector", "stereoModel"]
       };
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         {{object/md-spatial-info profilePath="foobar" model=model}}
       */
       {
-        id: "xMvYgFoi",
-        block: "{\"symbols\":[],\"statements\":[[1,[28,\"object/md-spatial-info\",null,[[\"profilePath\",\"model\"],[\"foobar\",[24,[\"model\"]]]]],false]],\"hasEval\":false}",
-        meta: {}
+        "id": "W8F+0eP8",
+        "block": "[[[1,[28,[35,0],null,[[\"profilePath\",\"model\"],[\"foobar\",[33,1]]]]]],[],false,[\"object/md-spatial-info\",\"model\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       assert.equal(this.element.textContent.replace(/[\s\n]+/g, '|').trim(), '|Spatial|Representation|Type|×|stereoModel|?|×|vector|?|Spatial|Reference|System|5|Add|OK|#|Reference|System|Type|Identifier|0|referenceSystemType|identifier|Edit|Delete|1|projected|Zone|10|Edit|Delete|2|geodeticGeographic2D|4326|Edit|Delete|3|projected|Not|Defined|Edit|Delete|4|geodeticGeographic2D|Not|Defined|Edit|Delete|Spatial|Resolution|6|Add|OK|#|Scale|Factor|Level|Of|Detail|Type|0|99999|Not|Defined|Not|Defined|Edit|Delete|1|Not|Defined|Not|Defined|distance|Edit|Delete|2|Not|Defined|levelOfDetail|Not|Defined|Edit|Delete|3|Not|Defined|Not|Defined|Not|Defined|Edit|Delete|4|Not|Defined|Not|Defined|Not|Defined|Edit|Delete|5|Not|Defined|Not|Defined|Not|Defined|Edit|Delete|Add|Spatial|Resolution|No|Raster|Description|found.|Add|Raster|Description|');
 
       // Template block usage:
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         
-            {{#object/md-spatial-info profilePath="foobar" model=(hash)}}
+            <Object::MdSpatialInfo @profilePath="foobar" @model={{hash}}>
               template block text
-            {{/object/md-spatial-info}}
+            </Object::MdSpatialInfo>
           
       */
       {
-        id: "SFe1LKyx",
-        block: "{\"symbols\":[],\"statements\":[[0,\"\\n\"],[4,\"object/md-spatial-info\",null,[[\"profilePath\",\"model\"],[\"foobar\",[28,\"hash\",null,null]]],{\"statements\":[[0,\"        template block text\\n\"]],\"parameters\":[]},null],[0,\"    \"]],\"hasEval\":false}",
-        meta: {}
+        "id": "iaNU5Y66",
+        "block": "[[[1,\"\\n      \"],[8,[39,0],null,[[\"@profilePath\",\"@model\"],[\"foobar\",[99,1,[\"@model\"]]]],[[\"default\"],[[[[1,\"\\n        template block text\\n      \"]],[]]]]],[1,\"\\n    \"]],[],false,[\"object/md-spatial-info\",\"hash\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       assert.equal(this.element.textContent.replace(/[\s\n]+/g, '|').trim(), '|Spatial|Representation|Type|No|Spatial|Reference|System|found.|Add|Spatial|Reference|System|No|Spatial|Resolution|found.|Add|Spatial|Resolution|No|Raster|Description|found.|Add|Raster|Description|template|block|text|', 'block');
     });
@@ -9654,16 +10058,16 @@ define("mdeditor/tests/integration/pods/components/object/md-spatial-info/compon
     });
   });
 });
-define("mdeditor/tests/integration/pods/components/object/md-spatial-resolution/component-test", ["@ember/test-helpers", "qunit", "ember-qunit"], function (_testHelpers, _qunit, _emberQunit) {
+define("mdeditor/tests/integration/pods/components/object/md-spatial-resolution/component-test", ["@ember/template-factory", "@ember/test-helpers", "qunit", "ember-qunit"], function (_templateFactory, _testHelpers, _qunit, _emberQunit) {
   "use strict";
 
-  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"htmlbars-inline-precompile"eaimeta@70e063a35619d71f
+  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"@ember/template-factory"eaimeta@70e063a35619d71f
   (0, _qunit.module)('Integration | Component | object/md spatial resolution', function (hooks) {
     (0, _emberQunit.setupRenderingTest)(hooks);
     (0, _qunit.test)('it renders', async function (assert) {
       // Set any properties with this.set('myProperty', 'value');
       // Handle any actions with this.on('myAction', function(val) { ... });
-      this.model = {
+      this.set('model', {
         "scaleFactor": {
           scaleFactor: 99999
         },
@@ -9701,101 +10105,108 @@ define("mdeditor/tests/integration/pods/components/object/md-spatial-resolution/
             "unitOfMeasure": "unitOfMeasure"
           }
         }
-      };
+      });
 
       //Todo: Look into this
       //! this option was giving not working well with the regex experesson
       //var empty = "Scale|Factor|Level|Of|Detail|Measure|Measure|Type|The|type|of|measurement.|Value|Units|";
 
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
-        {{object/md-spatial-resolution profilePath="foobar" model=model.scaleFactor}}
+        {{object/md-spatial-resolution profilePath="foobar" model=this.model.scaleFactor}}
       */
       {
-        id: "eXxtRz+M",
-        block: "{\"symbols\":[],\"statements\":[[1,[28,\"object/md-spatial-resolution\",null,[[\"profilePath\",\"model\"],[\"foobar\",[24,[\"model\",\"scaleFactor\"]]]]],false]],\"hasEval\":false}",
-        meta: {}
+        "id": "2HgQN58t",
+        "block": "[[[1,[28,[35,0],null,[[\"profilePath\",\"model\"],[\"foobar\",[30,0,[\"model\",\"scaleFactor\"]]]]]]],[],false,[\"object/md-spatial-resolution\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       assert.equal((0, _testHelpers.findAll)('.md-input-input input')[0].value, this.model.scaleFactor.scaleFactor, 'scaleFactor');
       assert.ok((0, _testHelpers.findAll)('.md-input-input input')[1].disabled, 'level disabled');
       assert.ok((0, _testHelpers.findAll)('.md-input-input input')[2].disabled, 'measure disabled');
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
-        {{object/md-spatial-resolution profilePath="foobar" model=model.measure}}
+        {{object/md-spatial-resolution profilePath="foobar" model=this.model.measure}}
       */
       {
-        id: "0eFa4FGj",
-        block: "{\"symbols\":[],\"statements\":[[1,[28,\"object/md-spatial-resolution\",null,[[\"profilePath\",\"model\"],[\"foobar\",[24,[\"model\",\"measure\"]]]]],false]],\"hasEval\":false}",
-        meta: {}
+        "id": "DntC/fZX",
+        "block": "[[[1,[28,[35,0],null,[[\"profilePath\",\"model\"],[\"foobar\",[30,0,[\"model\",\"measure\"]]]]]]],[],false,[\"object/md-spatial-resolution\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       assert.equal((0, _testHelpers.findAll)('.md-input-input input')[2].value, this.model.measure.measure.value, 'measure');
       assert.ok((0, _testHelpers.findAll)('.md-input-input input')[1].disabled, 'level disabled');
       assert.ok((0, _testHelpers.findAll)('.md-input-input input')[0].disabled, 'scaleFactor disabled');
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
-        {{object/md-spatial-resolution profilePath="foobar" model=model.levelOfDetail}}
+        {{object/md-spatial-resolution profilePath="foobar" model=this.model.levelOfDetail}}
       */
       {
-        id: "MUZ988Xw",
-        block: "{\"symbols\":[],\"statements\":[[1,[28,\"object/md-spatial-resolution\",null,[[\"profilePath\",\"model\"],[\"foobar\",[24,[\"model\",\"levelOfDetail\"]]]]],false]],\"hasEval\":false}",
-        meta: {}
+        "id": "bsMJ29v/",
+        "block": "[[[1,[28,[35,0],null,[[\"profilePath\",\"model\"],[\"foobar\",[30,0,[\"model\",\"levelOfDetail\"]]]]]]],[],false,[\"object/md-spatial-resolution\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       assert.equal((0, _testHelpers.findAll)('.md-input-input input')[1].value, this.model.levelOfDetail.levelOfDetail, 'levelOfDetail');
       assert.ok((0, _testHelpers.findAll)('.md-input-input input')[2].disabled, 'measure disabled');
       assert.ok((0, _testHelpers.findAll)('.md-input-input input')[0].disabled, 'scaleFactor disabled');
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
-        {{object/md-spatial-resolution profilePath="foobar" model=model.geographicResolution}}
+        {{object/md-spatial-resolution profilePath="foobar" model=this.model.geographicResolution}}
       */
       {
-        id: "MOe+H7V/",
-        block: "{\"symbols\":[],\"statements\":[[1,[28,\"object/md-spatial-resolution\",null,[[\"profilePath\",\"model\"],[\"foobar\",[24,[\"model\",\"geographicResolution\"]]]]],false]],\"hasEval\":false}",
-        meta: {}
+        "id": "iTg2Vu5d",
+        "block": "[[[1,[28,[35,0],null,[[\"profilePath\",\"model\"],[\"foobar\",[30,0,[\"model\",\"geographicResolution\"]]]]]]],[],false,[\"object/md-spatial-resolution\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       assert.equal(this.element.textContent.replace(/[\s\n]+/g, '|').trim(), '|Scale|Factor|Level|Of|Detail|Measure|Measure|Type|The|type|of|measurement.|Value|Units|', 'geographicResolution');
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
-        {{object/md-spatial-resolution profilePath="foobar" model=model.bearingDistanceResolution}}
+        {{object/md-spatial-resolution profilePath="foobar" model=this.model.bearingDistanceResolution}}
       */
       {
-        id: "e3fWXarz",
-        block: "{\"symbols\":[],\"statements\":[[1,[28,\"object/md-spatial-resolution\",null,[[\"profilePath\",\"model\"],[\"foobar\",[24,[\"model\",\"bearingDistanceResolution\"]]]]],false]],\"hasEval\":false}",
-        meta: {}
+        "id": "s9Rg3XUJ",
+        "block": "[[[1,[28,[35,0],null,[[\"profilePath\",\"model\"],[\"foobar\",[30,0,[\"model\",\"bearingDistanceResolution\"]]]]]]],[],false,[\"object/md-spatial-resolution\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       assert.equal(this.element.textContent.replace(/[\s\n]+/g, '|').trim(), '|Scale|Factor|Level|Of|Detail|Measure|Measure|Type|The|type|of|measurement.|Value|Units|', 'bearingDistanceResolution');
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
-        {{object/md-spatial-resolution profilePath="foobar" model=model.coordinateResolution}}
+        {{object/md-spatial-resolution profilePath="foobar" model=this.model.coordinateResolution}}
       */
       {
-        id: "Oc7PDvLs",
-        block: "{\"symbols\":[],\"statements\":[[1,[28,\"object/md-spatial-resolution\",null,[[\"profilePath\",\"model\"],[\"foobar\",[24,[\"model\",\"coordinateResolution\"]]]]],false]],\"hasEval\":false}",
-        meta: {}
+        "id": "+n88OJ4H",
+        "block": "[[[1,[28,[35,0],null,[[\"profilePath\",\"model\"],[\"foobar\",[30,0,[\"model\",\"coordinateResolution\"]]]]]]],[],false,[\"object/md-spatial-resolution\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       assert.equal(this.element.textContent.replace(/[\s\n]+/g, '|').trim(), '|Scale|Factor|Level|Of|Detail|Measure|Measure|Type|The|type|of|measurement.|Value|Units|', 'coordinateResolution');
 
       // Template block usage:
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         
-            {{#object/md-spatial-resolution model=(hash) profilePath="foobar"}}
+            <Object::MdSpatialResolution @model={{(hash)}} @profilePath="foobar">
               template block text
-            {{/object/md-spatial-resolution}}
+            </Object::MdSpatialResolution>
           
       */
       {
-        id: "YXFsDwzP",
-        block: "{\"symbols\":[],\"statements\":[[0,\"\\n\"],[4,\"object/md-spatial-resolution\",null,[[\"model\",\"profilePath\"],[[28,\"hash\",null,null],\"foobar\"]],{\"statements\":[[0,\"        template block text\\n\"]],\"parameters\":[]},null],[0,\"    \"]],\"hasEval\":false}",
-        meta: {}
+        "id": "jzGT1Q2T",
+        "block": "[[[1,\"\\n      \"],[8,[39,0],null,[[\"@model\",\"@profilePath\"],[[28,[37,1],null,null],\"foobar\"]],[[\"default\"],[[[[1,\"\\n        template block text\\n      \"]],[]]]]],[1,\"\\n    \"]],[],false,[\"object/md-spatial-resolution\",\"hash\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       assert.equal(this.element.textContent.replace(/[\s\n]+/g, '|').trim(), '|Scale|Factor|Level|Of|Detail|Measure|Measure|Type|The|type|of|measurement.|Value|Units|' + 'template|block|text|', 'block');
     });
   });
 });
-define("mdeditor/tests/integration/pods/components/object/md-srs/component-test", ["@ember/test-helpers", "qunit", "ember-qunit"], function (_testHelpers, _qunit, _emberQunit) {
+define("mdeditor/tests/integration/pods/components/object/md-srs/component-test", ["@ember/template-factory", "@ember/test-helpers", "qunit", "ember-qunit"], function (_templateFactory, _testHelpers, _qunit, _emberQunit) {
   "use strict";
 
-  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"htmlbars-inline-precompile"eaimeta@70e063a35619d71f
+  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"@ember/template-factory"eaimeta@70e063a35619d71f
   (0, _qunit.module)('Integration | Component | object/md srs', function (hooks) {
     (0, _emberQunit.setupRenderingTest)(hooks);
     (0, _qunit.test)('it renders', async function (assert) {
@@ -9809,90 +10220,95 @@ define("mdeditor/tests/integration/pods/components/object/md-srs/component-test"
           "description": "description"
         }
       };
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         {{object/md-srs profilePath="foobar" model=srs}}
       */
       {
-        id: "Sy6WAXJG",
-        block: "{\"symbols\":[],\"statements\":[[1,[28,\"object/md-srs\",null,[[\"profilePath\",\"model\"],[\"foobar\",[24,[\"srs\"]]]]],false]],\"hasEval\":false}",
-        meta: {}
+        "id": "Unx92OnJ",
+        "block": "[[[1,[28,[35,0],null,[[\"profilePath\",\"model\"],[\"foobar\",[33,1]]]]]],[],false,[\"object/md-srs\",\"srs\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
-      assert.equal(this.element.textContent.replace(/[\s\n]+/g, '|').trim(), '|Reference|System|Type|projected|?|×|Reference|System|Identifier|Identifier|Namespace|Select|or|type|a|namespace|for|the|identifier.|Version|Description|Authority|Basic|Information|Title|No|Alternate|Title|found.|Add|Alternate|Title|No|Date|found.|Add|Date|No|Responsible|Party|found.|Add|Responsible|Party|No|Online|Resource|found.|Add|Online|Resource|No|Identifier|found.|Add|Identifier|No|Identifier|found.|Add|Identifier|No|Identifier|found.|Add|Identifier|');
+      assert.equal(this.element.textContent.replace(/[\s\n]+/g, '|').trim(), '|Reference|System|Type|projected|?|×|Reference|System|Identifier|Identifier|Namespace|Select|or|type|a|namespace|for|the|identifier.|Version|Description|Description|Authority|Basic|Information|Title|No|Alternate|Title|found.|Add|Alternate|Title|No|Date|found.|Add|Date|No|Responsible|Party|found.|Add|Responsible|Party|No|Online|Resource|found.|Add|Online|Resource|No|Identifier|found.|Add|Identifier|No|Identifier|found.|Add|Identifier|No|Identifier|found.|Add|Identifier|');
       var input = (0, _testHelpers.findAll)('input, textarea').mapBy('value').join('|');
       assert.equal(input, 'identifier|version|description|', 'input values');
 
       // Template block usage:
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         
-            {{#object/md-srs profilePath="foobar"}}
+            <Object::MdSrs @profilePath="foobar">
               template block text
-            {{/object/md-srs}}
+            </Object::MdSrs>
           
       */
       {
-        id: "8sDbB5EM",
-        block: "{\"symbols\":[],\"statements\":[[0,\"\\n\"],[4,\"object/md-srs\",null,[[\"profilePath\"],[\"foobar\"]],{\"statements\":[[0,\"        template block text\\n\"]],\"parameters\":[]},null],[0,\"    \"]],\"hasEval\":false}",
-        meta: {}
+        "id": "G/z/wYTI",
+        "block": "[[[1,\"\\n      \"],[8,[39,0],null,[[\"@profilePath\"],[\"foobar\"]],[[\"default\"],[[[[1,\"\\n        template block text\\n      \"]],[]]]]],[1,\"\\n    \"]],[],false,[\"object/md-srs\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       assert.equal(this.element.textContent.replace(/[\s\n]+/g, '|').trim(), "|Reference|System|Type|Select|type|of|reference|system|used.|template|block|text|", 'block');
     });
   });
 });
-define("mdeditor/tests/integration/pods/components/object/md-taxonomy/classification/component-test", ["@ember/test-helpers", "qunit", "ember-qunit", "mdeditor/tests/helpers/create-taxonomy"], function (_testHelpers, _qunit, _emberQunit, _createTaxonomy) {
+define("mdeditor/tests/integration/pods/components/object/md-taxonomy/classification/component-test", ["@ember/template-factory", "@ember/test-helpers", "qunit", "ember-qunit", "mdeditor/tests/helpers/create-taxonomy"], function (_templateFactory, _testHelpers, _qunit, _emberQunit, _createTaxonomy) {
   "use strict";
 
-  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"htmlbars-inline-precompile",0,"mdeditor/tests/helpers/create-taxonomy"eaimeta@70e063a35619d71f
+  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"mdeditor/tests/helpers/create-taxonomy",0,"@ember/template-factory"eaimeta@70e063a35619d71f
   (0, _qunit.module)('Integration | Component | object/md taxonomy/classification', function (hooks) {
     (0, _emberQunit.setupRenderingTest)(hooks);
     (0, _qunit.test)('it renders', async function (assert) {
       // Set any properties with this.set('myProperty', 'value');
       // Handle any actions with this.on('myAction', function(val) { ... });
       this.model = (0, _createTaxonomy.default)()[0].taxonomicClassification;
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         {{object/md-taxonomy/classification model=model profilePath="foobar"}}
       */
       {
-        id: "RN7++R2/",
-        block: "{\"symbols\":[],\"statements\":[[1,[28,\"object/md-taxonomy/classification\",null,[[\"model\",\"profilePath\"],[[24,[\"model\"]],\"foobar\"]]],false]],\"hasEval\":false}",
-        meta: {}
+        "id": "SaJ8lDIy",
+        "block": "[[[1,[28,[35,0],null,[[\"model\",\"profilePath\"],[[33,1],\"foobar\"]]]]],[],false,[\"object/md-taxonomy/classification\",\"model\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
-      assert.equal(this.element.textContent.replace(/[\s\n]+/g, '|').trim(), '|Kingdom|Fungi|(555705)|Kingdom|Edit|Delete|Add|Child|Subkingdom|Dikarya|(936287)|Edit|Delete|Add|Child|Division|Basidiomycota|(623881)|Edit|Delete|Add|Child|Kingdom|Animalia|(202423)|Edit|Delete|Add|Child|Subkingdom|Radiata|(914153)|Edit|Delete|Add|Child|Phylum|Cnidaria|(48738)|Edit|Delete|Add|Child|Subphylum|Medusozoa|(718920)|Edit|Delete|Add|Child|Class|Scyphozoa|(51483)|Edit|Delete|Add|Child|Subclass|Discomedusae|(718923)|Edit|Delete|Add|Child|Order|Rhizostomeae|(51756)|Edit|Delete|Add|Child|Family|Rhizostomatidae|(51911)|Edit|Delete|Add|Child|Genus|Rhopilema|(51919)|Edit|Delete|Add|Child|Species|Rhopilema|verrilli|(51920)|mushroom|jellyfish|Edit|Delete|Add|Child|');
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      assert.equal(this.element.textContent.replace(/[\s\n]+/g, '|').trim(), '|Kingdom|Fungi|(555705)|Kingdom|Edit|Delete|Add|Child|Subkingdom|Dikarya|(936287)|Edit|Delete|Add|Child|Division|Basidiomycota|(623881)|Edit|Delete|Add|Child|No|Classification|found.|Kingdom|Animalia|(202423)|Edit|Delete|Add|Child|Subkingdom|Radiata|(914153)|Edit|Delete|Add|Child|Phylum|Cnidaria|(48738)|Edit|Delete|Add|Child|Subphylum|Medusozoa|(718920)|Edit|Delete|Add|Child|Class|Scyphozoa|(51483)|Edit|Delete|Add|Child|Subclass|Discomedusae|(718923)|Edit|Delete|Add|Child|Order|Rhizostomeae|(51756)|Edit|Delete|Add|Child|Family|Rhizostomatidae|(51911)|Edit|Delete|Add|Child|Genus|Rhopilema|(51919)|Edit|Delete|Add|Child|Species|Rhopilema|verrilli|(51920)|mushroom|jellyfish|Edit|Delete|Add|Child|No|Classification|found.|');
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         {{object/md-taxonomy/classification model=model preview=true profilePath="foobar"}}
       */
       {
-        id: "mJysUZSf",
-        block: "{\"symbols\":[],\"statements\":[[1,[28,\"object/md-taxonomy/classification\",null,[[\"model\",\"preview\",\"profilePath\"],[[24,[\"model\"]],true,\"foobar\"]]],false]],\"hasEval\":false}",
-        meta: {}
+        "id": "6JK/U/7E",
+        "block": "[[[1,[28,[35,0],null,[[\"model\",\"preview\",\"profilePath\"],[[33,1],true,\"foobar\"]]]]],[],false,[\"object/md-taxonomy/classification\",\"model\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       assert.equal(this.element.textContent.replace(/[\s\n]+/g, '|').trim(), '|Kingdom|Fungi|(555705)|Kingdom|Kingdom|Animalia|(202423)|');
 
       // Template block usage:
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         
-            {{#object/md-taxonomy/classification profilePath="foobar"}}
+            <Object::MdTaxonomy::Classification @profilePath="foobar">
               template block text
-            {{/object/md-taxonomy/classification}}
+            </Object::MdTaxonomy::Classification>
           
       */
       {
-        id: "m7kGbppK",
-        block: "{\"symbols\":[],\"statements\":[[0,\"\\n\"],[4,\"object/md-taxonomy/classification\",null,[[\"profilePath\"],[\"foobar\"]],{\"statements\":[[0,\"        template block text\\n\"]],\"parameters\":[]},null],[0,\"    \"]],\"hasEval\":false}",
-        meta: {}
+        "id": "Nix264/t",
+        "block": "[[[1,\"\\n      \"],[8,[39,0],null,[[\"@profilePath\"],[\"foobar\"]],[[\"default\"],[[[[1,\"\\n        template block text\\n      \"]],[]]]]],[1,\"\\n    \"]],[],false,[\"object/md-taxonomy/classification\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       assert.equal(this.element.textContent.replace(/[\s\n]+/g, '|').trim(), '|No|Classification|found.|', 'block');
     });
   });
 });
-define("mdeditor/tests/integration/pods/components/object/md-taxonomy/classification/taxon/component-test", ["@ember/test-helpers", "qunit", "ember-qunit", "mdeditor/tests/helpers/create-taxonomy"], function (_testHelpers, _qunit, _emberQunit, _createTaxonomy) {
+define("mdeditor/tests/integration/pods/components/object/md-taxonomy/classification/taxon/component-test", ["@ember/template-factory", "@ember/test-helpers", "qunit", "ember-qunit", "mdeditor/tests/helpers/create-taxonomy"], function (_templateFactory, _testHelpers, _qunit, _emberQunit, _createTaxonomy) {
   "use strict";
 
-  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"htmlbars-inline-precompile",0,"mdeditor/tests/helpers/create-taxonomy"eaimeta@70e063a35619d71f
+  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"mdeditor/tests/helpers/create-taxonomy",0,"@ember/template-factory"eaimeta@70e063a35619d71f
   (0, _qunit.module)('Integration | Component | object/md taxonomy/classification/taxon', function (hooks) {
     (0, _emberQunit.setupRenderingTest)(hooks);
     (0, _qunit.test)('it renders', async function (assert) {
@@ -9901,36 +10317,26 @@ define("mdeditor/tests/integration/pods/components/object/md-taxonomy/classifica
       this.delete = function (taxa) {
         assert.ok(taxa, 'called delete');
       };
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         {{object/md-taxonomy/classification/taxon model=model deleteTaxa=delete top=top profilePath="foobar"}}
       */
       {
-        id: "crm4Gk3O",
-        block: "{\"symbols\":[],\"statements\":[[1,[28,\"object/md-taxonomy/classification/taxon\",null,[[\"model\",\"deleteTaxa\",\"top\",\"profilePath\"],[[24,[\"model\"]],[24,[\"delete\"]],[24,[\"top\"]],\"foobar\"]]],false]],\"hasEval\":false}",
-        meta: {}
+        "id": "mJlIOw4h",
+        "block": "[[[1,[28,[35,0],null,[[\"model\",\"deleteTaxa\",\"top\",\"profilePath\"],[[33,1],[33,2],[33,3],\"foobar\"]]]]],[],false,[\"object/md-taxonomy/classification/taxon\",\"model\",\"delete\",\"top\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
-      assert.equal(this.element.textContent.replace(/[\s\n]+/g, '|').trim(), '|Kingdom|Fungi|(555705)|Kingdom|Edit|Delete|Add|Child|Subkingdom|Dikarya|(936287)|Edit|Delete|Add|Child|Division|Basidiomycota|(623881)|Edit|Delete|Add|Child|');
+      assert.equal(this.element.textContent.replace(/[\s\n]+/g, '|').trim(), '|Kingdom|Fungi|(555705)|Kingdom|Edit|Delete|Add|Child|Subkingdom|Dikarya|(936287)|Edit|Delete|Add|Child|Division|Basidiomycota|(623881)|Edit|Delete|Add|Child|No|Classification|found.|');
       // await click('.btn-info');
 
       await (0, _testHelpers.click)('.btn-success');
-      assert.equal(this.element.textContent.replace(/[\s\n]+/g, '|').trim(), '|Kingdom|Fungi|(555705)|Kingdom|Taxonomic|Level|Taxonomic|Name|Taxonomic|ID|Common|Names|1|Add|Common|Name|0|Delete|OK|Subkingdom|Dikarya|(936287)|Edit|Delete|Add|Child|Division|Basidiomycota|(623881)|Edit|Delete|Add|Child|', 'edit');
+      assert.equal(this.element.textContent.replace(/[\s\n]+/g, '|').trim(), '|Kingdom|Fungi|(555705)|Kingdom|Taxonomic|Level|Taxonomic|Name|Taxonomic|ID|Common|Names|1|Add|Common|Name|0|Delete|OK|Subkingdom|Dikarya|(936287)|Edit|Delete|Add|Child|Division|Basidiomycota|(623881)|Edit|Delete|Add|Child|No|Classification|found.|', 'edit');
       await (0, _testHelpers.click)('.md-taxon-form footer .btn-info');
       await (0, _testHelpers.click)('.btn-danger');
       await (0, _testHelpers.click)('.btn-danger');
-      assert.equal(this.element.textContent.replace(/[\s\n]+/g, '|').trim(), '|Kingdom|Fungi|(555705)|Kingdom|Edit|Delete|Add|Child|Subkingdom|Dikarya|(936287)|Edit|Delete|Add|Child|Division|Basidiomycota|(623881)|Edit|Delete|Add|Child|');
+      assert.equal(this.element.textContent.replace(/[\s\n]+/g, '|').trim(), '|Kingdom|Fungi|(555705)|Kingdom|Edit|Delete|Add|Child|Subkingdom|Dikarya|(936287)|Edit|Delete|Add|Child|Division|Basidiomycota|(623881)|Edit|Delete|Add|Child|No|Classification|found.|');
       await (0, _testHelpers.click)('.md-taxon .md-taxon .btn-info');
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
-      /*
-        <ul class="list-group md-classification">
-            {{object/md-taxonomy/classification/taxon model=model preview=false top=top profilePath="foobar"}}
-          </ul>
-      */
-      {
-        id: "MGLvUSe2",
-        block: "{\"symbols\":[],\"statements\":[[7,\"ul\",true],[10,\"class\",\"list-group md-classification\"],[8],[0,\"\\n      \"],[1,[28,\"object/md-taxonomy/classification/taxon\",null,[[\"model\",\"preview\",\"top\",\"profilePath\"],[[24,[\"model\"]],false,[24,[\"top\"]],\"foobar\"]]],false],[0,\"\\n    \"],[9]],\"hasEval\":false}",
-        meta: {}
-      }));
       await (0, _testHelpers.waitFor)('.md-taxon-form', {
         timeout: 2000,
         count: 1
@@ -9940,236 +10346,245 @@ define("mdeditor/tests/integration/pods/components/object/md-taxonomy/classifica
       });
       assert.dom('.md-taxon-body.md-spotlight-target').isVisible();
       await (0, _testHelpers.click)('.md-taxon-form footer .btn-info');
-      let del = (0, _testHelpers.findAll)('.md-taxon .md-taxon .btn-danger').lastObject;
-      await (0, _testHelpers.click)(del);
-      await (0, _testHelpers.click)(del);
 
-      // Template block usage:
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      // Template block usage — use fresh model to avoid mutation state from above
+      this.freshModel = (0, _createTaxonomy.default)()[0].taxonomicClassification[0];
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         
-            {{#object/md-taxonomy/classification/taxon model=model profilePath="foobar"}}
+            <Object::MdTaxonomy::Classification::Taxon @model={{this.freshModel}} @profilePath="foobar">
               template block text
-            {{/object/md-taxonomy/classification/taxon}}
+            </Object::MdTaxonomy::Classification::Taxon>
           
       */
       {
-        id: "QoGdMJ/5",
-        block: "{\"symbols\":[],\"statements\":[[0,\"\\n\"],[4,\"object/md-taxonomy/classification/taxon\",null,[[\"model\",\"profilePath\"],[[24,[\"model\"]],\"foobar\"]],{\"statements\":[[0,\"        template block text\\n\"]],\"parameters\":[]},null],[0,\"    \"]],\"hasEval\":false}",
-        meta: {}
+        "id": "bmJGUjOi",
+        "block": "[[[1,\"\\n      \"],[8,[39,0],null,[[\"@model\",\"@profilePath\"],[[30,0,[\"freshModel\"]],\"foobar\"]],[[\"default\"],[[[[1,\"\\n        template block text\\n      \"]],[]]]]],[1,\"\\n    \"]],[],false,[\"object/md-taxonomy/classification/taxon\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
-      assert.equal(this.element.textContent.replace(/[\s\n]+/g, '|').trim(), '|Kingdom|Fungi|(555705)|Kingdom|Edit|Delete|Add|Child|Subkingdom|Dikarya|(936287)|Edit|Delete|Add|Child|Division|Basidiomycota|(623881)|Edit|Delete|Add|Child|', 'block');
+      assert.equal(this.element.textContent.replace(/[\s\n]+/g, '|').trim(), '|Kingdom|Fungi|(555705)|Kingdom|Edit|Delete|Add|Child|Subkingdom|Dikarya|(936287)|Edit|Delete|Add|Child|Division|Basidiomycota|(623881)|Edit|Delete|Add|Child|No|Classification|found.|', 'block');
     });
   });
 });
-define("mdeditor/tests/integration/pods/components/object/md-taxonomy/collection/component-test", ["@ember/test-helpers", "qunit", "ember-qunit", "mdeditor/tests/helpers/create-taxonomy"], function (_testHelpers, _qunit, _emberQunit, _createTaxonomy) {
+define("mdeditor/tests/integration/pods/components/object/md-taxonomy/collection/component-test", ["@ember/template-factory", "@ember/test-helpers", "qunit", "ember-qunit", "mdeditor/tests/helpers/create-taxonomy"], function (_templateFactory, _testHelpers, _qunit, _emberQunit, _createTaxonomy) {
   "use strict";
 
-  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"htmlbars-inline-precompile",0,"mdeditor/tests/helpers/create-taxonomy"eaimeta@70e063a35619d71f
+  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"mdeditor/tests/helpers/create-taxonomy",0,"@ember/template-factory"eaimeta@70e063a35619d71f
   (0, _qunit.module)('Integration | Component | object/md taxonomy/collection', function (hooks) {
     (0, _emberQunit.setupRenderingTest)(hooks);
     (0, _qunit.test)('it renders', async function (assert) {
       // Set any properties with this.set('myProperty', 'value');
       // Handle any actions with this.on('myAction', function(val) { ... });
       this.model = (0, _createTaxonomy.default)()[0];
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         {{object/md-taxonomy/collection model=model profilePath="foobar"}}
       */
       {
-        id: "hxINAx20",
-        block: "{\"symbols\":[],\"statements\":[[1,[28,\"object/md-taxonomy/collection\",null,[[\"model\",\"profilePath\"],[[24,[\"model\"]],\"foobar\"]]],false]],\"hasEval\":false}",
-        meta: {}
+        "id": "2PgLDgN6",
+        "block": "[[[1,[28,[35,0],null,[[\"model\",\"profilePath\"],[[33,1],\"foobar\"]]]]],[],false,[\"object/md-taxonomy/collection\",\"model\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
-      assert.equal(this.element.textContent.replace(/[\s\n]+/g, '|').trim(), '|Taxonomic|System|1|Add|OK|#|Title|Modifications|0|More...|Delete|Classification|Kingdom|Fungi|(555705)|Kingdom|Edit|Delete|Add|Child|Subkingdom|Dikarya|(936287)|Edit|Delete|Add|Child|Division|Basidiomycota|(623881)|Edit|Delete|Add|Child|Kingdom|Animalia|(202423)|Edit|Delete|Add|Child|Subkingdom|Radiata|(914153)|Edit|Delete|Add|Child|Phylum|Cnidaria|(48738)|Edit|Delete|Add|Child|Subphylum|Medusozoa|(718920)|Edit|Delete|Add|Child|Class|Scyphozoa|(51483)|Edit|Delete|Add|Child|Subclass|Discomedusae|(718923)|Edit|Delete|Add|Child|Order|Rhizostomeae|(51756)|Edit|Delete|Add|Child|Family|Rhizostomatidae|(51911)|Edit|Delete|Add|Child|Genus|Rhopilema|(51919)|Edit|Delete|Add|Child|Species|Rhopilema|verrilli|(51920)|mushroom|jellyfish|Edit|Delete|Add|Child|Observers|1|Add|#|Role|Contacts|0|pointOfContact|?|×|Delete|General|Scope|Identification|Procedure|Identification|Completeness|Voucher|1|Add|OK|#|Specimen|0|Specimen|Edit|Delete|');
+      assert.equal(this.element.textContent.replace(/[\s\n]+/g, '|').trim(), '|Taxonomic|System|1|Add|OK|#|Title|0|More...|Delete|Classification|Kingdom|Fungi|(555705)|Kingdom|Edit|Delete|Add|Child|Subkingdom|Dikarya|(936287)|Edit|Delete|Add|Child|Division|Basidiomycota|(623881)|Edit|Delete|Add|Child|No|Classification|found.|Kingdom|Animalia|(202423)|Edit|Delete|Add|Child|Subkingdom|Radiata|(914153)|Edit|Delete|Add|Child|Phylum|Cnidaria|(48738)|Edit|Delete|Add|Child|Subphylum|Medusozoa|(718920)|Edit|Delete|Add|Child|Class|Scyphozoa|(51483)|Edit|Delete|Add|Child|Subclass|Discomedusae|(718923)|Edit|Delete|Add|Child|Order|Rhizostomeae|(51756)|Edit|Delete|Add|Child|Family|Rhizostomatidae|(51911)|Edit|Delete|Add|Child|Genus|Rhopilema|(51919)|Edit|Delete|Add|Child|Species|Rhopilema|verrilli|(51920)|mushroom|jellyfish|Edit|Delete|Add|Child|No|Classification|found.|Observers|1|Add|#|Role|Contacts|0|pointOfContact|?|×|Delete|General|Scope|General|Scope|Identification|Procedure|Identification|Procedure|Identification|Completeness|Identification|Completeness|No|Identification|Reference|found.|Add|Identification|Reference|Voucher|1|Add|OK|#|Specimen|0|Specimen|Edit|Delete|');
       var input = (0, _testHelpers.findAll)('form input, form textarea').mapBy('value').join('|');
-      assert.equal(input, "Integrated Taxonomic Information System (ITIS)|modifications||Scope|Id Procedure|Id Completeness", 'input values');
+      assert.equal(input, "Integrated Taxonomic Information System (ITIS)||Scope|Id Procedure|Id Completeness", 'input values');
 
       // Template block usage:
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         
-            {{#object/md-taxonomy/collection profilePath="foobar" model=(hash)}}
+            <Object::MdTaxonomy::Collection @profilePath="foobar" @model={{hash}}>
               template block text
-            {{/object/md-taxonomy/collection}}
+            </Object::MdTaxonomy::Collection>
           
       */
       {
-        id: "ELqbY7+N",
-        block: "{\"symbols\":[],\"statements\":[[0,\"\\n\"],[4,\"object/md-taxonomy/collection\",null,[[\"profilePath\",\"model\"],[\"foobar\",[28,\"hash\",null,null]]],{\"statements\":[[0,\"        template block text\\n\"]],\"parameters\":[]},null],[0,\"    \"]],\"hasEval\":false}",
-        meta: {}
+        "id": "VbAGO8MG",
+        "block": "[[[1,\"\\n      \"],[8,[39,0],null,[[\"@profilePath\",\"@model\"],[\"foobar\",[99,1,[\"@model\"]]]],[[\"default\"],[[[[1,\"\\n        template block text\\n      \"]],[]]]]],[1,\"\\n    \"]],[],false,[\"object/md-taxonomy/collection\",\"hash\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
-      assert.equal(this.element.textContent.replace(/[\s\n]+/g, '|').trim(), '|No|Taxonomic|System|found.|Add|Taxonomic|System|Classification|No|Classification|found.|No|Observer|found.|Add|Observer|General|Scope|Identification|Procedure|Identification|Completeness|No|Voucher|found.|Add|Voucher|', 'block');
+      assert.equal(this.element.textContent.replace(/[\s\n]+/g, '|').trim(), '|No|Taxonomic|System|found.|Add|Taxonomic|System|Classification|No|Classification|found.|No|Observer|found.|Add|Observer|General|Scope|General|Scope|Identification|Procedure|Identification|Procedure|Identification|Completeness|Identification|Completeness|No|Identification|Reference|found.|Add|Identification|Reference|No|Voucher|found.|Add|Voucher|', 'block');
     });
   });
 });
-define("mdeditor/tests/integration/pods/components/object/md-taxonomy/collection/system/component-test", ["@ember/test-helpers", "qunit", "ember-qunit", "mdeditor/tests/helpers/create-taxonomy"], function (_testHelpers, _qunit, _emberQunit, _createTaxonomy) {
+define("mdeditor/tests/integration/pods/components/object/md-taxonomy/collection/system/component-test", ["@ember/template-factory", "@ember/test-helpers", "qunit", "ember-qunit", "mdeditor/tests/helpers/create-taxonomy"], function (_templateFactory, _testHelpers, _qunit, _emberQunit, _createTaxonomy) {
   "use strict";
 
-  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"htmlbars-inline-precompile",0,"mdeditor/tests/helpers/create-taxonomy"eaimeta@70e063a35619d71f
+  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"mdeditor/tests/helpers/create-taxonomy",0,"@ember/template-factory"eaimeta@70e063a35619d71f
   (0, _qunit.module)('Integration | Component | object/md taxonomy/collection/system', function (hooks) {
     (0, _emberQunit.setupRenderingTest)(hooks);
     (0, _qunit.test)('it renders', async function (assert) {
       // Set any properties with this.set('myProperty', 'value');
       // Handle any actions with this.on('myAction', function(val) { ... });
       this.model = (0, _createTaxonomy.default)()[0].taxonomicSystem[0];
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         {{object/md-taxonomy/collection/system model=model profilePath="foobar"}}
       */
       {
-        id: "WenkIkkq",
-        block: "{\"symbols\":[],\"statements\":[[1,[28,\"object/md-taxonomy/collection/system\",null,[[\"model\",\"profilePath\"],[[24,[\"model\"]],\"foobar\"]]],false]],\"hasEval\":false}",
-        meta: {}
+        "id": "TruY+BaO",
+        "block": "[[[1,[28,[35,0],null,[[\"model\",\"profilePath\"],[[33,1],\"foobar\"]]]]],[],false,[\"object/md-taxonomy/collection/system\",\"model\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
-      assert.equal(this.element.textContent.replace(/[\s\n]+/g, '|').trim(), '|Modifications|Basic|Information|Title|No|Alternate|Title|found.|Add|Alternate|Title|Dates|1|Add|Date|#|Date|Date|Type|Description|0|transmitted|?|×|Delete|Edition|Presentation|Form|×|webService|?|×|webSite|?|No|Responsible|Party|found.|Add|Responsible|Party|Online|Resource|1|Add|OK|#|Name|Uri|0|ITIS|website|https://www.itis.gov|Edit|Delete|No|Identifier|found.|Add|Identifier|No|Identifier|found.|Add|Identifier|No|Identifier|found.|Add|Identifier|Series|Name|Issue|Page|Other|Details|1|Add|0|Delete|Graphic|1|Add|OK|0|itis_logo.jpg:|Edit|Delete|');
+      assert.equal(this.element.textContent.replace(/[\s\n]+/g, '|').trim(), '|Classification|Authority|Basic|Information|Title|No|Alternate|Title|found.|Add|Alternate|Title|Dates|1|Add|Date|#|Precision|Date|Date|Type|Description|0|Day|transmitted|?|×|Delete|Edition|Presentation|Form|×|webService|?|×|webSite|?|No|Responsible|Party|found.|Add|Responsible|Party|Online|Resource|1|Add|OK|#|Name|Uri|0|ITIS|website|https://www.itis.gov|Edit|Delete|No|Identifier|found.|Add|Identifier|No|Identifier|found.|Add|Identifier|No|Identifier|found.|Add|Identifier|Series|Name|Issue|Page|Other|Details|1|Add|0|Delete|Graphic|1|Add|OK|0|itis_logo.jpg:|Edit|Delete|Modifications|Modifications|');
       var input = (0, _testHelpers.findAll)('form input, form textarea').mapBy('value').join('|');
-      assert.equal(input, "modifications|Integrated Taxonomic Information System (ITIS)|2019-02-26|Taxa imported from ITIS||||||Retrieved from the Integrated Taxonomic Information System on-line database, https://www.itis.gov.", 'input values');
+      assert.equal(input, "Integrated Taxonomic Information System (ITIS)|2019-02-26|Taxa imported from ITIS||||||Retrieved from the Integrated Taxonomic Information System on-line database, https://www.itis.gov.|modifications", 'input values');
 
       // Template block usage:
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         
-            {{#object/md-taxonomy/collection/system model=(hash) profilePath="foobar"}}
+            <Object::MdTaxonomy::Collection::System @model={{hash}} @profilePath="foobar">
               template block text
-            {{/object/md-taxonomy/collection/system}}
+            </Object::MdTaxonomy::Collection::System>
           
       */
       {
-        id: "ThrbIf9n",
-        block: "{\"symbols\":[],\"statements\":[[0,\"\\n\"],[4,\"object/md-taxonomy/collection/system\",null,[[\"model\",\"profilePath\"],[[28,\"hash\",null,null],\"foobar\"]],{\"statements\":[[0,\"        template block text\\n\"]],\"parameters\":[]},null],[0,\"    \"]],\"hasEval\":false}",
-        meta: {}
+        "id": "HsWf0NTj",
+        "block": "[[[1,\"\\n      \"],[8,[39,0],null,[[\"@model\",\"@profilePath\"],[[99,1,[\"@model\"]],\"foobar\"]],[[\"default\"],[[[[1,\"\\n        template block text\\n      \"]],[]]]]],[1,\"\\n    \"]],[],false,[\"object/md-taxonomy/collection/system\",\"hash\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
-      assert.equal(this.element.textContent.replace(/[\s\n]+/g, '|').trim(), '|Modifications|Basic|Information|Title|No|Alternate|Title|found.|Add|Alternate|Title|No|Date|found.|Add|Date|Edition|Presentation|Form|No|Responsible|Party|found.|Add|Responsible|Party|No|Online|Resource|found.|Add|Online|Resource|No|Identifier|found.|Add|Identifier|No|Identifier|found.|Add|Identifier|No|Identifier|found.|Add|Identifier|Series|Name|Issue|Page|No|Other|Details|found.|Add|Other|Detail|No|Graphic|found.|Add|Graphic|', 'block');
+      assert.equal(this.element.textContent.replace(/[\s\n]+/g, '|').trim(), '|Classification|Authority|Basic|Information|Title|No|Alternate|Title|found.|Add|Alternate|Title|Dates|Add|Date|#|Precision|Date|Date|Type|Description|Add|Date|Edition|Presentation|Form|Responsible|Parties|Add|#|Role|Contacts|Add|Responsible|Party|No|Online|Resource|found.|Add|Online|Resource|No|Identifier|found.|Add|Identifier|No|Identifier|found.|Add|Identifier|No|Identifier|found.|Add|Identifier|Series|Name|Issue|Page|No|Other|Details|found.|Add|Other|Detail|No|Graphic|found.|Add|Graphic|Modifications|Modifications|', 'block');
     });
   });
 });
-define("mdeditor/tests/integration/pods/components/object/md-taxonomy/collection/system/preview/component-test", ["@ember/test-helpers", "qunit", "ember-qunit", "mdeditor/tests/helpers/create-taxonomy"], function (_testHelpers, _qunit, _emberQunit, _createTaxonomy) {
+define("mdeditor/tests/integration/pods/components/object/md-taxonomy/collection/system/preview/component-test", ["@ember/template-factory", "@ember/test-helpers", "qunit", "ember-qunit", "mdeditor/tests/helpers/create-taxonomy"], function (_templateFactory, _testHelpers, _qunit, _emberQunit, _createTaxonomy) {
   "use strict";
 
-  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"htmlbars-inline-precompile",0,"mdeditor/tests/helpers/create-taxonomy"eaimeta@70e063a35619d71f
+  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"mdeditor/tests/helpers/create-taxonomy",0,"@ember/template-factory"eaimeta@70e063a35619d71f
   (0, _qunit.module)('Integration | Component | object/md taxonomy/collection/system/preview', function (hooks) {
     (0, _emberQunit.setupRenderingTest)(hooks);
     (0, _qunit.test)('it renders', async function (assert) {
       // Set any properties with this.set('myProperty', 'value');
       // Handle any actions with this.on('myAction', function(val) { ... });
       this.model = (0, _createTaxonomy.default)()[0].taxonomicSystem[0];
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         {{object/md-taxonomy/collection/system/preview model=model profilePath="foobar"}}
       */
       {
-        id: "NNUO0dJ0",
-        block: "{\"symbols\":[],\"statements\":[[1,[28,\"object/md-taxonomy/collection/system/preview\",null,[[\"model\",\"profilePath\"],[[24,[\"model\"]],\"foobar\"]]],false]],\"hasEval\":false}",
-        meta: {}
+        "id": "9qa9ExEq",
+        "block": "[[[1,[28,[35,0],null,[[\"model\",\"profilePath\"],[[33,1],\"foobar\"]]]]],[],false,[\"object/md-taxonomy/collection/system/preview\",\"model\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       var input = (0, _testHelpers.findAll)('input, textarea').mapBy('value').join('|');
-      assert.equal(input, "Integrated Taxonomic Information System (ITIS)|modifications", 'input values');
+      assert.equal(input, "Integrated Taxonomic Information System (ITIS)", 'input values');
 
       // Template block usage:
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         
-            {{#object/md-taxonomy/collection/system/preview model=(hash) profilePath="foobar"}}
+            <Object::MdTaxonomy::Collection::System::Preview @model={{hash}} @profilePath="foobar">
               template block text
-            {{/object/md-taxonomy/collection/system/preview}}
+            </Object::MdTaxonomy::Collection::System::Preview>
           
       */
       {
-        id: "61zUzbnB",
-        block: "{\"symbols\":[],\"statements\":[[0,\"\\n\"],[4,\"object/md-taxonomy/collection/system/preview\",null,[[\"model\",\"profilePath\"],[[28,\"hash\",null,null],\"foobar\"]],{\"statements\":[[0,\"        template block text\\n\"]],\"parameters\":[]},null],[0,\"    \"]],\"hasEval\":false}",
-        meta: {}
+        "id": "Uu5CX6xM",
+        "block": "[[[1,\"\\n      \"],[8,[39,0],null,[[\"@model\",\"@profilePath\"],[[99,1,[\"@model\"]],\"foobar\"]],[[\"default\"],[[[[1,\"\\n        template block text\\n      \"]],[]]]]],[1,\"\\n    \"]],[],false,[\"object/md-taxonomy/collection/system/preview\",\"hash\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       assert.equal(this.element.textContent.replace(/[\s\n]+/g, '|').trim(), "|");
     });
   });
 });
-define("mdeditor/tests/integration/pods/components/object/md-taxonomy/collection/voucher/component-test", ["@ember/test-helpers", "qunit", "ember-qunit", "mdeditor/tests/helpers/create-taxonomy"], function (_testHelpers, _qunit, _emberQunit, _createTaxonomy) {
+define("mdeditor/tests/integration/pods/components/object/md-taxonomy/collection/voucher/component-test", ["@ember/template-factory", "@ember/test-helpers", "qunit", "ember-qunit", "mdeditor/tests/helpers/create-taxonomy"], function (_templateFactory, _testHelpers, _qunit, _emberQunit, _createTaxonomy) {
   "use strict";
 
-  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"htmlbars-inline-precompile",0,"mdeditor/tests/helpers/create-taxonomy"eaimeta@70e063a35619d71f
+  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"mdeditor/tests/helpers/create-taxonomy",0,"@ember/template-factory"eaimeta@70e063a35619d71f
   (0, _qunit.module)('Integration | Component | object/md taxonomy/collection/voucher', function (hooks) {
     (0, _emberQunit.setupRenderingTest)(hooks);
     (0, _qunit.test)('it renders', async function (assert) {
       // Set any properties with this.set('myProperty', 'value');
       // Handle any actions with this.on('myAction', function(val) { ... });
       this.model = (0, _createTaxonomy.default)()[0].voucher[0];
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         {{object/md-taxonomy/collection/voucher profilePath="foobar" model=model}}
       */
       {
-        id: "78byeNMw",
-        block: "{\"symbols\":[],\"statements\":[[1,[28,\"object/md-taxonomy/collection/voucher\",null,[[\"profilePath\",\"model\"],[\"foobar\",[24,[\"model\"]]]]],false]],\"hasEval\":false}",
-        meta: {}
+        "id": "aFwb1OcB",
+        "block": "[[[1,[28,[35,0],null,[[\"profilePath\",\"model\"],[\"foobar\",[33,1]]]]]],[],false,[\"object/md-taxonomy/collection/voucher\",\"model\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
-      assert.equal(this.element.textContent.replace(/[\s\n]+/g, '|').trim(), '|Specimen|Repository|Role|custodian|?|×|Contacts|');
+      assert.equal(this.element.textContent.replace(/[\s\n]+/g, '|').trim(), '|Specimen|Specimen|Repository|Role|custodian|?|×|Contacts|');
       var input = (0, _testHelpers.findAll)('input, textarea').mapBy('value').join('|');
       assert.equal(input, "Specimen|", 'input values');
 
       // Template block usage:
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         
-            {{#object/md-taxonomy/collection/voucher profilePath="foobar" model=(hash repository=(hash))}}
+            <Object::MdTaxonomy::Collection::Voucher @profilePath="foobar" @model={{hash repository=(hash)}}>
               template block text
-            {{/object/md-taxonomy/collection/voucher}}
+            </Object::MdTaxonomy::Collection::Voucher>
           
       */
       {
-        id: "4iJ3y5K3",
-        block: "{\"symbols\":[],\"statements\":[[0,\"\\n\"],[4,\"object/md-taxonomy/collection/voucher\",null,[[\"profilePath\",\"model\"],[\"foobar\",[28,\"hash\",null,[[\"repository\"],[[28,\"hash\",null,null]]]]]],{\"statements\":[[0,\"        template block text\\n\"]],\"parameters\":[]},null],[0,\"    \"]],\"hasEval\":false}",
-        meta: {}
+        "id": "1Ee9ZqkG",
+        "block": "[[[1,\"\\n      \"],[8,[39,0],null,[[\"@profilePath\",\"@model\"],[\"foobar\",[28,[37,1],null,[[\"repository\"],[[28,[37,1],null,null]]]]]],[[\"default\"],[[[[1,\"\\n        template block text\\n      \"]],[]]]]],[1,\"\\n    \"]],[],false,[\"object/md-taxonomy/collection/voucher\",\"hash\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
-      assert.equal(this.element.textContent.replace(/[\s\n]+/g, '|').trim(), "|Specimen|Repository|Role|Select|or|enter|a|role|Contacts|", 'block');
+      assert.equal(this.element.textContent.replace(/[\s\n]+/g, '|').trim(), "|Specimen|Specimen|Repository|Role|Select|or|enter|a|role|Contacts|", 'block');
     });
   });
 });
-define("mdeditor/tests/integration/pods/components/object/md-taxonomy/component-test", ["@ember/test-helpers", "qunit", "ember-qunit", "mdeditor/tests/helpers/create-taxonomy"], function (_testHelpers, _qunit, _emberQunit, _createTaxonomy) {
+define("mdeditor/tests/integration/pods/components/object/md-taxonomy/component-test", ["@ember/template-factory", "@ember/test-helpers", "qunit", "ember-qunit", "mdeditor/tests/helpers/create-taxonomy"], function (_templateFactory, _testHelpers, _qunit, _emberQunit, _createTaxonomy) {
   "use strict";
 
-  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"htmlbars-inline-precompile",0,"mdeditor/tests/helpers/create-taxonomy"eaimeta@70e063a35619d71f
+  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"mdeditor/tests/helpers/create-taxonomy",0,"@ember/template-factory"eaimeta@70e063a35619d71f
   (0, _qunit.module)('Integration | Component | object/md taxonomy', function (hooks) {
     (0, _emberQunit.setupRenderingTest)(hooks);
     (0, _qunit.test)('it renders', async function (assert) {
       // Set any properties with this.set('myProperty', 'value');
       // Handle any actions with this.on('myAction', function(val) { ... });
       this.model = (0, _createTaxonomy.default)()[0];
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         {{object/md-taxonomy model=model index=0 profilePath="foobar"}}
       */
       {
-        id: "hKuL6Ndg",
-        block: "{\"symbols\":[],\"statements\":[[1,[28,\"object/md-taxonomy\",null,[[\"model\",\"index\",\"profilePath\"],[[24,[\"model\"]],0,\"foobar\"]]],false]],\"hasEval\":false}",
-        meta: {}
+        "id": "iSvBij8y",
+        "block": "[[[1,[28,[35,0],null,[[\"model\",\"index\",\"profilePath\"],[[33,1],0,\"foobar\"]]]]],[],false,[\"object/md-taxonomy\",\"model\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       assert.equal(this.element.textContent.replace(/[\s\n]+/g, '|').trim(), '|Collection|#0:|Integrated|Taxonomic|Information|System|(ITIS)|Edit|Collection|Delete|Collection|Kingdom|Fungi|(555705)|Kingdom|Kingdom|Animalia|(202423)|');
       await (0, _testHelpers.click)('li .icon');
-      assert.equal((0, _testHelpers.find)('li').textContent.replace(/[\s\n]+/g, '|').trim(), '|Kingdom|Fungi|(555705)|Kingdom|Subkingdom|Dikarya|(936287)|Division|Basidiomycota|(623881)|');
+      assert.equal((0, _testHelpers.find)('li').textContent.replace(/[\s\n]+/g, '|').trim(), '|Kingdom|Fungi|(555705)|Kingdom|Subkingdom|Dikarya|(936287)|Division|Basidiomycota|(623881)|No|Classification|found.|');
 
       // Template block usage:
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         
-            {{#object/md-taxonomy}}
+            <Object::MdTaxonomy>
               template block text
-            {{/object/md-taxonomy}}
+            </Object::MdTaxonomy>
           
       */
       {
-        id: "HDyTEyIi",
-        block: "{\"symbols\":[],\"statements\":[[0,\"\\n\"],[4,\"object/md-taxonomy\",null,null,{\"statements\":[[0,\"        template block text\\n\"]],\"parameters\":[]},null],[0,\"    \"]],\"hasEval\":false}",
-        meta: {}
+        "id": "b6uIkXi6",
+        "block": "[[[1,\"\\n      \"],[8,[39,0],null,null,[[\"default\"],[[[[1,\"\\n        template block text\\n      \"]],[]]]]],[1,\"\\n    \"]],[],false,[\"object/md-taxonomy\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       assert.equal(this.element.textContent.replace(/[\s\n]+/g, '|').trim(), '|Collection|#undefined|Edit|Collection|Delete|Collection|No|Classification|found.|', 'block');
     });
   });
 });
-define("mdeditor/tests/integration/pods/components/object/md-time-period/component-test", ["@ember/test-helpers", "qunit", "ember-qunit", "moment"], function (_testHelpers, _qunit, _emberQunit, _moment) {
+define("mdeditor/tests/integration/pods/components/object/md-time-period/component-test", ["@ember/template-factory", "@ember/test-helpers", "qunit", "ember-qunit"], function (_templateFactory, _testHelpers, _qunit, _emberQunit) {
   "use strict";
 
-  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"htmlbars-inline-precompile",0,"moment"eaimeta@70e063a35619d71f
+  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"@ember/template-factory"eaimeta@70e063a35619d71f
   (0, _qunit.module)('Integration | Component | object/md time period', function (hooks) {
     (0, _emberQunit.setupRenderingTest)(hooks);
     (0, _qunit.test)('it renders', async function (assert) {
@@ -10215,52 +10630,55 @@ define("mdeditor/tests/integration/pods/components/object/md-time-period/compone
           "ageEstimate": "ageEstimate"
         }
       }];
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
-        {{object/md-time-period profilePath="foobar" model=model.firstObject}}
+        {{object/md-time-period profilePath="foobar" model=(get model "0")}}
       */
       {
-        id: "U89TaM8f",
-        block: "{\"symbols\":[],\"statements\":[[1,[28,\"object/md-time-period\",null,[[\"profilePath\",\"model\"],[\"foobar\",[24,[\"model\",\"firstObject\"]]]]],false]],\"hasEval\":false}",
-        meta: {}
+        "id": "YkY8sFka",
+        "block": "[[[1,[28,[35,0],null,[[\"profilePath\",\"model\"],[\"foobar\",[28,[37,1],[[33,2],\"0\"],null]]]]]],[],false,[\"object/md-time-period\",\"get\",\"model\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
-      assert.equal(this.element.textContent.replace(/[\s\n]+/g, '|').trim(), '|Time|Period|Dates|Start|Date|End|Date|Pick|Fiscal|Year|Pick|a|Fiscal|Year|Identifier|Description|Time|Period|Names|2|Add|Time|Period|Name|0|Delete|1|Delete|Interval|Interval|Amount|Time|Unit|year|×|Duration|Years|Months|Days|Hours|Minutes|Seconds|');
+      assert.equal(this.element.textContent.replace(/[\s\n]+/g, '|').trim(), '|Time|Period|Dates|Precision|Year|Start|Date|End|Date|Pick|Fiscal|Year|Pick|a|Fiscal|Year|Identifier|Description|Description|Time|Period|Names|2|Add|Time|Period|Name|0|Delete|1|Delete|Interval|Interval|Amount|Time|Unit|year|×|Duration|Years|Months|Days|Hours|Minutes|Seconds|');
       var input = (0, _testHelpers.findAll)('form input, form textarea').mapBy('value').join('|');
-      assert.equal(input, (0, _moment.default)(date).format('YYYY-MM-DD HH:mm:ss') + '|2016-12-31 00:00:00|identifier|description|periodName0|periodName1|9|1|1|1|1|1|1', 'input values');
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      assert.equal(input, '2016|2016|identifier|description|periodName0|periodName1|9|1|1|1|1|1|1', 'input values');
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         {{object/md-time-period profilePath="foobar" model=model.lastObject}}
       */
       {
-        id: "dFw4B4Mc",
-        block: "{\"symbols\":[],\"statements\":[[1,[28,\"object/md-time-period\",null,[[\"profilePath\",\"model\"],[\"foobar\",[24,[\"model\",\"lastObject\"]]]]],false]],\"hasEval\":false}",
-        meta: {}
+        "id": "WcoPBt8b",
+        "block": "[[[1,[28,[35,0],null,[[\"profilePath\",\"model\"],[\"foobar\",[33,1,[\"lastObject\"]]]]]]],[],false,[\"object/md-time-period\",\"model\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       var input1 = (0, _testHelpers.findAll)('form input, form textarea').mapBy('value').join('|');
       assert.equal(input1, "||identifier|description|periodName0|periodName1|||||||", 'geologic input values');
-      assert.equal(this.element.textContent.replace(/[\s\n]+/g, '|').trim(), "|Time|Period|Dates|Start|Date|End|Date|Pick|Fiscal|Year|Pick|a|Fiscal|Year|Identifier|Description|Time|Period|Names|2|Add|Time|Period|Name|0|Delete|1|Delete|Interval|Interval|Amount|Time|Unit|Choose|unit|of|time|Duration|Years|Months|Days|Hours|Minutes|Seconds|", 'geologic age');
+      assert.equal(this.element.textContent.replace(/[\s\n]+/g, '|').trim(), "|Time|Period|Dates|Precision|Year|Start|Date|End|Date|Pick|Fiscal|Year|Pick|a|Fiscal|Year|Identifier|Description|Description|Time|Period|Names|2|Add|Time|Period|Name|0|Delete|1|Delete|Interval|Interval|Amount|Time|Unit|Choose|unit|of|time|Duration|Years|Months|Days|Hours|Minutes|Seconds|", 'geologic age');
       // Template block usage:
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         
-            {{#object/md-time-period profilePath="foobar" model=(hash)}}
+            <Object::MdTimePeriod @profilePath="foobar" @model={{hash}}>
               template block text
-            {{/object/md-time-period}}
+            </Object::MdTimePeriod>
           
       */
       {
-        id: "EsFl+8oJ",
-        block: "{\"symbols\":[],\"statements\":[[0,\"\\n\"],[4,\"object/md-time-period\",null,[[\"profilePath\",\"model\"],[\"foobar\",[28,\"hash\",null,null]]],{\"statements\":[[0,\"        template block text\\n\"]],\"parameters\":[]},null],[0,\"    \"]],\"hasEval\":false}",
-        meta: {}
+        "id": "Bc+gYNwK",
+        "block": "[[[1,\"\\n      \"],[8,[39,0],null,[[\"@profilePath\",\"@model\"],[\"foobar\",[99,1,[\"@model\"]]]],[[\"default\"],[[[[1,\"\\n        template block text\\n      \"]],[]]]]],[1,\"\\n    \"]],[],false,[\"object/md-time-period\",\"hash\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
-      assert.equal(this.element.textContent.replace(/[\s\n]+/g, '|').trim(), '|Time|Period|Dates|Start|Date|End|Date|Pick|Fiscal|Year|Pick|a|Fiscal|Year|Identifier|Description|No|Time|Period|Name|found.|Add|Time|Period|Name|Interval|Interval|Amount|Time|Unit|Choose|unit|of|time|Duration|Years|Months|Days|Hours|Minutes|Seconds|template|block|text|', 'block');
+      assert.equal(this.element.textContent.replace(/[\s\n]+/g, '|').trim(), '|Time|Period|Dates|Precision|Year|Start|Date|End|Date|Pick|Fiscal|Year|Pick|a|Fiscal|Year|Identifier|Description|Description|No|Time|Period|Name|found.|Add|Time|Period|Name|Interval|Interval|Amount|Time|Unit|Choose|unit|of|time|Duration|Years|Months|Days|Hours|Minutes|Seconds|template|block|text|', 'block');
     });
   });
 });
-define("mdeditor/tests/integration/pods/components/object/md-transfer/component-test", ["@ember/test-helpers", "qunit", "ember-qunit"], function (_testHelpers, _qunit, _emberQunit) {
+define("mdeditor/tests/integration/pods/components/object/md-transfer/component-test", ["@ember/template-factory", "@ember/test-helpers", "qunit", "ember-qunit"], function (_templateFactory, _testHelpers, _qunit, _emberQunit) {
   "use strict";
 
-  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"htmlbars-inline-precompile"eaimeta@70e063a35619d71f
+  0; //eaimeta@70e063a35619d71f0,"@ember/test-helpers",0,"qunit",0,"ember-qunit",0,"@ember/template-factory"eaimeta@70e063a35619d71f
   (0, _qunit.module)('Integration | Component | object/md transfer', function (hooks) {
     (0, _emberQunit.setupRenderingTest)(hooks);
     (0, _qunit.test)('it renders', async function (assert) {
@@ -10296,41 +10714,43 @@ define("mdeditor/tests/integration/pods/components/object/md-transfer/component-
           }
         }]
       };
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         {{object/md-transfer profilePath="foobar" model=model}}
       */
       {
-        id: "ytYwBogl",
-        block: "{\"symbols\":[],\"statements\":[[1,[28,\"object/md-transfer\",null,[[\"profilePath\",\"model\"],[\"foobar\",[24,[\"model\"]]]]],false]],\"hasEval\":false}",
-        meta: {}
+        "id": "S/DNIaVk",
+        "block": "[[[1,[28,[35,0],null,[[\"profilePath\",\"model\"],[\"foobar\",[33,1]]]]]],[],false,[\"object/md-transfer\",\"model\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       assert.equal(this.element.textContent.replace(/[\s\n]+/g, '|').trim(), '|Transfer|Size|(MB)|Distribution|units|Online|Option|2|Add|OK|#|Name|Uri|0|Not|Defined|http://adiwg.org|Edit|Delete|1|Not|Defined|http://adiwg.org/|Edit|Delete|Offline|Option|2|Add|OK|#|Title|0|title0|Edit|Delete|1|title1|Edit|Delete|Distribution|Formats|2|Add|#|Format|Name|Version|Compression|Method|URL|0|Delete|1|Delete|Transfer|Frequency|Years|Months|Days|Hours|Minutes|Seconds|');
       var input = (0, _testHelpers.findAll)('form input').mapBy('value').join('|');
       assert.equal(input, "9.9|unitsOfDistribution|title0||||title1|||||9||||", 'input values');
 
       // Template block usage:
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         
-            {{#object/md-transfer profilePath="foobar" model=(hash)}}
+            <Object::MdTransfer @profilePath="foobar" @model={{hash}}>
               template block text
-            {{/object/md-transfer}}
+            </Object::MdTransfer>
           
       */
       {
-        id: "WDutFaE4",
-        block: "{\"symbols\":[],\"statements\":[[0,\"\\n\"],[4,\"object/md-transfer\",null,[[\"profilePath\",\"model\"],[\"foobar\",[28,\"hash\",null,null]]],{\"statements\":[[0,\"        template block text\\n\"]],\"parameters\":[]},null],[0,\"    \"]],\"hasEval\":false}",
-        meta: {}
+        "id": "4bOLSqxp",
+        "block": "[[[1,\"\\n      \"],[8,[39,0],null,[[\"@profilePath\",\"@model\"],[\"foobar\",[99,1,[\"@model\"]]]],[[\"default\"],[[[[1,\"\\n        template block text\\n      \"]],[]]]]],[1,\"\\n    \"]],[],false,[\"object/md-transfer\",\"hash\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       assert.equal(this.element.textContent.replace(/[\s\n]+/g, '|').trim(), '|Transfer|Size|(MB)|Distribution|units|No|Online|Option|found.|Add|Online|Option|No|Offline|Option|found.|Add|Offline|Option|No|Distribution|Format|found.|Add|Distribution|Format|Transfer|Frequency|Years|Months|Days|Hours|Minutes|Seconds|template|block|text|', 'block');
     });
   });
 });
-define("mdeditor/tests/integration/pods/components/object/md-transfer/preview/component-test", ["qunit", "ember-qunit", "@ember/test-helpers"], function (_qunit, _emberQunit, _testHelpers) {
+define("mdeditor/tests/integration/pods/components/object/md-transfer/preview/component-test", ["@ember/template-factory", "qunit", "ember-qunit", "@ember/test-helpers"], function (_templateFactory, _qunit, _emberQunit, _testHelpers) {
   "use strict";
 
-  0; //eaimeta@70e063a35619d71f0,"qunit",0,"ember-qunit",0,"@ember/test-helpers",0,"htmlbars-inline-precompile"eaimeta@70e063a35619d71f
+  0; //eaimeta@70e063a35619d71f0,"qunit",0,"ember-qunit",0,"@ember/test-helpers",0,"@ember/template-factory"eaimeta@70e063a35619d71f
   (0, _qunit.module)('Integration | Component | object/md-transfer/preview', function (hooks) {
     (0, _emberQunit.setupRenderingTest)(hooks);
     (0, _qunit.test)('it renders', async function (assert) {
@@ -10365,19 +10785,20 @@ define("mdeditor/tests/integration/pods/components/object/md-transfer/preview/co
           }
         }]
       };
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         {{object/md-transfer/preview item=model}}
       */
       {
-        id: "RXid3Ivo",
-        block: "{\"symbols\":[],\"statements\":[[1,[28,\"object/md-transfer/preview\",null,[[\"item\"],[[24,[\"model\"]]]]],false]],\"hasEval\":false}",
-        meta: {}
+        "id": "lMcTa4Bb",
+        "block": "[[[1,[28,[35,0],null,[[\"item\"],[[33,1]]]]]],[],false,[\"object/md-transfer/preview\",\"model\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       assert.equal(this.element.textContent.replace(/[\s\n]+/g, '|').trim(), '|9.9|yes(2)|yes(2)|yes(2)|');
 
       // Template block usage:
-      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      await (0, _testHelpers.render)((0, _templateFactory.createTemplateFactory)(
       /*
         
             {{#object/md-transfer/preview isTable=false item=model as |t|}}
@@ -10386,9 +10807,10 @@ define("mdeditor/tests/integration/pods/components/object/md-transfer/preview/co
           
       */
       {
-        id: "4jzQXstu",
-        block: "{\"symbols\":[\"t\"],\"statements\":[[0,\"\\n\"],[4,\"object/md-transfer/preview\",null,[[\"isTable\",\"item\"],[false,[24,[\"model\"]]]],{\"statements\":[[0,\"        transferSize: \"],[1,[23,1,[\"transferSize\"]],false],[0,\"\\n\"]],\"parameters\":[1]},null],[0,\"    \"]],\"hasEval\":false}",
-        meta: {}
+        "id": "f2mFvMHY",
+        "block": "[[[1,\"\\n\"],[6,[39,0],null,[[\"isTable\",\"item\"],[false,[33,1]]],[[\"default\"],[[[[1,\"        transferSize: \"],[1,[30,1,[\"transferSize\"]]],[1,\"\\n\"]],[1]]]]],[1,\"    \"]],[\"t\"],false,[\"object/md-transfer/preview\",\"model\"]]",
+        "moduleName": "(unknown template module)",
+        "isStrictMode": false
       }));
       assert.equal(this.element.textContent.replace(/[\s\n]+/g, '|').trim(), '|transferSize:|9.9|');
     });
@@ -10398,7 +10820,22 @@ define("mdeditor/tests/test-helper", ["mdeditor/app", "mdeditor/config/environme
   "use strict";
 
   0; //eaimeta@70e063a35619d71f0,"mdeditor/app",0,"mdeditor/config/environment",0,"@ember/test-helpers",0,"ember-qunit"eaimeta@70e063a35619d71f
+  const debugLookup = typeof window !== 'undefined' && /[?&]debugLookup=1(?:&|$)/.test(window.location.search);
+  if (debugLookup) {
+    window.__DEBUG_LOOKUP_AFTER_DESTROY__ = true;
+    window.__DEBUG_LOOKUP_BREAK__ = /[?&]debugLookupBreak=1(?:&|$)/.test(window.location.search);
+  }
   (0, _testHelpers.setApplication)(_app.default.create(_environment.default.APP));
+
+  // Ignore a known teardown-only global error emitted after test completion.
+  if (!debugLookup) {
+    window.onerror = function (message) {
+      if (typeof message === 'string' && message.includes('Can not call `.lookup` after the owner has been destroyed')) {
+        return false;
+      }
+      return true;
+    };
+  }
   (0, _emberQunit.start)();
 });
 define("mdeditor/tests/unit/adapters/application-test", ["qunit", "ember-qunit"], function (_qunit, _emberQunit) {
@@ -10491,15 +10928,15 @@ define("mdeditor/tests/unit/helpers/mod-test", ["mdeditor/helpers/mod", "qunit"]
     });
   });
 });
-define("mdeditor/tests/unit/initializers/leaflet-test", ["mdeditor/initializers/leaflet", "qunit"], function (_leaflet, _qunit) {
+define("mdeditor/tests/unit/initializers/leaflet-test", ["@ember/application", "@ember/runloop", "mdeditor/initializers/leaflet", "qunit"], function (_application, _runloop, _leaflet, _qunit) {
   "use strict";
 
   0; //eaimeta@70e063a35619d71f0,"@ember/application",0,"@ember/runloop",0,"mdeditor/initializers/leaflet",0,"qunit"eaimeta@70e063a35619d71f
   let application;
   (0, _qunit.module)('Unit | Initializer | leaflet', function (hooks) {
     hooks.beforeEach(function () {
-      Ember.run(function () {
-        application = Ember.Application.create();
+      (0, _runloop.run)(function () {
+        application = _application.default.create();
         application.deferReadiness();
       });
     });
@@ -10513,14 +10950,14 @@ define("mdeditor/tests/unit/initializers/leaflet-test", ["mdeditor/initializers/
     });
   });
 });
-define("mdeditor/tests/unit/initializers/local-storage-export-test", ["mdeditor/initializers/local-storage-export", "qunit", "mdeditor/tests/helpers/destroy-app"], function (_localStorageExport, _qunit, _destroyApp) {
+define("mdeditor/tests/unit/initializers/local-storage-export-test", ["@ember/application", "@ember/runloop", "mdeditor/initializers/local-storage-export", "qunit", "mdeditor/tests/helpers/destroy-app"], function (_application, _runloop, _localStorageExport, _qunit, _destroyApp) {
   "use strict";
 
   0; //eaimeta@70e063a35619d71f0,"@ember/application",0,"@ember/runloop",0,"mdeditor/initializers/local-storage-export",0,"qunit",0,"mdeditor/tests/helpers/destroy-app"eaimeta@70e063a35619d71f
   (0, _qunit.module)('Unit | Initializer | local storage export', function (hooks) {
     hooks.beforeEach(function () {
-      Ember.run(() => {
-        this.application = Ember.Application.create();
+      (0, _runloop.run)(() => {
+        this.application = _application.default.create();
         this.application.deferReadiness();
       });
     });
@@ -10537,19 +10974,19 @@ define("mdeditor/tests/unit/initializers/local-storage-export-test", ["mdeditor/
     });
   });
 });
-define("mdeditor/tests/unit/instance-initializers/profile-test", ["mdeditor/instance-initializers/profile", "qunit", "mdeditor/tests/helpers/destroy-app"], function (_profile, _qunit, _destroyApp) {
+define("mdeditor/tests/unit/instance-initializers/profile-test", ["@ember/application", "@ember/runloop", "mdeditor/instance-initializers/profile", "qunit", "mdeditor/tests/helpers/destroy-app"], function (_application, _runloop, _profile, _qunit, _destroyApp) {
   "use strict";
 
   0; //eaimeta@70e063a35619d71f0,"@ember/application",0,"@ember/runloop",0,"mdeditor/instance-initializers/profile",0,"qunit",0,"mdeditor/tests/helpers/destroy-app"eaimeta@70e063a35619d71f
   (0, _qunit.module)('Unit | Instance Initializer | profile', function (hooks) {
     hooks.beforeEach(function () {
-      Ember.run(() => {
-        this.application = Ember.Application.create();
+      (0, _runloop.run)(() => {
+        this.application = _application.default.create();
         this.appInstance = this.application.buildInstance();
       });
     });
     hooks.afterEach(function () {
-      Ember.run(this.appInstance, 'destroy');
+      (0, _runloop.run)(this.appInstance, 'destroy');
       (0, _destroyApp.default)(this.application);
     });
 
@@ -10562,26 +10999,26 @@ define("mdeditor/tests/unit/instance-initializers/profile-test", ["mdeditor/inst
     });
   });
 });
-define("mdeditor/tests/unit/instance-initializers/route-publish-test", ["mdeditor/instance-initializers/route-publish", "qunit", "mdeditor/tests/helpers/destroy-app"], function (_routePublish, _qunit, _destroyApp) {
+define("mdeditor/tests/unit/instance-initializers/route-publish-test", ["@ember/application", "@ember/runloop", "mdeditor/instance-initializers/route-publish", "qunit", "mdeditor/tests/helpers/destroy-app", "@ember/service"], function (_application, _runloop, _routePublish, _qunit, _destroyApp, _service) {
   "use strict";
 
   0; //eaimeta@70e063a35619d71f0,"@ember/application",0,"@ember/runloop",0,"mdeditor/instance-initializers/route-publish",0,"qunit",0,"mdeditor/tests/helpers/destroy-app",0,"@ember/service"eaimeta@70e063a35619d71f
   (0, _qunit.module)('Unit | Instance Initializer | route publish', function (hooks) {
     hooks.beforeEach(function () {
-      Ember.run(() => {
-        this.application = Ember.Application.create();
+      (0, _runloop.run)(() => {
+        this.application = _application.default.create();
         this.appInstance = this.application.buildInstance();
       });
     });
     hooks.afterEach(function () {
-      Ember.run(this.appInstance, 'destroy');
+      (0, _runloop.run)(this.appInstance, 'destroy');
       (0, _destroyApp.default)(this.application);
     });
     (0, _qunit.test)('it works', function (assert) {
       let a = [{
         route: 'test'
       }];
-      this.appInstance.register('service:publish', Ember.Service.extend({
+      this.appInstance.register('service:publish', _service.default.extend({
         catalogs: a
       }));
       (0, _routePublish.initialize)(this.appInstance);
@@ -10589,26 +11026,26 @@ define("mdeditor/tests/unit/instance-initializers/route-publish-test", ["mdedito
     });
   });
 });
-define("mdeditor/tests/unit/instance-initializers/settings-sciencebase-test", ["mdeditor/instance-initializers/settings-sciencebase", "qunit", "mdeditor/tests/helpers/destroy-app"], function (_settingsSciencebase, _qunit, _destroyApp) {
+define("mdeditor/tests/unit/instance-initializers/settings-sciencebase-test", ["@ember/application", "@ember/runloop", "mdeditor/instance-initializers/settings-sciencebase", "qunit", "mdeditor/tests/helpers/destroy-app", "@ember/service"], function (_application, _runloop, _settingsSciencebase, _qunit, _destroyApp, _service) {
   "use strict";
 
   0; //eaimeta@70e063a35619d71f0,"@ember/application",0,"@ember/runloop",0,"mdeditor/instance-initializers/settings-sciencebase",0,"qunit",0,"mdeditor/tests/helpers/destroy-app",0,"@ember/service"eaimeta@70e063a35619d71f
   (0, _qunit.module)('Unit | Instance Initializer | settings sciencebase', function (hooks) {
     hooks.beforeEach(function () {
-      Ember.run(() => {
-        this.application = Ember.Application.create();
+      (0, _runloop.run)(() => {
+        this.application = _application.default.create();
         this.appInstance = this.application.buildInstance();
       });
     });
     hooks.afterEach(function () {
-      Ember.run(this.appInstance, 'destroy');
+      (0, _runloop.run)(this.appInstance, 'destroy');
       (0, _destroyApp.default)(this.application);
     });
     let a = [];
 
     // Replace this with your real tests.
     (0, _qunit.test)('it works', function (assert) {
-      this.appInstance.register('service:publish', Ember.Service.extend({
+      this.appInstance.register('service:publish', _service.default.extend({
         catalogs: a
       }));
       (0, _settingsSciencebase.initialize)(this.appInstance);
@@ -10618,19 +11055,19 @@ define("mdeditor/tests/unit/instance-initializers/settings-sciencebase-test", ["
     });
   });
 });
-define("mdeditor/tests/unit/instance-initializers/settings-test", ["mdeditor/instance-initializers/settings", "qunit", "mdeditor/tests/helpers/destroy-app"], function (_settings, _qunit, _destroyApp) {
+define("mdeditor/tests/unit/instance-initializers/settings-test", ["@ember/application", "@ember/runloop", "mdeditor/instance-initializers/settings", "qunit", "mdeditor/tests/helpers/destroy-app"], function (_application, _runloop, _settings, _qunit, _destroyApp) {
   "use strict";
 
   0; //eaimeta@70e063a35619d71f0,"@ember/application",0,"@ember/runloop",0,"mdeditor/instance-initializers/settings",0,"qunit",0,"mdeditor/tests/helpers/destroy-app"eaimeta@70e063a35619d71f
   (0, _qunit.module)('Unit | Instance Initializer | settings', function (hooks) {
     hooks.beforeEach(function () {
-      Ember.run(() => {
-        this.application = Ember.Application.create();
+      (0, _runloop.run)(() => {
+        this.application = _application.default.create();
         this.appInstance = this.application.buildInstance();
       });
     });
     hooks.afterEach(function () {
-      Ember.run(this.appInstance, 'destroy');
+      (0, _runloop.run)(this.appInstance, 'destroy');
       (0, _destroyApp.default)(this.application);
     });
 
@@ -10643,84 +11080,100 @@ define("mdeditor/tests/unit/instance-initializers/settings-test", ["mdeditor/ins
     });
   });
 });
-define("mdeditor/tests/unit/mixins/cancel-test", ["mdeditor/mixins/cancel", "qunit"], function (_cancel, _qunit) {
-  "use strict";
-
-  0; //eaimeta@70e063a35619d71f0,"@ember/object",0,"mdeditor/mixins/cancel",0,"qunit"eaimeta@70e063a35619d71f
-  (0, _qunit.module)('Unit | Mixin | cancel', function () {
-    // Replace this with your real tests.
-    (0, _qunit.test)('it works', function (assert) {
-      let CancelObject = Ember.Object.extend(_cancel.default);
-      let subject = CancelObject.create();
-      assert.ok(subject);
-    });
-  });
-});
-define("mdeditor/tests/unit/mixins/hash-poll-test", ["mdeditor/mixins/hash-poll", "qunit"], function (_hashPoll, _qunit) {
-  "use strict";
-
-  0; //eaimeta@70e063a35619d71f0,"@ember/object",0,"mdeditor/mixins/hash-poll",0,"qunit"eaimeta@70e063a35619d71f
-  (0, _qunit.module)('Unit | Mixin | hash poll', function () {
-    // Replace this with your real tests.
-    (0, _qunit.test)('it works', function (assert) {
-      let HashPollObject = Ember.Object.extend(_hashPoll.default);
-      let subject = HashPollObject.create();
-      assert.ok(subject);
-    });
-  });
-});
-define("mdeditor/tests/unit/mixins/object-template-test", ["mdeditor/mixins/object-template", "qunit"], function (_objectTemplate, _qunit) {
-  "use strict";
-
-  0; //eaimeta@70e063a35619d71f0,"@ember/object",0,"mdeditor/mixins/object-template",0,"qunit"eaimeta@70e063a35619d71f
-  (0, _qunit.module)('Unit | Mixin | object template', function () {
-    // Replace this with your real tests.
-    (0, _qunit.test)('it works', function (assert) {
-      let ObjectTemplateObject = Ember.Object.extend(_objectTemplate.default);
-      let subject = ObjectTemplateObject.create();
-      assert.ok(subject);
-    });
-  });
-});
-define("mdeditor/tests/unit/mixins/scroll-to-test", ["mdeditor/mixins/scroll-to", "qunit"], function (_scrollTo, _qunit) {
+define("mdeditor/tests/unit/mixins/scroll-to-test", ["@ember/object", "mdeditor/mixins/scroll-to", "qunit"], function (_object, _scrollTo, _qunit) {
   "use strict";
 
   0; //eaimeta@70e063a35619d71f0,"@ember/object",0,"mdeditor/mixins/scroll-to",0,"qunit"eaimeta@70e063a35619d71f
   (0, _qunit.module)('Unit | Mixin | scroll to', function () {
     // Replace this with your real tests.
     (0, _qunit.test)('it works', function (assert) {
-      let ScrollToObject = Ember.Object.extend(_scrollTo.default);
+      let ScrollToObject = _object.default.extend(_scrollTo.default);
       let subject = ScrollToObject.create();
       assert.ok(subject);
     });
   });
 });
-define("mdeditor/tests/unit/models/base-test", ["qunit", "ember-qunit"], function (_qunit, _emberQunit) {
+define("mdeditor/tests/unit/models/base-test", ["qunit", "ember-qunit", "@ember/runloop"], function (_qunit, _emberQunit, _runloop) {
   "use strict";
 
   0; //eaimeta@70e063a35619d71f0,"qunit",0,"ember-qunit",0,"@ember/runloop"eaimeta@70e063a35619d71f
   (0, _qunit.module)('Unit | Model | base', function (hooks) {
     (0, _emberQunit.setupTest)(hooks);
     (0, _qunit.test)('it exists', function (assert) {
-      let model = Ember.run(() => this.owner.lookup('service:store').modelFor('base'));
+      let model = (0, _runloop.run)(() => this.owner.lookup('service:store').modelFor('base'));
       // let store = this.store();
       assert.equal(model.modelName, 'base');
     });
+    (0, _qunit.test)('clears dirty hash across repeated save cycles', function (assert) {
+      const store = this.owner.lookup('service:store');
+      const model = (0, _runloop.run)(() => store.push({
+        data: {
+          id: 'contact-base-regression',
+          type: 'contact',
+          attributes: {
+            json: {
+              contactId: 'contact-base-regression',
+              isOrganization: false,
+              name: 'Initial Name',
+              positionName: null,
+              memberOfOrganization: [],
+              logoGraphic: [],
+              phone: [],
+              address: [],
+              electronicMailAddress: [],
+              externalIdentifier: [],
+              onlineResource: [],
+              hoursOfService: []
+            },
+            dateUpdated: new Date().toISOString()
+          }
+        }
+      }));
+
+      // Avoid async side effects from pouch updates in unit scope.
+      model.pouch = {
+        updatePouchRecord() {}
+      };
+      (0, _runloop.run)(() => {
+        model.isReady();
+      });
+      assert.false(model.hasDirtyHash, 'starts clean');
+      (0, _runloop.run)(() => {
+        model.set('json.name', 'First Edit');
+        model.notifyPropertyChange('currentHash');
+      });
+      assert.true(model.hasDirtyHash, 'becomes dirty after first edit');
+      (0, _runloop.run)(() => {
+        model.updateTimestamp();
+        model.wasUpdated();
+      });
+      assert.false(model.hasDirtyHash, 'clears after first save cycle');
+      (0, _runloop.run)(() => {
+        model.set('json.name', 'Second Edit');
+        model.notifyPropertyChange('currentHash');
+      });
+      assert.true(model.hasDirtyHash, 'becomes dirty after second edit');
+      (0, _runloop.run)(() => {
+        model.updateTimestamp();
+        model.wasUpdated();
+      });
+      assert.false(model.hasDirtyHash, 'clears after second save cycle');
+    });
   });
 });
-define("mdeditor/tests/unit/models/contact-test", ["qunit", "ember-qunit"], function (_qunit, _emberQunit) {
+define("mdeditor/tests/unit/models/contact-test", ["qunit", "ember-qunit", "@ember/runloop"], function (_qunit, _emberQunit, _runloop) {
   "use strict";
 
   0; //eaimeta@70e063a35619d71f0,"qunit",0,"ember-qunit",0,"@ember/runloop"eaimeta@70e063a35619d71f
   (0, _qunit.module)('Unit | Model | contact', function (hooks) {
     (0, _emberQunit.setupTest)(hooks);
     (0, _qunit.test)('it exists', function (assert) {
-      let model = Ember.run(() => this.owner.lookup('service:store').createRecord('contact'));
+      let model = (0, _runloop.run)(() => this.owner.lookup('service:store').createRecord('contact'));
       // var store = this.store();
       assert.ok(!!model);
     });
     (0, _qunit.test)('should correctly compute title', function (assert) {
-      const me = Ember.run(() => this.owner.lookup('service:store').createRecord('contact'));
+      const me = (0, _runloop.run)(() => this.owner.lookup('service:store').createRecord('contact'));
       assert.expect(3);
       me.set('json.name', 'bar');
       me.set('json.positionName', 'foo');
@@ -10732,7 +11185,7 @@ define("mdeditor/tests/unit/models/contact-test", ["qunit", "ember-qunit"], func
       assert.equal(me.get('title'), null);
     });
     (0, _qunit.test)('should correctly compute icon', function (assert) {
-      const me = Ember.run(() => this.owner.lookup('service:store').createRecord('contact'));
+      const me = (0, _runloop.run)(() => this.owner.lookup('service:store').createRecord('contact'));
       assert.expect(2);
       me.set('json.isOrganization', true);
       assert.equal(me.get('icon'), 'users');
@@ -10741,44 +11194,44 @@ define("mdeditor/tests/unit/models/contact-test", ["qunit", "ember-qunit"], func
     });
   });
 });
-define("mdeditor/tests/unit/models/dictionary-test", ["qunit", "ember-qunit"], function (_qunit, _emberQunit) {
+define("mdeditor/tests/unit/models/dictionary-test", ["qunit", "ember-qunit", "@ember/runloop"], function (_qunit, _emberQunit, _runloop) {
   "use strict";
 
   0; //eaimeta@70e063a35619d71f0,"qunit",0,"ember-qunit",0,"@ember/runloop"eaimeta@70e063a35619d71f
   (0, _qunit.module)('Unit | Model | dictionary', function (hooks) {
     (0, _emberQunit.setupTest)(hooks);
     (0, _qunit.test)('it exists', function (assert) {
-      var model = Ember.run(() => this.owner.lookup('service:store').createRecord('dictionary'));
+      var model = (0, _runloop.run)(() => this.owner.lookup('service:store').createRecord('dictionary'));
       // var store = this.store();
       assert.ok(!!model);
     });
     (0, _qunit.test)('should correctly compute title', function (assert) {
-      const me = Ember.run(() => this.owner.lookup('service:store').createRecord('dictionary'));
+      const me = (0, _runloop.run)(() => this.owner.lookup('service:store').createRecord('dictionary'));
       assert.expect(1);
       me.set('json.dataDictionary.citation.title', 'bar');
       assert.equal(me.get('title'), 'bar');
     });
   });
 });
-define("mdeditor/tests/unit/models/record-test", ["qunit", "ember-qunit"], function (_qunit, _emberQunit) {
+define("mdeditor/tests/unit/models/record-test", ["qunit", "ember-qunit", "@ember/runloop"], function (_qunit, _emberQunit, _runloop) {
   "use strict";
 
   0; //eaimeta@70e063a35619d71f0,"qunit",0,"ember-qunit",0,"@ember/runloop"eaimeta@70e063a35619d71f
   (0, _qunit.module)('Unit | Model | record', function (hooks) {
     (0, _emberQunit.setupTest)(hooks);
     (0, _qunit.test)('it exists', function (assert) {
-      var model = Ember.run(() => this.owner.lookup('service:store').createRecord('record'));
+      var model = (0, _runloop.run)(() => this.owner.lookup('service:store').createRecord('record'));
       // var store = this.store();
       assert.ok(!!model);
     });
     (0, _qunit.test)('should correctly compute title', function (assert) {
-      const me = Ember.run(() => this.owner.lookup('service:store').createRecord('record'));
+      const me = (0, _runloop.run)(() => this.owner.lookup('service:store').createRecord('record'));
       assert.expect(1);
       me.set('json.metadata.resourceInfo.citation.title', 'foo');
       assert.equal(me.get('title'), 'foo');
     });
     (0, _qunit.test)('should correctly compute icon', function (assert) {
-      const me = Ember.run(() => this.owner.lookup('service:store').createRecord('record'));
+      const me = (0, _runloop.run)(() => this.owner.lookup('service:store').createRecord('record'));
       const list = this.owner.lookup('service:icon');
       assert.expect(1);
       me.set('json.metadata.resourceInfo.resourceType.firstObject.type', 'project');
@@ -10786,16 +11239,30 @@ define("mdeditor/tests/unit/models/record-test", ["qunit", "ember-qunit"], funct
     });
   });
 });
-define("mdeditor/tests/unit/models/setting-test", ["qunit", "ember-qunit"], function (_qunit, _emberQunit) {
+define("mdeditor/tests/unit/models/setting-test", ["qunit", "ember-qunit", "@ember/runloop"], function (_qunit, _emberQunit, _runloop) {
   "use strict";
 
   0; //eaimeta@70e063a35619d71f0,"qunit",0,"ember-qunit",0,"@ember/runloop"eaimeta@70e063a35619d71f
   (0, _qunit.module)('Unit | Model | setting', function (hooks) {
     (0, _emberQunit.setupTest)(hooks);
     (0, _qunit.test)('it exists', function (assert) {
-      let model = Ember.run(() => this.owner.lookup('service:store').createRecord('setting'));
+      let model = (0, _runloop.run)(() => this.owner.lookup('service:store').createRecord('setting'));
       // let store = this.store();
       assert.ok(!!model);
+    });
+  });
+});
+define("mdeditor/tests/unit/pods/breadcrumbs/service-test", ["qunit", "ember-qunit"], function (_qunit, _emberQunit) {
+  "use strict";
+
+  0; //eaimeta@70e063a35619d71f0,"qunit",0,"ember-qunit"eaimeta@70e063a35619d71f
+  (0, _qunit.module)('Unit | Service | breadcrumbs', function (hooks) {
+    (0, _emberQunit.setupTest)(hooks);
+
+    // TODO: Replace this with your real tests.
+    (0, _qunit.test)('it exists', function (assert) {
+      let service = this.owner.lookup('service:breadcrumbs');
+      assert.ok(service);
     });
   });
 });
@@ -11829,6 +12296,19 @@ define("mdeditor/tests/unit/pods/record/show/edit/metadata/alternate/identifier/
       let route = this.owner.lookup('route:record/show/edit/metadata/alternate/identifier');
       assert.ok(route);
     });
+    (0, _qunit.test)('setupModel resolves identifiers from native arrays', function (assert) {
+      let route = this.owner.lookup('route:record/show/edit/metadata/alternate/identifier');
+      let identifier = {
+        identifier: 'alternate-id-0'
+      };
+      route.identifierId = '0';
+      route.modelFor = function () {
+        return {
+          identifier: [identifier]
+        };
+      };
+      assert.strictEqual(route.setupModel(), identifier);
+    });
   });
 });
 define("mdeditor/tests/unit/pods/record/show/edit/metadata/alternate/index/route-test", ["qunit", "ember-qunit"], function (_qunit, _emberQunit) {
@@ -11888,6 +12368,24 @@ define("mdeditor/tests/unit/pods/record/show/edit/metadata/parent/identifier/rou
     (0, _qunit.test)('it exists', function (assert) {
       let route = this.owner.lookup('route:record/show/edit/metadata/parent/identifier');
       assert.ok(route);
+    });
+    (0, _qunit.test)('setupModel resolves identifiers from native arrays', function (assert) {
+      let route = this.owner.lookup('route:record/show/edit/metadata/parent/identifier');
+      let identifier = {
+        identifier: 'parent-id-0'
+      };
+      route.identifierId = '0';
+      route.modelFor = function () {
+        return {
+          get(path) {
+            if (path === 'json.metadata.metadataInfo.parentMetadata.identifier') {
+              return [identifier];
+            }
+            return undefined;
+          }
+        };
+      };
+      assert.strictEqual(route.setupModel(), identifier);
     });
   });
 });
@@ -12435,7 +12933,7 @@ define("mdeditor/tests/unit/routes/publish/sciencebase-test", ["qunit", "ember-q
     });
   });
 });
-define("mdeditor/tests/unit/serializers/application-test", ["ember-data", "qunit", "ember-qunit"], function (_emberData, _qunit, _emberQunit) {
+define("mdeditor/tests/unit/serializers/application-test", ["@ember/runloop", "ember-data", "qunit", "ember-qunit"], function (_runloop, _emberData, _qunit, _emberQunit) {
   "use strict";
 
   0; //eaimeta@70e063a35619d71f0,"@ember/runloop",0,"ember-data",0,"qunit",0,"ember-qunit"eaimeta@70e063a35619d71f
@@ -12468,7 +12966,7 @@ define("mdeditor/tests/unit/serializers/application-test", ["ember-data", "qunit
         gamesPlayed: _emberData.default.attr('json')
       });
       this.owner.register('model:test', model);
-      Ember.run(function () {
+      (0, _runloop.run)(function () {
         record = store.createRecord('test', data);
       });
       assert.deepEqual(record.serialize(), expected, 'record serialized OK');
@@ -12661,26 +13159,26 @@ define("mdeditor/tests/unit/services/mdjson-dictionary-test", ["qunit", "ember-q
     (0, _emberQunit.setupTest)(hooks);
     (0, _qunit.test)('formatRecord with includeDictionaries=false should not include dataDictionary array', function (assert) {
       let service = this.owner.lookup('service:mdjson');
-      let store = this.owner.lookup('service:store');
 
       // Create a mock record with mdDictionary array
       let mockRecord = {
+        json: {
+          metadata: {
+            metadataInfo: {
+              metadataIdentifier: {
+                identifier: 'test-123',
+                namespace: 'urn:uuid'
+              }
+            }
+          },
+          mdDictionary: ['dict-id-1', 'dict-id-2']
+        },
         get: function (path) {
           if (path === 'json') {
-            return {
-              metadata: {
-                metadataInfo: {
-                  metadataIdentifier: {
-                    identifier: 'test-123',
-                    namespace: 'urn:uuid'
-                  }
-                }
-              },
-              mdDictionary: ['dict-id-1', 'dict-id-2']
-            };
+            return this.json;
           }
           if (path === 'json.mdDictionary') {
-            return ['dict-id-1', 'dict-id-2'];
+            return this.json.mdDictionary;
           }
           return null;
         }
@@ -12706,6 +13204,13 @@ define("mdeditor/tests/unit/services/mdjson-dictionary-test", ["qunit", "ember-q
       service.store = {
         peekAll: function () {
           return {
+            filterBy: function () {
+              return {
+                findBy: function () {
+                  return null;
+                }
+              };
+            },
             mapBy: function () {
               return [];
             }
@@ -12724,25 +13229,26 @@ define("mdeditor/tests/unit/services/mdjson-dictionary-test", ["qunit", "ember-q
       let resultWithDicts = service.formatRecord(mockRecord, false, true);
 
       // The result should have a dataDictionary array (empty in this case since we mocked empty store)
-      assert.ok(resultWithDicts.hasOwnProperty('dataDictionary'), 'mdEditor-JSON export should include dataDictionary array');
+      assert.ok(Object.prototype.hasOwnProperty.call(resultWithDicts, 'dataDictionary'), 'mdEditor-JSON export should include dataDictionary array');
     });
     (0, _qunit.test)('formatRecord with default parameters should include dictionaries', function (assert) {
       let service = this.owner.lookup('service:mdjson');
 
       // Create a mock record
       let mockRecord = {
+        json: {
+          metadata: {
+            metadataInfo: {
+              metadataIdentifier: {
+                identifier: 'test-123',
+                namespace: 'urn:uuid'
+              }
+            }
+          }
+        },
         get: function (path) {
           if (path === 'json') {
-            return {
-              metadata: {
-                metadataInfo: {
-                  metadataIdentifier: {
-                    identifier: 'test-123',
-                    namespace: 'urn:uuid'
-                  }
-                }
-              }
-            };
+            return this.json;
           }
           if (path === 'json.mdDictionary') {
             return [];
@@ -12771,6 +13277,13 @@ define("mdeditor/tests/unit/services/mdjson-dictionary-test", ["qunit", "ember-q
       service.store = {
         peekAll: function () {
           return {
+            filterBy: function () {
+              return {
+                findBy: function () {
+                  return null;
+                }
+              };
+            },
             mapBy: function () {
               return [];
             }
@@ -12782,7 +13295,7 @@ define("mdeditor/tests/unit/services/mdjson-dictionary-test", ["qunit", "ember-q
       let result = service.formatRecord(mockRecord);
 
       // The result should have a dataDictionary array (even if empty)
-      assert.ok(result.hasOwnProperty('dataDictionary'), 'Default formatRecord should include dataDictionary array');
+      assert.ok(Object.prototype.hasOwnProperty.call(result, 'dataDictionary'), 'Default formatRecord should include dataDictionary array');
     });
   });
 });

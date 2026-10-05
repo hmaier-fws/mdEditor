@@ -1,0 +1,25 @@
+See:
+
+  - https://citation-file-format.github.io/
+  - https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-citation-files
+
+Initial template obtained from:
+  https://github.com/citation-file-format/citation-file-format/tree/main
+
+cff-version: 1.2.0
+message: "Suggested citation for the mdEditor."
+title: "mdEditor"
+abstract: "The mdEditor is a generic, open source metadata authoring tool."
+authors:
+  - name: "Alaska Data Intergration Working Group (ADIwg)"
+version: 0.11.2
+date-released: "2021-07-18"
+identifiers:
+  - description: This is the collection of archived snapshots of all versions of My Research Software
+    type: doi
+    value: "10.5281/zenodo.123456"
+  - description: This is the archived snapshot of version 0.11.2 of My Research Software
+    type: doi
+    value: "10.5281/zenodo.123457"
+license: Apache-2.0
+repository-code: "https://github.com/citation-file-format/my-research-software"
